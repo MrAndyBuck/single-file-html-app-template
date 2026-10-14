@@ -817,7 +817,7 @@
     <div id="debug-overlay">
       <div class="debug-hud-header" id="debug-hud-toggle">
         <span class="debug-hud-title">🔍 CADN'T DIAGNOSTIC HUD</span>
-        <span id="debug-hud-version" class="debug-badge">v00000-004-DIAG</span>
+        <span id="debug-hud-version" class="debug-badge">v00000-005-DIAG</span>
         <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
       </div>
       <div id="debug-hud-body" class="debug-hud-body">
@@ -836,6 +836,14 @@
         <div class="debug-row">
           <span class="debug-label">Last Key Received:</span>
           <span id="dbg-last-key" class="debug-val">None</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">defaultPrevented:</span>
+          <span id="dbg-def-prevented" class="debug-val">-</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Last Orbit Δ:</span>
+          <span id="dbg-cam-delta" class="debug-val">-</span>
         </div>
         <div class="debug-row">
           <span class="debug-label">Keys Held:</span>
@@ -862,16 +870,24 @@
         <hr class="debug-divider">
         <div class="debug-section-title">4-Viewport Geometry & Architecture</div>
         <div class="debug-row">
-          <span class="debug-label">Drawing Buffer:</span>
+          <span class="debug-label">Viewport Sizing:</span>
           <span id="dbg-canvas-dims" class="debug-val">-</span>
         </div>
         <div class="debug-viewport-list">
-          <div class="debug-vp-entry"><strong>TL: Top (X/Z)</strong> — OrthoCamera | scissor: [0, halfH, halfW, halfH]</div>
-          <div class="debug-vp-entry"><strong>TR: Perspective</strong> — PerspCamera (45°) | scissor: [halfW, halfH, halfW, halfH]</div>
-          <div class="debug-vp-entry"><strong>BL: Front (X/Y)</strong> — OrthoCamera | scissor: [0, 0, halfW, halfH]</div>
-          <div class="debug-vp-entry"><strong>BR: Right (Z/Y)</strong> — OrthoCamera | scissor: [halfW, 0, halfW, halfH]</div>
+          <div class="debug-vp-entry"><strong>TL: Top (X/Z)</strong> — OrthoCamera | Top-Left CSS quadrant</div>
+          <div class="debug-vp-entry"><strong>TR: Perspective</strong> — PerspCamera (45°) | Top-Right CSS quadrant</div>
+          <div class="debug-vp-entry"><strong>BL: Front (X/Y)</strong> — OrthoCamera | Bottom-Left CSS quadrant</div>
+          <div class="debug-vp-entry"><strong>BR: Right (Z/Y)</strong> — OrthoCamera | Bottom-Right CSS quadrant</div>
         </div>
-        <div class="debug-note">4 independent camera instances rendered via 4 distinct gl.scissor / gl.viewport passes.</div>
+        <div class="debug-note">4 independent camera instances rendered via 4 distinct gl.scissor / gl.viewport passes with clearDepth().</div>
+        <hr class="debug-divider">
+        <div class="debug-row">
+          <span class="debug-label">Test Primitives:</span>
+          <span id="dbg-test-primitives" class="debug-val">OFF</span>
+        </div>
+        <button id="btn-toggle-test-primitives" style="width:100%; margin-top:4px; padding:4px 6px; background:#222; border:1px solid var(--rhino-yellow); color:var(--rhino-yellow); font-family:var(--font-mono); font-size:10px; cursor:pointer; border-radius:3px; font-weight:bold;">
+          Toggle 4-View Test Primitives [ON/OFF]
+        </button>
       </div>
     </div>
   </main>
@@ -918,7 +934,7 @@
     <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div id="status-message">Ready. Type polite request in Request Bar.</div>
     <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
-    <button id="chip" title="Check for newer version">v00000-004 ↻</button>
+    <button id="chip" title="Check for newer version">v00000-005 ↻</button>
   </footer>
 </div>
 
@@ -978,7 +994,7 @@
 <!-- About Modal -->
 <dialog id="modal-about">
   <h2>About CADN'T</h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-004</span></p>
+  <p><strong>Version</strong>: <span id="about-version">v00000-005</span></p>
   <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
   <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
   <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
@@ -1059,7 +1075,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-004",
+  version: "v00000-005",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -1132,6 +1148,61 @@ const cameras = {
   front: new THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000),
   right: new THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000)
 };
+
+// Enable layer support for 4-view isolation testing
+cameras.top.layers.enable(1);
+cameras.perspective.layers.enable(2);
+cameras.front.layers.enable(3);
+cameras.right.layers.enable(4);
+
+/* =========================================================================
+   DIAGNOSTIC TEST PRIMITIVES (4-View Isolation Verification)
+   ========================================================================= */
+const diagPrimitivesGroup = new THREE.Group();
+diagPrimitivesGroup.name = "diagPrimitivesGroup";
+diagPrimitivesGroup.visible = new URLSearchParams(location.search).has("test_viewports") || new URLSearchParams(location.search).has("diag");
+
+// 1. Top primitive: Bright Yellow Box (Layer 1)
+const boxGeo = new THREE.BoxGeometry(14, 14, 14);
+const boxMesh = new THREE.Mesh(boxGeo, new THREE.MeshLambertMaterial({ color: 0xffff00, transparent: true, opacity: 0.85 }));
+boxMesh.position.set(0, 2.25, 0);
+boxMesh.layers.set(1);
+const boxEdges = new THREE.LineSegments(new THREE.EdgesGeometry(boxGeo), new THREE.LineBasicMaterial({ color: 0x000000 }));
+boxEdges.layers.set(1);
+boxMesh.add(boxEdges);
+diagPrimitivesGroup.add(boxMesh);
+
+// 2. Perspective primitive: Bright Cyan Sphere (Layer 2)
+const sphereGeo = new THREE.SphereGeometry(9, 24, 24);
+const sphereMesh = new THREE.Mesh(sphereGeo, new THREE.MeshLambertMaterial({ color: 0x00ffff, transparent: true, opacity: 0.85 }));
+sphereMesh.position.set(0, 2.25, 0);
+sphereMesh.layers.set(2);
+const sphereEdges = new THREE.LineSegments(new THREE.WireframeGeometry(sphereGeo), new THREE.LineBasicMaterial({ color: 0x004466 }));
+sphereEdges.layers.set(2);
+sphereMesh.add(sphereEdges);
+diagPrimitivesGroup.add(sphereMesh);
+
+// 3. Front primitive: Bright Magenta Cone (Layer 3)
+const coneGeo = new THREE.ConeGeometry(9, 18, 24);
+const coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshLambertMaterial({ color: 0xff00ff, transparent: true, opacity: 0.85 }));
+coneMesh.position.set(0, 2.25, 0);
+coneMesh.layers.set(3);
+const coneEdges = new THREE.LineSegments(new THREE.WireframeGeometry(coneGeo), new THREE.LineBasicMaterial({ color: 0x440044 }));
+coneEdges.layers.set(3);
+coneMesh.add(coneEdges);
+diagPrimitivesGroup.add(coneMesh);
+
+// 4. Right primitive: Bright Lime Green Cylinder (Layer 4)
+const cylGeo = new THREE.CylinderGeometry(7, 7, 18, 24);
+const cylMesh = new THREE.Mesh(cylGeo, new THREE.MeshLambertMaterial({ color: 0x00ff66, transparent: true, opacity: 0.85 }));
+cylMesh.position.set(0, 2.25, 0);
+cylMesh.layers.set(4);
+const cylEdges = new THREE.LineSegments(new THREE.WireframeGeometry(cylGeo), new THREE.LineBasicMaterial({ color: 0x004411 }));
+cylEdges.layers.set(4);
+cylMesh.add(cylEdges);
+diagPrimitivesGroup.add(cylMesh);
+
+scene.add(diagPrimitivesGroup);
 
 // Initial camera positions
 cameras.top.position.set(0, 300, 0);
@@ -3630,7 +3701,9 @@ const debugTelemetry = {
   lastKey: "None",
   lastShift: false,
   lastTarget: "None",
-  lastHandled: "None"
+  lastHandled: "None",
+  defaultPrevented: false,
+  camDelta: "-"
 };
 
 // Global key listeners
@@ -3638,6 +3711,9 @@ window.addEventListener("keydown", (e) => {
   const code = e.code || "";
   const key = e.key || "";
   const isInput = e.target && e.target.matches("input, textarea");
+
+  const prevTheta = camState.perspective.theta;
+  const prevPhi = camState.perspective.phi;
 
   debugTelemetry.lastCode = code || key || "unknown";
   debugTelemetry.lastKey = key || code || "unknown";
@@ -3651,6 +3727,7 @@ window.addEventListener("keydown", (e) => {
       canvas.focus({ preventScroll: true });
       status("Viewport focused. Navigation keys active.");
       e.preventDefault();
+      debugTelemetry.defaultPrevented = true;
       return;
     }
     if (e.target.id === "request-input" && e.target.value.trim() === "" && isNavKey(e.code, e.key)) {
@@ -3672,33 +3749,43 @@ window.addEventListener("keydown", (e) => {
         cancelSketch();
       }
       e.preventDefault();
+      debugTelemetry.defaultPrevented = true;
       return;
     }
     if (e.key === "Escape") {
       cancelSketch();
       status("Sketch cancelled.");
       e.preventDefault();
+      debugTelemetry.defaultPrevented = true;
       return;
     }
   }
 
   if (isNavKey(code, key)) {
     e.preventDefault();
+    debugTelemetry.defaultPrevented = true;
     pressedKeys.add(code || key);
     if (e.shiftKey) pressedKeys.add("shift");
     // Immediate discrete action on initial press
     applyNavigationStep(code || key, e.shiftKey, 1.0);
+    const dTheta = ((camState.perspective.theta - prevTheta) * 180 / Math.PI).toFixed(1);
+    const dPhi = ((camState.perspective.phi - prevPhi) * 180 / Math.PI).toFixed(1);
+    debugTelemetry.camDelta = `ΔAz: ${Number(dTheta) >= 0 ? "+" + dTheta : dTheta}° | ΔEl: ${Number(dPhi) >= 0 ? "+" + dPhi : dPhi}°`;
   }
 
   if (code === "Delete" || code === "Backspace" || key === "Delete" || key === "Backspace") {
     handleDelete();
     e.preventDefault();
+    debugTelemetry.defaultPrevented = true;
   }
 });
 
 window.addEventListener("keyup", (e) => {
   const code = e.code || "";
   const key = e.key || "";
+  debugTelemetry.lastCode = code || key || "unknown";
+  debugTelemetry.lastKey = key || code || "unknown";
+  debugTelemetry.defaultPrevented = e.defaultPrevented;
   pressedKeys.delete(code);
   pressedKeys.delete(key);
   pressedKeys.delete((code || "").toLowerCase());
@@ -3995,9 +4082,10 @@ function render() {
   updateContinuousNavigation();
   resizeRenderer();
 
-  // WebGL setViewport and setScissor operate on the physical drawing buffer:
-  const width = canvas.width;
-  const height = canvas.height;
+  // Three.js setViewport and setScissor expect CSS (logical) dimensions;
+  // Three.js internally multiplies these values by renderer.getPixelRatio() to set gl.viewport / gl.scissor!
+  const width = stageContainer.clientWidth || 800;
+  const height = stageContainer.clientHeight || 600;
   if (!width || !height) return;
 
   const halfW = Math.floor(width / 2);
@@ -4010,6 +4098,7 @@ function render() {
   // 1. TOP-LEFT: Top Viewport (XZ Orthographic)
   renderer.setViewport(0, height - halfH, halfW, halfH);
   renderer.setScissor(0, height - halfH, halfW, halfH);
+  renderer.clearDepth();
   updateOrthoCamera("top", cameras.top, camState.top, halfW, halfH);
   gridTop.visible = true;
   gridPerspective.visible = false;
@@ -4021,6 +4110,7 @@ function render() {
   // 2. TOP-RIGHT: Perspective Viewport (3D Orbit)
   renderer.setViewport(halfW, height - halfH, width - halfW, halfH);
   renderer.setScissor(halfW, height - halfH, width - halfW, halfH);
+  renderer.clearDepth();
   cameras.perspective.aspect = (width - halfW) / halfH;
   cameras.perspective.updateProjectionMatrix();
   updatePerspectiveCamera();
@@ -4034,6 +4124,7 @@ function render() {
   // 3. BOTTOM-LEFT: Front Viewport (XY Orthographic)
   renderer.setViewport(0, 0, halfW, height - halfH);
   renderer.setScissor(0, 0, halfW, height - halfH);
+  renderer.clearDepth();
   updateOrthoCamera("front", cameras.front, camState.front, halfW, height - halfH);
   gridTop.visible = false;
   gridPerspective.visible = false;
@@ -4045,6 +4136,7 @@ function render() {
   // 4. BOTTOM-RIGHT: Right Viewport (ZY Orthographic)
   renderer.setViewport(halfW, 0, width - halfW, height - halfH);
   renderer.setScissor(halfW, 0, width - halfW, height - halfH);
+  renderer.clearDepth();
   updateOrthoCamera("right", cameras.right, camState.right, width - halfW, height - halfH);
   gridTop.visible = false;
   gridPerspective.visible = false;
@@ -4107,18 +4199,28 @@ function updateDebugOverlay() {
       : "None";
   }
 
-  const elHeld = document.getElementById("dbg-held-keys");
-  if (elHeld) elHeld.textContent = JSON.stringify(Array.from(pressedKeys));
+  const elDefPrev = document.getElementById("dbg-def-prevented");
+  if (elDefPrev) elDefPrev.textContent = String(debugTelemetry.defaultPrevented);
 
-  const w = canvas.width;
-  const h = canvas.height;
-  const hw = Math.floor(w / 2);
-  const hh = Math.floor(h / 2);
+  const elDelta = document.getElementById("dbg-cam-delta");
+  if (elDelta) elDelta.textContent = debugTelemetry.camDelta;
+
+  const elTestPrim = document.getElementById("dbg-test-primitives");
+  if (elTestPrim) {
+    elTestPrim.textContent = diagPrimitivesGroup.visible ? "ON" : "OFF";
+    elTestPrim.className = "debug-val " + (diagPrimitivesGroup.visible ? "status-ok" : "");
+  }
+
+  const cssW = stageContainer.clientWidth || 800;
+  const cssH = stageContainer.clientHeight || 600;
+  const bufW = canvas.width;
+  const bufH = canvas.height;
+  const dpr = (window.devicePixelRatio || 1).toFixed(1);
   const elDims = document.getElementById("dbg-canvas-dims");
-  if (elDims) elDims.textContent = `${w} × ${h} (quadrant: ${hw} × ${hh})`;
+  if (elDims) elDims.textContent = `${cssW}×${cssH} CSS (${bufW}×${bufH} buf, DPR:${dpr})`;
 }
 
-// Debug HUD Minimize Toggle
+// Debug HUD Minimize Toggle & Test Primitive Toggle
 const btnMinDebug = document.getElementById("btn-minimize-debug");
 const debugOverlay = document.getElementById("debug-overlay");
 if (btnMinDebug && debugOverlay) {
@@ -4130,6 +4232,21 @@ if (btnMinDebug && debugOverlay) {
   document.getElementById("debug-hud-toggle").onclick = () => {
     debugOverlay.classList.toggle("minimized");
     btnMinDebug.textContent = debugOverlay.classList.contains("minimized") ? "+" : "_";
+  };
+}
+
+const btnToggleTestPrimitives = document.getElementById("btn-toggle-test-primitives");
+if (btnToggleTestPrimitives) {
+  btnToggleTestPrimitives.onclick = (e) => {
+    e.stopPropagation();
+    diagPrimitivesGroup.visible = !diagPrimitivesGroup.visible;
+    const txt = diagPrimitivesGroup.visible ? "ON" : "OFF";
+    const el = document.getElementById("dbg-test-primitives");
+    if (el) {
+      el.textContent = txt;
+      el.className = "debug-val " + (diagPrimitivesGroup.visible ? "status-ok" : "");
+    }
+    status(`Diagnostic test primitives turned ${txt}.`);
   };
 }
 

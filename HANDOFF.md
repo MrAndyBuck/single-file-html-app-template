@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-004`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-005`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -96,38 +96,64 @@
 
 ## Reproducible Diagnosis of Acceptance Failure
 
-### 1. Deployed Application vs Local Working Copy Desynchronization
-- **Deployed Build on GitHub Pages**: Commit `6ee923f` ("feat: complete CADN'T Phase 3 & 4").
-- **Local Working Copy**: Contained uncommitted modifications to `index.html` and `HANDOFF.md`.
-- **Finding**: Because the repairs were withheld locally pending user approval and not pushed to GitHub Pages, the user's browser was loading the original commit `6ee923f`.
-- **In Commit `6ee923f`**:
-  1. Top-Left was Perspective, Top-Right was Top (reversed from Rhino).
-  2. Front and Right viewports had no orthogonal grids (`gridFront` and `gridRight` were missing).
-  3. `#request-input` never blurred on Enter or canvas click, trapping DOM focus forever and silently blocking all navigation keypresses.
-  4. Angular orbit velocity was under-scaled (`0.08 * mult`).
+## Viewport Architecture & WASD Orbit Repair (v00000-004 Acceptance Failure Diagnosis)
 
-### 2. Service Worker Cache Retention
-- `sw.js` uses a cache-first strategy (`caches.match(e.request).then(hit => hit || fetch(e.request))`) keyed by `cadnt-v00000-003`.
-- Any browser that loaded `v00000-003` will retain the old cached `index.html` from `6ee923f` unless the cache key in `sw.js` is bumped (e.g. `v00000-004`) or the cache is explicitly cleared.
+### 1. Root Cause: Retina High-DPI Double-Scaling Bug in WebGL Viewport
+- **User Acceptance Failure**: In Safari Private Window on macOS (Retina display, `devicePixelRatio = 2.0`), the canvas had focus and the HUD was active, but:
+  1. WASD orbit produced zero visible camera movement.
+  2. The four-view layout visually displayed the Michigan model as a single horizontal extrusion across the center.
+- **Investigation Finding**:
+  - In `vendor/three.min.js`, `renderer.setViewport(x, y, w, h)` and `renderer.setScissor(x, y, w, h)` are wrappers around WebGL that internally multiply coordinates by `_pixelRatio` (`T.copy(N).multiplyScalar(P).floor()`).
+  - `render()` in `index.html` was passing physical canvas buffer dimensions (`canvas.width`, `canvas.height`) instead of CSS logical dimensions (`stageContainer.clientWidth`, `stageContainer.clientHeight`).
+  - On standard DPR 1.0 displays, `canvas.width == stageContainer.clientWidth`, masking the bug.
+  - On macOS Retina displays (`DPR = 2.0`):
+    - `canvas.width` is already $2\times$ CSS width (e.g. $944 \times 2 = 1888$).
+    - Passing `(halfW, height - halfH, ...)` caused Three.js to scale by $2\times$ a second time ($2 \times 2 = 4\times$).
+    - **Bottom-Left (Front Viewport)**: Scaled to `(0, 0, 1888, 1278)`, blowing up across 100% of the physical canvas! In Front view, the extruded Michigan model is viewed edge-on parallel to the plane, causing it to display as a flat horizontal extrusion band across the center of the entire screen.
+    - **Top-Right (Perspective Viewport)**: Scaled to $X = 1888$, placing the viewport completely outside the canvas drawing buffer! WASD orbit updated the camera orientation in JavaScript, but rendered off-screen into void space, producing zero visible motion on screen.
+    - **Top and Right Viewports**: Similarly scissored off-screen above and to the right.
 
-### 3. Four-View Architecture Verification
-- **Are there 4 independent camera views or divisions of one rendered area?**
-  - **Verdict: Genuinely 4 independent camera views.**
-  - There are 4 distinct `THREE.Camera` objects:
-    1. `cameras.top`: `THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000)`, position `(x, 300, z)`, up `(0, 0, -1)`, lookAt `(x, 0, z)`.
-    2. `cameras.perspective`: `THREE.PerspectiveCamera(45, aspect, 1, 3000)`, spherical orbit around target.
-    3. `cameras.front`: `THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000)`, position `(x, y, 300)`, up `(0, 1, 0)`, lookAt `(x, y, 0)`.
-    4. `cameras.right`: `THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000)`, position `(300, y, z)`, up `(0, 1, 0)`, lookAt `(0, y, z)`.
-  - In `render()`, WebGL executes four separate render passes:
-    - Pass 1: `gl.viewport(0, height - halfH, halfW, halfH)` & `gl.scissor(...)` -> `renderer.render(scene, cameras.top)`
-    - Pass 2: `gl.viewport(halfW, height - halfH, width - halfW, halfH)` & `gl.scissor(...)` -> `renderer.render(scene, cameras.perspective)`
-    - Pass 3: `gl.viewport(0, 0, halfW, height - halfH)` & `gl.scissor(...)` -> `renderer.render(scene, cameras.front)`
-    - Pass 4: `gl.viewport(halfW, 0, width - halfW, height - halfH)` & `gl.scissor(...)` -> `renderer.render(scene, cameras.right)`
-  - Each viewport maintains its own C-plane grid, projection matrix, aspect ratio, camera position, and pan/zoom state.
+### 2. The Minimal Repair
+1. **Pass CSS Logical Dimensions in `render()`**:
+   ```javascript
+   const width = stageContainer.clientWidth || 800;
+   const height = stageContainer.clientHeight || 600;
+   const halfW = Math.floor(width / 2);
+   const halfH = Math.floor(height / 2);
+   ```
+   Three.js now scales `halfW` ($472$) by $2.0 \to 944$, exactly placing the four quadrants in the physical $1888 \times 1278$ buffer.
+2. **Explicit Depth Clear Between Passes**:
+   Added `renderer.clearDepth();` before each of the four quadrant render calls to ensure complete depth buffer isolation.
+3. **Safari Event Capture & Telemetry**:
+   - Automated `safaridriver` requires manual administrator authorization and "Allow Remote Automation" in Safari Preferences; headless Chrome with `--force-device-scale-factor=2` was used to reproduce Retina DPR behavior.
+   - Added `defaultPrevented`, `Last Orbit Δ`, and `CSS vs Buffer sizing (DPR)` to the diagnostic HUD.
+
+### 3. Diagnostic Test Mode (Independent 4-View Primitives)
+- Centered at `(0, 2.25, 0)` on dedicated Three.js layers:
+  - **Top Viewport (Layer 1)**: Bright Yellow Box (`THREE.BoxGeometry(14, 14, 14)`)
+  - **Perspective Viewport (Layer 2)**: Bright Cyan Sphere (`THREE.SphereGeometry(9, 24, 24)`)
+  - **Front Viewport (Layer 3)**: Bright Magenta Cone (`THREE.ConeGeometry(9, 18, 24)`)
+  - **Right Viewport (Layer 4)**: Bright Lime Green Cylinder (`THREE.CylinderGeometry(7, 7, 18, 24)`)
+  - **Layer 0 (Shared)**: Extruded 3D Michigan starting geometry and coordinate axes visible across all 4 views.
+- Toggled via `[Toggle 4-View Test Primitives [ON/OFF]]` button in HUD or URL `?test_viewports=1`.
+- Non-destructive: does NOT replace or delete the Michigan starting model.
+
+---
+
+## Visual Verification Artifacts (Retina DPR 2.0)
+- **Repaired 4-View Layout (Michigan Model)**:
+  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_repaired_michigan_4views.png`
+  Demonstrates Top (top-left plan view), Perspective (top-right 3D isometric), Front (bottom-left edge view), and Right (bottom-right side view) correctly framed under DPR 2.0.
+- **Diagnostic Test Mode (Unobscured 4-View Primitives)**:
+  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_diagnostic_primitives_unobscured.png`
+  Demonstrates all 4 independent viewports rendering their unique colored test primitives (Yellow Box, Cyan Sphere, Magenta Cone, Lime Cylinder) centered on the shared Michigan model.
+- **Post-WASD Orbit (Perspective Rotated)**:
+  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_orbited_primitives.png`
+  Demonstrates live HUD capturing `KeyD ('d') -> Nav: KeyD`, camera azimuth shifted from 45° to 65°, elevation shifted from 56° to 37°, and the Cyan Sphere and Michigan model visibly orbited in the top-right viewport while the 3 orthographic viewports remain static.
 
 ---
 
 ## Next Steps (Awaiting User Review & Approval to Push)
-1. User reviews diagnostic findings, HUD telemetry, and screenshots.
-2. User provides approval to commit, bump service worker version to `v00000-004`, and push to `origin/main` for GitHub Pages deployment.
-3. User tests in deployed browser with live Diagnostic HUD confirming WASD orbit, focus states, and 4-viewport behavior.
+1. User reviews diagnostic findings, Retina DPR explanation, and visual verification artifacts.
+2. User provides approval to bump application and service worker versions to `v00000-005`, commit, and push to `origin/main` for GitHub Pages deployment.
+3. User tests deployed build on macOS Safari in Private Window.
