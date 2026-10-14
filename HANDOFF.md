@@ -11,49 +11,60 @@
 
 ## Environment & Tooling
 - **OS**: macOS (Darwin arm64)
-- **Python**: Python 3.9.6 (available for local preview: `python3 -m http.server 8000`)
+- **Python**: Python 3.9.6 (local preview: `python3 -m http.server 8000`)
 - **Git**: 2.39.5
-- **Node/NPM**: None installed; conforming strictly to zero-build-step single-file HTML architecture
-- **Browser Compatibility**: Chrome, Safari (desktop focus)
-
----
-
-## 3D & Geometry Library Recommendation
-1. **Renderer & Scene Graph: Three.js (r128 UMD)**
-   - **Rationale**: Ultra-reliable, zero-dependency browser 3D library with full multi-viewport scissor rendering, raycasting, built-in primitives (`BoxGeometry`, `SphereGeometry`, `CylinderGeometry`, `ConeGeometry`, `ExtrudeGeometry`, `Shape`), and standard matrix math.
-   - **Distribution**: Vendored locally in `/vendor/three.min.js` to enable 100% offline PWA operation.
-2. **Boolean Engine: ThreeCSG / Constructive Solid Geometry**
-   - **Rationale**: Real BSP-tree mesh intersection, union, and difference. Does not fake booleans.
-3. **Importers/Exporters: Three.js STLExporter & OBJExporter**
-   - **Rationale**: Standard ASCII/binary formats compatible with Blender, Rhino, and 3D printing slicers.
+- **Engine**: Three.js r128 vendored locally in `/vendor/three.min.js`
+- **Headless Chrome**: Verified via SwiftShader WebGL rendering and automated test suite
 
 ---
 
 ## Phased Implementation Status
 
-| Phase | Description | Status | Notes |
+| Phase | Description | Status | Verification |
 |---|---|---|---|
-| **Phase 1** | Functional Skeleton | **In Progress** | 4 Viewports (Persp/Top/Front/Right), Request Bar, Michigan starting model, keyboard nav, selection, primitives |
-| **Phase 2** | Real Modeling | Pending | 2D Sketches, Extrude, Transforms, CSG Booleans, Layers & Properties |
-| **Phase 3** | Data & I/O | Pending | Native `.cadnt` save/open, OBJ/STL import/export, Undo/Redo |
-| **Phase 4** | Satire & Friction | Pending | Confirmations, icon relocation, ads, 10s delays, $249 economy, onboarding |
-| **Phase 5** | Polish & Deploy | Pending | Themes, audio hooks, full test suite, GitHub Pages sync |
+| **Phase 1** | Functional Skeleton | **Complete** (Awaiting Review) | 19/19 automated tests passing. 4 viewports, Michigan model, Request Bar, keyboard nav, primitives, wandering toolbar. |
+| **Phase 2** | Real Modeling | Ready to Begin | 2D Sketches (Line/Rect/Circle), Profile Extrude, Transforms, CSG Booleans (Union/Diff), Layers. |
+| **Phase 3** | Data & I/O | Pending | Native `.cadnt` save/reopen, OBJ/STL import/export, Undo/Redo stack. |
+| **Phase 4** | Satire & Friction | Pending | 10s artificial loading delays, ad popups, mini close buttons, gaslighting toasts. |
+| **Phase 5** | Polish & Deploy | Pending | Themes, audio hooks, multi-browser validation. |
 
 ---
 
-## Rules & Invariants
-1. **Strict Request Bar Prefix**: Any command typed in the Request Bar without `Can I ` must reply **"Nope."**
-2. **Michigan Immunity**: The starting Michigan model cannot be deleted with standard delete keys or commands. Only `Can I remove starting object` removes it.
-3. **No Trackpad Navigation**: Mouse/trackpad wheels and drags on the viewports must NOT pan, orbit, or zoom. Viewport navigation is strictly mapped to `W/S/A/D`, arrows, and `Shift+arrows`.
-4. **Real Geometry Only**: Primitives, transforms, and booleans must be real 3D geometry objects in the scene graph.
-5. **Debug Bypass**: `?debug` URL parameter must disable artificial loading delays and skip confirmation modals for swift automated and manual testing.
+## What Works in Phase 1
+1. **Rhino-Inspired 4-Viewport Matrix**:
+   - Single WebGL canvas with hardware scissor splitting into Perspective, Top, Front, and Right views.
+   - Dynamic C-Plane grids, origin axes tripod, and clickable active viewport indicators.
+2. **The Request Bar**:
+   - Requires `Can I [command]` prefix (case-insensitive).
+   - Any command entered without `Can I ` receives the curt response **"Nope."** with an animated shake effect.
+   - History dropdown log records previous queries and system responses.
+3. **The Michigan Starting Model**:
+   - Genuine extruded 3D geometry of both the Upper and Lower Peninsulas with beveled edges.
+   - Immune to standard `Delete` commands.
+   - Successfully removable **only** via `Can I remove starting object` through a confirmation dialog.
+4. **Navigation**:
+   - Camera orbit: `W / S` (vertical), `A / D` (horizontal).
+   - Camera pan: `Up / Down / Left / Right` arrows.
+   - Camera zoom: `Shift + Up / Down` arrows.
+   - Trackpad wheel scrolling strictly prevented for camera navigation (emits user advisory toast).
+   - Left-click raycasting selects objects and highlights them with Rhino-yellow glowing wireframes.
+5. **Primitive Geometry Creation**:
+   - Real Three.js meshes created via Request Bar: `Can I box`, `Can I sphere`, `Can I cylinder`, `Can I cone`.
+   - Also invokable via toolbar icons.
+6. **Wandering Toolbars**:
+   - Executing any toolbar command swaps button positions to promote "neural elasticity".
+7. **Fictional Economy & Onboarding**:
+   - $249.00 credit balance readout with an "UNDER CONSTRUCTION" refill modal.
+   - First-launch handbook containing the exact phrase: *"The command to delete the starting object exists."*
+8. **Automated Verification**:
+   - 19/19 automated test suite passing in headless Chrome with SwiftShader WebGL (`?run_tests=1`).
 
 ---
 
-## What's Next (Immediate Action)
-- Construct the Phase 1 Walking Skeleton:
-  1. Vendor `three.min.js` into `/vendor/three.min.js` (and include MIT license in `ATTRIBUTION.md`).
-  2. Implement `index.html` with Rhino 4-viewport split layout, Request Bar, viewport labels/grids, Michigan extruded 3D model, camera controls, raycast selection, and primitive generation (`box`, `sphere`, `cylinder`, `cone`).
-  3. Create PWA `manifest.webmanifest`, `sw.js`, and `icon.svg`.
-  4. Test locally with `python3 -m http.server`.
-  5. Present running application for user review before proceeding to Phase 2.
+## Instructions for Next Session (Phase 2 Entry)
+- After the user evaluates the visual appearance and interaction of Phase 1, proceed to Phase 2:
+  1. Add 2D sketch tools (Lines, Rectangles, Circles) onto the active viewport C-Plane.
+  2. Implement closed 2D profile extrusion into 3D meshes.
+  3. Implement Move, Rotate, and Scale transforms with direct viewport gizmos and properties panel coordinates.
+  4. Implement genuine CSG (Constructive Solid Geometry) for Boolean Union and Boolean Difference.
+  5. Expand Layer & Object management capabilities.
