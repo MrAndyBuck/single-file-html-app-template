@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" fill="#181818" rx="80"/>
+  <!-- Isometric Cube Grid in Rhino Yellow -->
+  <g stroke="#ffff00" stroke-width="14" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Top Face -->
+    <path d="M 256 90 L 396 170 L 256 250 L 116 170 Z" fill="#242424"/>
+    <!-- Left Face -->
+    <path d="M 116 170 L 256 250 L 256 410 L 116 330 Z" fill="#1c1c1c"/>
+    <!-- Right Face -->
+    <path d="M 256 250 L 396 170 L 396 330 L 256 410 Z" fill="#202020"/>
+  </g>
+  <!-- Radioactive Green Wireframe Edges -->
+  <g stroke="#39ff14" stroke-width="6" stroke-dasharray="10 10" fill="none">
+    <path d="M 256 90 L 256 250"/>
+    <path d="M 116 330 L 256 250"/>
+    <path d="M 396 330 L 256 250"/>
+  </g>
+  <!-- Red 'NO / N'T' Universal Slash / Accent -->
+  <g stroke="#ff3366" stroke-width="26" stroke-linecap="round">
+    <line x1="120" y1="390" x2="392" y2="120"/>
+  </g>
+  <!-- Text Wordmark CADN'T -->
+  <text x="256" y="468" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="52" fill="#ffff00" letter-spacing="4">CADN'T</text>
+</svg>

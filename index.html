@@ -1,75 +1,1969 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Go Knicks!</title>
-  <style>
-    :root {
-      --knicks-blue: #006BB6;
-      --knicks-orange: #F58426;
-      --knicks-silver: #BEC0C2;
-    }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: radial-gradient(circle at 50% 50%, #0d1b2a, #050b14);
-      color: #f9fafb;
-      text-align: center;
-      padding: 24px;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 18px;
-      border-radius: 9999px;
-      background: rgba(245, 132, 38, 0.15);
-      border: 1px solid rgba(245, 132, 38, 0.4);
-      color: var(--knicks-orange);
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin-bottom: 1.5rem;
-    }
-    .badge-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--knicks-orange);
-      box-shadow: 0 0 12px var(--knicks-orange);
-    }
-    h1 {
-      font-size: 4.5rem;
-      margin: 0 0 1rem 0;
-      letter-spacing: -0.03em;
-      font-weight: 900;
-      background: linear-gradient(135deg, #ffffff 30%, var(--knicks-orange) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 4px 30px rgba(0, 107, 182, 0.4);
-    }
-    p {
-      color: #93c5fd;
-      font-size: 1.35rem;
-      max-width: 500px;
-      line-height: 1.6;
-      margin: 0;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADN'T — The Adversarial 3D CAD System</title>
+<meta name="description" content="Functional 3D CAD software with intentionally dysfunctional interactions.">
+<meta property="og:title" content="CADN'T">
+<meta property="og:description" content="Functional 3D CAD software with intentionally dysfunctional interactions.">
+<meta property="og:image" content="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="theme-color" content="#161616">
+<style>
+  :root {
+    --bg-dark: #141414;
+    --panel-dark: #1c1c1c;
+    --panel-header: #242424;
+    --border-dark: #2e2e2e;
+    --border-light: #444444;
+    --fg-main: #e0e0e0;
+    --fg-muted: #888888;
+    --rhino-yellow: #ffff00;
+    --toxic-green: #39ff14;
+    --alert-pink: #ff3366;
+    --active-tab: #2d2d2d;
+    --active-border: #ffff00;
+    --grid-line: #2b2b2b;
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--fg-main); font-family: var(--font-ui); font-size: 13px; user-select: none; }
+
+  /* App Shell Grid */
+  #app-root {
+    display: grid;
+    grid-template-rows: 36px 34px 1fr 24px;
+    grid-template-columns: 56px 1fr 280px;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* Top App Header */
+  #top-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    background: var(--panel-header);
+    border-bottom: 1px solid var(--border-dark);
+    padding: 0 10px;
+    gap: 14px;
+  }
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--rhino-yellow);
+  }
+  .wordmark svg { width: 20px; height: 20px; }
+  .badge-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #ff336622;
+    color: var(--alert-pink);
+    border: 1px solid var(--alert-pink);
+    letter-spacing: 1px;
+  }
+
+  /* Fictional Economy Bar */
+  .economy-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #111111;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .economy-chip .balance-label { color: var(--fg-muted); }
+  .economy-chip .balance-val { color: var(--toxic-green); font-weight: bold; }
+  .btn-buy-credits {
+    background: #2a2a2a;
+    border: 1px solid var(--border-light);
+    color: var(--rhino-yellow);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .btn-buy-credits:hover { background: #383838; border-color: var(--rhino-yellow); }
+
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .header-btn {
+    background: transparent;
+    border: 1px solid var(--border-dark);
+    color: var(--fg-main);
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .header-btn:hover { background: #262626; border-color: var(--border-light); }
+  .header-btn.debug-btn { border-color: var(--toxic-green); color: var(--toxic-green); }
+
+  /* Request Bar (Rhino Command Line) */
+  #request-bar-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    background: #181818;
+    border-bottom: 1px solid var(--border-dark);
+    padding: 0 10px;
+    gap: 8px;
+    position: relative;
+  }
+  .request-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--rhino-yellow);
+    white-space: nowrap;
+  }
+  #request-input {
+    flex: 1;
+    background: #0d0d0d;
+    border: 1px solid var(--border-light);
+    color: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    outline: none;
+  }
+  #request-input:focus {
+    border-color: var(--rhino-yellow);
+    box-shadow: 0 0 4px rgba(255, 255, 0, 0.3);
+  }
+  #btn-submit-request {
+    background: #2a2a2a;
+    border: 1px solid var(--border-light);
+    color: var(--fg-main);
+    padding: 4px 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  #btn-submit-request:hover { background: #383838; color: var(--rhino-yellow); }
+
+  /* Request History Drawer */
+  #request-history-btn {
+    background: transparent;
+    border: none;
+    color: var(--fg-muted);
+    cursor: pointer;
+    font-size: 12px;
+  }
+  #request-log-box {
+    position: absolute;
+    top: 34px;
+    left: 10px;
+    right: 10px;
+    max-height: 180px;
+    background: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-light);
+    border-top: none;
+    padding: 8px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    z-index: 99;
+    display: none;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+  }
+  .log-line { margin-bottom: 4px; line-height: 1.4; }
+  .log-user { color: var(--fg-muted); }
+  .log-success { color: var(--toxic-green); }
+  .log-nope { color: var(--alert-pink); font-weight: bold; }
+  .log-warn { color: var(--rhino-yellow); }
+
+  /* Left Wandering Toolbar */
+  #left-toolbar {
+    grid-column: 1 / 2;
+    background: var(--panel-dark);
+    border-right: 1px solid var(--border-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    gap: 6px;
+    overflow-y: auto;
+  }
+  .tool-btn {
+    width: 42px;
+    height: 42px;
+    background: #252525;
+    border: 1px solid var(--border-dark);
+    border-radius: 4px;
+    color: var(--fg-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+    transition: transform 0.15s ease, background 0.15s ease;
+    position: relative;
+  }
+  .tool-btn:hover {
+    background: #333333;
+    border-color: var(--rhino-yellow);
+    color: var(--rhino-yellow);
+  }
+  .tool-btn:active { transform: scale(0.95); }
+  .tool-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .tool-btn span { font-size: 9px; line-height: 1; margin-top: 2px; }
+
+  /* Main Viewport Stage (Rhino 4-Way Matrix) */
+  #stage-container {
+    grid-column: 2 / 3;
+    position: relative;
+    background: #111111;
+    overflow: hidden;
+  }
+  #cad-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+
+  /* Overlay Viewport Labels */
+  .viewport-label {
+    position: absolute;
+    background: rgba(24, 24, 24, 0.85);
+    border: 1px solid var(--border-dark);
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    pointer-events: auto;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+  }
+  .viewport-label:hover { border-color: var(--border-light); color: var(--fg-main); }
+  .viewport-label.active-vp {
+    border-color: var(--rhino-yellow);
+    color: var(--rhino-yellow);
+    background: rgba(40, 40, 0, 0.8);
+    font-weight: 700;
+  }
+  .vp-tl { top: 8px; left: 8px; }
+  .vp-tr { top: 8px; left: calc(50% + 8px); }
+  .vp-bl { top: calc(50% + 8px); left: 8px; }
+  .vp-br { top: calc(50% + 8px); left: calc(50% + 8px); }
+
+  /* Viewport Splitter Lines */
+  .vp-divider-v {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: var(--border-dark);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .vp-divider-h {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: var(--border-dark);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Navigation Advisory Toast */
+  #nav-toast {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%) translateY(50px);
+    background: rgba(28, 28, 28, 0.95);
+    border: 1px solid var(--rhino-yellow);
+    color: var(--rhino-yellow);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    opacity: 0;
+    z-index: 20;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+  }
+  #nav-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* Right Sidebar (Layers & Properties) */
+  #right-sidebar {
+    grid-column: 3 / 4;
+    background: var(--panel-dark);
+    border-left: 1px solid var(--border-dark);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-section {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--border-dark);
+  }
+  .sidebar-title {
+    background: var(--panel-header);
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sidebar-content {
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  /* Layers Tree */
+  .layers-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .layer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: #232323;
+    border-radius: 3px;
+    border: 1px solid transparent;
+  }
+  .layer-item.active { border-color: var(--rhino-yellow); }
+  .layer-color { width: 10px; height: 10px; border-radius: 2px; }
+  .layer-name { flex: 1; font-size: 12px; }
+  .layer-icon { color: var(--fg-muted); cursor: pointer; font-size: 11px; }
+
+  /* Objects Tree */
+  .objects-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+  .object-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: #222;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    border: 1px solid transparent;
+  }
+  .object-item:hover { background: #2a2a2a; }
+  .object-item.selected {
+    background: #333311;
+    border-color: var(--rhino-yellow);
+    color: var(--rhino-yellow);
+  }
+  .object-item .obj-tag {
+    font-size: 9px;
+    background: #333;
+    padding: 1px 4px;
+    border-radius: 2px;
+    color: var(--fg-muted);
+  }
+
+  /* Properties Grid */
+  .prop-group { margin-bottom: 10px; }
+  .prop-label { font-size: 11px; color: var(--fg-muted); margin-bottom: 4px; }
+  .prop-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .prop-input {
+    flex: 1;
+    background: #111111;
+    border: 1px solid var(--border-light);
+    color: var(--fg-main);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 3px;
+  }
+  .prop-input:read-only { color: var(--fg-muted); border-color: var(--border-dark); }
+
+  /* Bottom Status Bar */
+  #bottom-bar {
+    grid-column: 1 / -1;
+    background: var(--panel-header);
+    border-top: 1px solid var(--border-dark);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+  }
+  #coords-readout { min-width: 180px; }
+  #status-message { flex: 1; color: var(--fg-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nav-hint { color: var(--toxic-green); font-size: 11px; }
+  #chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  #chip:hover { color: var(--rhino-yellow); }
+
+  /* Modals and Dialogs */
+  dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e1e1e;
+    color: var(--fg-main);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    padding: 20px;
+    max-width: 540px;
+    width: 90vw;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.8);
+    z-index: 1000;
+  }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(3px); }
+  dialog h2 { font-size: 16px; margin-bottom: 12px; color: var(--rhino-yellow); display: flex; align-items: center; gap: 8px; }
+  dialog p { font-size: 13px; line-height: 1.5; margin-bottom: 12px; color: #cccccc; }
+  dialog ul { margin-left: 20px; margin-bottom: 14px; line-height: 1.5; font-size: 12px; }
+  dialog .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+  .btn-dialog {
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-light);
+  }
+  .btn-primary { background: var(--rhino-yellow); color: #111; border-color: var(--rhino-yellow); }
+  .btn-primary:hover { background: #ffff33; }
+  .btn-danger { background: var(--alert-pink); color: #fff; border-color: var(--alert-pink); }
+  .btn-danger:hover { background: #ff4d79; }
+  .btn-secondary { background: #2c2c2c; color: var(--fg-main); }
+  .btn-secondary:hover { background: #383838; }
+
+  /* Ring highlighting for Help */
+  .ring { outline: 3px solid var(--rhino-yellow); outline-offset: 3px; transition: outline-color 1.2s; }
+
+  /* Shake animation for Request Bar "Nope." */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .shake { animation: shake 0.3s ease-in-out; border-color: var(--alert-pink) !important; }
+</style>
 </head>
 <body>
-  <div class="badge">
-    <span class="badge-dot"></span>
-    New York Basketball
+
+<div id="app-root">
+  <!-- Top App Header -->
+  <header id="top-header">
+    <div class="wordmark" title="CADN'T v0.1 — The Adversarial CAD Workspace">
+      <svg viewBox="0 0 512 512">
+        <rect width="512" height="512" fill="#181818" rx="80"/>
+        <path d="M 256 90 L 396 170 L 256 250 L 116 170 Z" fill="#242424" stroke="#ffff00" stroke-width="16"/>
+        <path d="M 116 170 L 256 250 L 256 410 L 116 330 Z" fill="#1c1c1c" stroke="#ffff00" stroke-width="16"/>
+        <path d="M 256 250 L 396 170 L 396 330 L 256 410 Z" fill="#202020" stroke="#ffff00" stroke-width="16"/>
+        <line x1="120" y1="390" x2="392" y2="120" stroke="#ff3366" stroke-width="28" stroke-linecap="round"/>
+      </svg>
+      CADN'T
+    </div>
+    <span class="badge-tag">SATIRICAL v0.1</span>
+
+    <!-- Fictional Economy Display -->
+    <div class="economy-chip" id="economy-display">
+      <span class="balance-label">Credits:</span>
+      <span class="balance-val" id="credit-val">$249.00</span>
+      <button class="btn-buy-credits" id="btn-buy-credits" title="Replenish fictional CAD tokens">+ Buy More</button>
+    </div>
+
+    <div class="header-actions">
+      <button class="header-btn" id="btn-tutorial-open" title="Open CADN'T onboarding handbook">Tutorial</button>
+      <button class="header-btn" id="btn-help-open" title="Search CADN'T help index">Help</button>
+      <button class="header-btn" id="btn-about-open" title="About CADN'T">About</button>
+      <button class="header-btn debug-btn" id="btn-debug-toggle" style="display:none;" title="Toggle Debug Mode">DEBUG ON</button>
+    </div>
+  </header>
+
+  <!-- Request Bar Row (Rhino Command Line replacement) -->
+  <div id="request-bar-row">
+    <span class="request-label">Request:</span>
+    <input type="text" id="request-input" placeholder="Type polite request (e.g., 'Can I box' or 'Can I sphere')..." autocomplete="off" spellcheck="false">
+    <button id="btn-submit-request">Send</button>
+    <button id="request-history-btn" title="Toggle Command History Log">▼ Log</button>
+
+    <!-- Dropdown Request Log -->
+    <div id="request-log-box"></div>
   </div>
-  <h1>Go Knicks!</h1>
-  <p>Orange &amp; Blue Skies</p>
+
+  <!-- Wandering Left Toolbar -->
+  <aside id="left-toolbar">
+    <button class="tool-btn" data-cmd="box" id="tool-box" title="Create Box primitive (Relocates after execution)">
+      <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <span>Box</span>
+    </button>
+    <button class="tool-btn" data-cmd="extrude" id="tool-extrude" title="Extrude closed 2D profile (Phase 2)">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <span>Extrude</span>
+    </button>
+    <button class="tool-btn" data-cmd="spline" id="tool-spline" title="Spline Sketch Curve (Phase 2)">
+      <svg viewBox="0 0 24 24"><path d="M3 17c3.5 0 3.5-10 7-10s3.5 10 7 10 3.5-10 4-10"/></svg>
+      <span>Spline</span>
+    </button>
+    <button class="tool-btn" data-cmd="explode" id="tool-explode" title="Explode solid into disconnected faces">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+      <span>Explode</span>
+    </button>
+    <button class="tool-btn" data-cmd="sphere" id="tool-sphere" title="Create Sphere primitive">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/></svg>
+      <span>Sphere</span>
+    </button>
+    <button class="tool-btn" data-cmd="join" id="tool-join" title="Join adjacent surfaces">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span>Join</span>
+    </button>
+    <button class="tool-btn" data-cmd="cylinder" id="tool-cylinder" title="Create Cylinder primitive">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/></svg>
+      <span>Cyl</span>
+    </button>
+    <button class="tool-btn" data-cmd="cone" id="tool-cone" title="Create Cone primitive">
+      <svg viewBox="0 0 24 24"><path d="m12 2 8 16a8 3 0 0 1-16 0z"/></svg>
+      <span>Cone</span>
+    </button>
+    <button class="tool-btn" data-cmd="union" id="tool-union" title="Boolean Union (CSG)">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="6"/><circle cx="15" cy="15" r="6"/></svg>
+      <span>Union</span>
+    </button>
+    <button class="tool-btn" data-cmd="difference" id="tool-difference" title="Boolean Difference (CSG)">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="6"/><path d="M15 6a6 6 0 1 1-5.19 9"/></svg>
+      <span>Diff</span>
+    </button>
+    <button class="tool-btn" data-cmd="chamfer" id="tool-chamfer" title="Chamfer Edges ($49 fee)">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="16" y2="4"/><line x1="16" y1="4" x2="20" y2="4"/><line x1="4" y1="20" x2="4" y2="16"/></svg>
+      <span>Chamfer</span>
+    </button>
+    <button class="tool-btn" data-cmd="fillet" id="tool-fillet" title="Fillet Edges ($49 fee)">
+      <svg viewBox="0 0 24 24"><path d="M4 20h8a8 8 0 0 0 8-8V4"/></svg>
+      <span>Fillet</span>
+    </button>
+  </aside>
+
+  <!-- 4-Viewport Matrix Stage -->
+  <main id="stage-container">
+    <canvas id="cad-canvas"></canvas>
+
+    <!-- Quadrant Viewport Labels -->
+    <div class="viewport-label vp-tl active-vp" id="lbl-perspective" data-vp="perspective">
+      <span>●</span> Perspective [W/S/A/D]
+    </div>
+    <div class="viewport-label vp-tr" id="lbl-top" data-vp="top">
+      <span>●</span> Top (X/Z)
+    </div>
+    <div class="viewport-label vp-bl" id="lbl-front" data-vp="front">
+      <span>●</span> Front (X/Y)
+    </div>
+    <div class="viewport-label vp-br" id="lbl-right" data-vp="right">
+      <span>●</span> Right (Z/Y)
+    </div>
+
+    <!-- Dividing Crosshair Borders -->
+    <div class="vp-divider-v"></div>
+    <div class="vp-divider-h"></div>
+
+    <!-- Navigation Advisory Toast -->
+    <div id="nav-toast">Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.</div>
+  </main>
+
+  <!-- Right Sidebar: Layers & Properties -->
+  <aside id="right-sidebar">
+    <!-- Layers Panel -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">
+        <span>Layers</span>
+        <span style="font-size:10px; color:var(--toxic-green);">● Active</span>
+      </div>
+      <div class="sidebar-content" style="max-height: 140px;">
+        <ul class="layers-list">
+          <li class="layer-item active" id="layer-default">
+            <div class="layer-color" style="background:#6e8494;"></div>
+            <span class="layer-name">Default</span>
+            <span class="layer-icon" title="Layer Visible">👁</span>
+          </li>
+          <li class="layer-item" id="layer-starting">
+            <div class="layer-color" style="background:#2b808a;"></div>
+            <span class="layer-name">Starting Geometry</span>
+            <span class="layer-icon" title="Locked Immune Layer">🔒</span>
+          </li>
+          <li class="layer-item" id="layer-01">
+            <div class="layer-color" style="background:#ff9900;"></div>
+            <span class="layer-name">Layer 01</span>
+            <span class="layer-icon" title="Layer Visible">👁</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Objects Tree Panel -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">
+        <span>Objects</span>
+        <span id="obj-count-badge" style="font-size:10px; color:var(--fg-muted);">1 items</span>
+      </div>
+      <div class="sidebar-content" style="max-height: 180px;">
+        <ul class="objects-list" id="objects-tree">
+          <!-- Dynamically populated -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- Properties Panel -->
+    <div class="sidebar-section" style="flex:1;">
+      <div class="sidebar-title">Properties</div>
+      <div class="sidebar-content" id="properties-panel">
+        <p style="color:var(--fg-muted); font-size:11px; font-style:italic;">No object selected. Click in any viewport to select.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom Status Bar -->
+  <footer id="bottom-bar">
+    <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
+    <div id="status-message">Ready. Type polite request in Request Bar.</div>
+    <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
+    <button id="chip" title="Check for newer version">v00000-001 ↻</button>
+  </footer>
+</div>
+
+<!-- Onboarding Modal -->
+<dialog id="modal-onboarding">
+  <h2>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Welcome to CADN'T v0.1
+  </h2>
+  <p>CADN'T is a precision 3D CAD application engineered with intentionally dysfunctional interactions. Please review operational guidelines:</p>
+  <ul>
+    <li><strong>The Request Bar</strong>: All typed commands must begin with <code>Can I [command]</code> (e.g. <code>Can I box</code>). Commands lacking polite deference will receive a curt <em>"Nope."</em></li>
+    <li><strong>Viewport Navigation</strong>: Trackpad and mouse wheels will <strong>not</strong> navigate viewports. Orbit with <code>W / S / A / D</code>, pan with <code>Arrow Keys</code>, and zoom with <code>Shift + Arrow Keys</code>. Mouse clicks are strictly reserved for raycast selection.</li>
+    <li><strong>Wandering Toolbars</strong>: Command icons relocate across the toolbar after each execution to stimulate neural elasticity.</li>
+    <li><strong>Starting Geometry</strong>: <em>The command to delete the starting object exists.</em></li>
+    <li><strong>Economy</strong>: You have received a starting grant of $249.00 in fictional CAD credits.</li>
+  </ul>
+  <div class="dialog-actions">
+    <button class="btn-dialog btn-primary" id="btn-close-onboarding">Accept Terms & Suffer</button>
+  </div>
+</dialog>
+
+<!-- Confirmation Modal -->
+<dialog id="modal-confirm">
+  <h2 id="confirm-title">Are you sure?</h2>
+  <p id="confirm-body">Are you sure you want to execute this command?</p>
+  <div class="dialog-actions">
+    <button class="btn-dialog btn-secondary" id="btn-confirm-cancel">Cancel</button>
+    <button class="btn-dialog btn-primary" id="btn-confirm-ok">Yes, Proceed</button>
+  </div>
+</dialog>
+
+<!-- Under Construction Modal (Economy) -->
+<dialog id="modal-construction">
+  <h2>⚠️ UNDER CONSTRUCTION</h2>
+  <p>The CADN'T Cloud Credit Marketplace is temporarily offline for scheduled server griefing.</p>
+  <p>Please mail a cashier's check or certified money order payable to CADN'T Customer Friction Division.</p>
+  <div class="dialog-actions">
+    <button class="btn-dialog btn-secondary" id="btn-close-construction">Acknowledge</button>
+  </div>
+</dialog>
+
+<!-- Help Modal -->
+<dialog id="modal-help">
+  <h2>Help Index</h2>
+  <div style="margin-bottom:12px;">
+    <input type="text" id="help-search" placeholder="Filter help commands..." style="width:100%; padding:6px; background:#111; border:1px solid var(--border-light); color:#fff; border-radius:3px;">
+  </div>
+  <ul id="help-list" style="max-height:240px; overflow-y:auto; list-style:none; margin:0;">
+    <!-- Filled by JS -->
+  </ul>
+  <div class="dialog-actions">
+    <button class="btn-dialog btn-secondary" id="btn-close-help">Close</button>
+  </div>
+</dialog>
+
+<!-- About Modal -->
+<dialog id="modal-about">
+  <h2>About CADN'T</h2>
+  <p><strong>Version</strong>: <span id="about-version">v00000-001</span></p>
+  <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
+  <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
+  <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
+  <div class="dialog-actions">
+    <button class="btn-dialog btn-secondary" id="btn-close-about">Close</button>
+  </div>
+</dialog>
+
+<!-- Three.js (Vendored locally for 100% offline PWA operation) -->
+<script src="vendor/three.min.js"></script>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   1. APP CONSTANTS & CONFIGURATION
+   ========================================================================= */
+const APP = {
+  name: "CADN'T",
+  id: "cadnt",
+  version: "v00000-001",
+  author: "Andy Buck",
+  site: "https://mrandybuck.github.io/single-file-html-app-template/",
+  repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
+};
+
+const DEBUG = new URLSearchParams(location.search).has("debug");
+if (DEBUG) {
+  const dbgBtn = document.getElementById("btn-debug-toggle");
+  if (dbgBtn) dbgBtn.style.display = "inline-flex";
+}
+
+document.getElementById("chip").textContent = APP.version + " ↻";
+document.getElementById("about-version").textContent = APP.version;
+
+/* =========================================================================
+   2. SCENE, CAMERAS & 4-VIEWPORT ENGINE
+   ========================================================================= */
+const canvas = document.getElementById("cad-canvas");
+const stageContainer = document.getElementById("stage-container");
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.autoClear = false;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x181818);
+
+// Lights
+const ambLight = new THREE.AmbientLight(0xffffff, 0.55);
+scene.add(ambLight);
+
+const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.75);
+dirLight1.position.set(60, 120, 80);
+scene.add(dirLight1);
+
+const dirLight2 = new THREE.DirectionalLight(0x778899, 0.4);
+dirLight2.position.set(-60, -40, -80);
+scene.add(dirLight2);
+
+// Coordinate Grids (Rhino C-Planes)
+const gridPerspective = new THREE.GridHelper(120, 24, 0x444444, 0x242424);
+gridPerspective.position.y = -0.01;
+scene.add(gridPerspective);
+
+// Separate orthographic grids
+const gridTop = new THREE.GridHelper(120, 24, 0x444444, 0x222222);
+gridTop.position.y = -0.02;
+scene.add(gridTop);
+
+// Axes Helper at Origin
+const originAxes = new THREE.AxesHelper(15);
+originAxes.renderOrder = 1;
+scene.add(originAxes);
+
+// Cameras for 4 viewports
+const cameras = {
+  perspective: new THREE.PerspectiveCamera(45, 1, 1, 3000),
+  top: new THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000),
+  front: new THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000),
+  right: new THREE.OrthographicCamera(-60, 60, 60, -60, 1, 3000)
+};
+
+// Initial camera positions
+cameras.top.position.set(0, 300, 0);
+cameras.top.up.set(0, 0, -1);
+cameras.top.lookAt(0, 0, 0);
+
+cameras.front.position.set(0, 0, 300);
+cameras.front.up.set(0, 1, 0);
+cameras.front.lookAt(0, 0, 0);
+
+cameras.right.position.set(300, 0, 0);
+cameras.right.up.set(0, 1, 0);
+cameras.right.lookAt(0, 0, 0);
+
+// Viewport & Camera Controller State
+let activeViewport = "perspective"; // 'perspective' | 'top' | 'front' | 'right'
+
+const camState = {
+  perspective: {
+    target: new THREE.Vector3(0, 4, 0),
+    radius: 95,
+    theta: Math.PI / 4, // azimuth
+    phi: Math.PI / 3.2   // polar elevation
+  },
+  top: { target: new THREE.Vector3(0, 0, 0), zoom: 1.0 },
+  front: { target: new THREE.Vector3(0, 4, 0), zoom: 1.0 },
+  right: { target: new THREE.Vector3(0, 4, 0), zoom: 1.0 }
+};
+
+function updatePerspectiveCamera() {
+  const p = camState.perspective;
+  p.radius = Math.max(10, Math.min(600, p.radius));
+  p.phi = Math.max(0.05, Math.min(Math.PI - 0.05, p.phi));
+
+  const x = p.target.x + p.radius * Math.sin(p.phi) * Math.sin(p.theta);
+  const y = p.target.y + p.radius * Math.cos(p.phi);
+  const z = p.target.z + p.radius * Math.sin(p.phi) * Math.cos(p.theta);
+
+  cameras.perspective.position.set(x, y, z);
+  cameras.perspective.lookAt(p.target);
+}
+updatePerspectiveCamera();
+
+function updateOrthoCamera(name, cam, state, width, height) {
+  const aspect = width / height;
+  const baseSize = 50 / state.zoom;
+  cam.left = -baseSize * aspect;
+  cam.right = baseSize * aspect;
+  cam.top = baseSize;
+  cam.bottom = -baseSize;
+
+  if (name === "top") {
+    cam.position.set(state.target.x, 300, state.target.z);
+    cam.lookAt(state.target.x, 0, state.target.z);
+  } else if (name === "front") {
+    cam.position.set(state.target.x, state.target.y, 300);
+    cam.lookAt(state.target.x, state.target.y, 0);
+  } else if (name === "right") {
+    cam.position.set(300, state.target.y, state.target.z);
+    cam.lookAt(0, state.target.y, state.target.z);
+  }
+  cam.updateProjectionMatrix();
+}
+
+/* =========================================================================
+   3. STARTING MODEL: EXTRUDED 3D STATE OF MICHIGAN
+   ========================================================================= */
+const sceneObjects = [];
+let selectedObjects = [];
+
+function createMichiganModel() {
+  // Lower Peninsula polygon
+  const lpShape = new THREE.Shape();
+  const lpPoints = [
+    [8, 24], [14, 21], [18, 16], [18, 10], [13, 6], [11, 3],
+    [16, 4], [19, 7], [20, 2], [18, -4], [17, -9], [15, -14],
+    [13, -17], [-5, -17], [-7, -15], [-8, -10], [-7, -4], [-8, 2],
+    [-7, 8], [-7, 13], [-5, 17], [-3, 20], [-2, 17], [0, 19],
+    [3, 21], [5, 23]
+  ];
+  lpShape.moveTo(lpPoints[0][0], lpPoints[0][1]);
+  for (let i = 1; i < lpPoints.length; i++) {
+    lpShape.lineTo(lpPoints[i][0], lpPoints[i][1]);
+  }
+  lpShape.closePath();
+
+  // Upper Peninsula polygon
+  const upShape = new THREE.Shape();
+  const upPoints = [
+    [7, 26], [13, 29], [13, 33], [9, 34], [3, 33], [-3, 33],
+    [-9, 34], [-13, 35], [-14, 38], [-11, 44], [-14, 45], [-17, 40],
+    [-20, 36], [-24, 34], [-27, 31], [-24, 27], [-19, 25], [-14, 24],
+    [-9, 25], [-3, 25]
+  ];
+  upShape.moveTo(upPoints[0][0], upPoints[0][1]);
+  for (let i = 1; i < upPoints.length; i++) {
+    upShape.lineTo(upPoints[i][0], upPoints[i][1]);
+  }
+  upShape.closePath();
+
+  const extrudeSettings = {
+    steps: 1,
+    depth: 4.5,
+    bevelEnabled: true,
+    bevelThickness: 0.6,
+    bevelSize: 0.5,
+    bevelSegments: 2
+  };
+
+  const lpGeo = new THREE.ExtrudeGeometry(lpShape, extrudeSettings);
+  const upGeo = new THREE.ExtrudeGeometry(upShape, extrudeSettings);
+
+  // Rotate to lay flat on XZ plane and extrude up along Y
+  lpGeo.rotateX(-Math.PI / 2);
+  upGeo.rotateX(-Math.PI / 2);
+
+  // Center around scene origin
+  lpGeo.translate(2, 0, -12);
+  upGeo.translate(2, 0, -12);
+
+  const group = new THREE.Group();
+  group.name = "Michigan (Starting Model)";
+  group.userData = {
+    id: "starting_michigan",
+    isStartingObject: true,
+    type: "ExtrudedSolid",
+    layer: "Starting Geometry",
+    protected: true
+  };
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x2b808a,
+    roughness: 0.4,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+
+  const lpMesh = new THREE.Mesh(lpGeo, mat);
+  const upMesh = new THREE.Mesh(upGeo, mat);
+
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x111111, linewidth: 1 });
+  const lpEdges = new THREE.LineSegments(new THREE.EdgesGeometry(lpGeo, 28), wireMat);
+  const upEdges = new THREE.LineSegments(new THREE.EdgesGeometry(upGeo, 28), wireMat);
+
+  group.add(lpMesh);
+  group.add(upMesh);
+  group.add(lpEdges);
+  group.add(upEdges);
+
+  scene.add(group);
+  sceneObjects.push(group);
+  updateObjectsTree();
+  return group;
+}
+
+// Instantiate initial Michigan model
+let michiganModel = createMichiganModel();
+
+/* =========================================================================
+   4. PRIMITIVES & MODELING OPERATIONS
+   ========================================================================= */
+let primitiveCounter = 1;
+
+function registerNewObject(mesh, name, type) {
+  mesh.name = name;
+  mesh.userData = {
+    id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+    isStartingObject: false,
+    type: type,
+    layer: "Default",
+    protected: false
+  };
+
+  scene.add(mesh);
+  sceneObjects.push(mesh);
+  updateObjectsTree();
+  selectObject(mesh);
+  addLog(`Created ${name} at origin.`, "log-success");
+  status(`Created ${name}`);
+}
+
+function createBoxPrimitive() {
+  const geo = new THREE.BoxGeometry(14, 14, 14);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x6e8494,
+    roughness: 0.4,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, 7, 0);
+
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), wireMat);
+  mesh.add(edges);
+
+  registerNewObject(mesh, `Box_${primitiveCounter++}`, "Box");
+}
+
+function createSpherePrimitive() {
+  const geo = new THREE.SphereGeometry(8, 32, 24);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x7a90a0,
+    roughness: 0.35,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, 8, 0);
+
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x222222 });
+  const edges = new THREE.LineSegments(new THREE.WireframeGeometry(geo), wireMat);
+  mesh.add(edges);
+
+  registerNewObject(mesh, `Sphere_${primitiveCounter++}`, "Sphere");
+}
+
+function createCylinderPrimitive() {
+  const geo = new THREE.CylinderGeometry(7, 7, 16, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x6e8494,
+    roughness: 0.4,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, 8, 0);
+
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), wireMat);
+  mesh.add(edges);
+
+  registerNewObject(mesh, `Cylinder_${primitiveCounter++}`, "Cylinder");
+}
+
+function createConePrimitive() {
+  const geo = new THREE.ConeGeometry(8, 16, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x6e8494,
+    roughness: 0.4,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, 8, 0);
+
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), wireMat);
+  mesh.add(edges);
+
+  registerNewObject(mesh, `Cone_${primitiveCounter++}`, "Cone");
+}
+
+/* =========================================================================
+   5. SELECTION & PROPERTIES
+   ========================================================================= */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function selectObject(obj, multi = false) {
+  if (!multi) {
+    clearSelection();
+  }
+  if (!obj) {
+    updatePropertiesPanel();
+    updateObjectsTree();
+    return;
+  }
+
+  if (!selectedObjects.includes(obj)) {
+    selectedObjects.push(obj);
+    highlightObject(obj, true);
+  } else if (multi) {
+    selectedObjects = selectedObjects.filter(o => o !== obj);
+    highlightObject(obj, false);
+  }
+
+  updatePropertiesPanel();
+  updateObjectsTree();
+  if (selectedObjects.length > 0) {
+    status(`Selected: ${selectedObjects.map(o => o.name).join(", ")}`);
+  } else {
+    status("Ready.");
+  }
+}
+
+function clearSelection() {
+  selectedObjects.forEach(o => highlightObject(o, false));
+  selectedObjects = [];
+  updatePropertiesPanel();
+  updateObjectsTree();
+}
+
+function highlightObject(obj, active) {
+  obj.traverse(child => {
+    if (child.isLineSegments) {
+      child.material.color.setHex(active ? 0xffff00 : 0x111111);
+      child.material.linewidth = active ? 2 : 1;
+    } else if (child.isMesh) {
+      if (active) {
+        child.userData.origEmissive = child.material.emissive ? child.material.emissive.getHex() : 0x000000;
+        if (child.material.emissive) child.material.emissive.setHex(0x333300);
+      } else {
+        if (child.material.emissive) child.material.emissive.setHex(child.userData.origEmissive || 0x000000);
+      }
+    }
+  });
+}
+
+function updateObjectsTree() {
+  const tree = document.getElementById("objects-tree");
+  const countBadge = document.getElementById("obj-count-badge");
+  countBadge.textContent = `${sceneObjects.length} items`;
+  tree.innerHTML = "";
+
+  sceneObjects.forEach(obj => {
+    const li = document.createElement("li");
+    li.className = "object-item" + (selectedObjects.includes(obj) ? " selected" : "");
+    const tag = obj.userData.isStartingObject ? "MICHIGAN" : obj.userData.type || "MESH";
+    li.innerHTML = `
+      <span class="obj-tag">${tag}</span>
+      <span style="flex:1;">${obj.name}</span>
+      ${obj.userData.protected ? "🔒" : ""}
+    `;
+    li.onclick = (e) => {
+      e.stopPropagation();
+      selectObject(obj, e.shiftKey);
+    };
+    tree.appendChild(li);
+  });
+}
+
+function updatePropertiesPanel() {
+  const panel = document.getElementById("properties-panel");
+  if (selectedObjects.length === 0) {
+    panel.innerHTML = `<p style="color:var(--fg-muted); font-size:11px; font-style:italic;">No object selected. Click in any viewport to select.</p>`;
+    return;
+  }
+
+  const obj = selectedObjects[0];
+  const pos = obj.position;
+  const isProtected = obj.userData.protected;
+
+  panel.innerHTML = `
+    <div class="prop-group">
+      <div class="prop-label">Name</div>
+      <input class="prop-input" type="text" value="${obj.name}" readonly>
+    </div>
+    <div class="prop-group">
+      <div class="prop-label">Type & Layer</div>
+      <div class="prop-row">
+        <input class="prop-input" type="text" value="${obj.userData.type || 'Solid'}" readonly>
+        <input class="prop-input" type="text" value="${obj.userData.layer || 'Default'}" readonly>
+      </div>
+    </div>
+    <div class="prop-group">
+      <div class="prop-label">Position (X, Y, Z)</div>
+      <div class="prop-row">
+        <input class="prop-input" type="text" value="${pos.x.toFixed(2)}" readonly>
+        <input class="prop-input" type="text" value="${pos.y.toFixed(2)}" readonly>
+        <input class="prop-input" type="text" value="${pos.z.toFixed(2)}" readonly>
+      </div>
+    </div>
+    <div class="prop-group">
+      <div class="prop-label">Status</div>
+      <div style="font-size:11px; color:${isProtected ? 'var(--alert-pink)' : 'var(--toxic-green)'}; font-weight:bold;">
+        ${isProtected ? "🛡️ IMMUNE TO DELETION" : "✓ Standard Mesh"}
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   6. THE REQUEST BAR ENGINE & DISPATCHER
+   ========================================================================= */
+const requestInput = document.getElementById("request-input");
+const requestLogBox = document.getElementById("request-log-box");
+const requestHistoryBtn = document.getElementById("request-history-btn");
+
+requestHistoryBtn.onclick = () => {
+  const show = requestLogBox.style.display !== "block";
+  requestLogBox.style.display = show ? "block" : "none";
+};
+
+function addLog(msg, className = "") {
+  const div = document.createElement("div");
+  div.className = "log-line " + className;
+  div.textContent = msg;
+  requestLogBox.appendChild(div);
+  requestLogBox.scrollTop = requestLogBox.scrollHeight;
+}
+
+function shakeRequestBar() {
+  requestInput.classList.remove("shake");
+  void requestInput.offsetWidth; // trigger reflow
+  requestInput.classList.add("shake");
+  setTimeout(() => requestInput.classList.remove("shake"), 350);
+}
+
+function processRequest(raw) {
+  const text = raw.trim();
+  if (!text) return;
+
+  requestLogBox.style.display = "block";
+  addLog(`> ${text}`, "log-user");
+
+  // Check prefix 'Can I ' (case-insensitive)
+  const match = text.match(/^can\s+i\s+(.*)$/i);
+  if (!match) {
+    addLog("Nope.", "log-nope");
+    status("Nope. Request lacked polite prefix.");
+    shakeRequestBar();
+    return;
+  }
+
+  const query = match[1].trim().toLowerCase();
+  executeCommand(query);
+}
+
+function executeCommand(cmd) {
+  switch (cmd) {
+    case "box":
+      createBoxPrimitive();
+      break;
+
+    case "sphere":
+      createSpherePrimitive();
+      break;
+
+    case "cylinder":
+    case "cyl":
+      createCylinderPrimitive();
+      break;
+
+    case "cone":
+      createConePrimitive();
+      break;
+
+    case "remove starting object":
+      if (!michiganModel || !sceneObjects.includes(michiganModel)) {
+        addLog("Starting object is already gone.", "log-warn");
+        status("Starting object does not exist.");
+        return;
+      }
+      showConfirmModal(
+        "Are you sure you want to remove this?",
+        "Removing the starting State of Michigan geometry is irreversible.",
+        () => {
+          scene.remove(michiganModel);
+          const idx = sceneObjects.indexOf(michiganModel);
+          if (idx !== -1) sceneObjects.splice(idx, 1);
+          selectedObjects = selectedObjects.filter(o => o !== michiganModel);
+          michiganModel = null;
+          updateObjectsTree();
+          updatePropertiesPanel();
+          addLog("Starting object permanently removed. Hope you're happy.", "log-success");
+          status("Starting object removed.");
+        }
+      );
+      break;
+
+    case "delete":
+      handleDelete();
+      break;
+
+    case "select all":
+      selectedObjects = [...sceneObjects];
+      sceneObjects.forEach(o => highlightObject(o, true));
+      updatePropertiesPanel();
+      updateObjectsTree();
+      addLog(`Selected all (${sceneObjects.length}) objects.`, "log-success");
+      break;
+
+    case "deselect":
+    case "clear selection":
+      clearSelection();
+      addLog("Cleared selection.", "log-success");
+      break;
+
+    case "undo":
+      addLog("Undo requested. (No prior user edits in stack)", "log-warn");
+      status("Undo stack clean.");
+      break;
+
+    case "redo":
+      addLog("Redo requested. (Redo stack empty)", "log-warn");
+      status("Redo stack clean.");
+      break;
+
+    case "save":
+      showConfirmModal(
+        "Save Project Confirmation [Stage 1 of 2]",
+        "Are you absolutely certain you wish to persist document geometry to browser storage?",
+        () => {
+          showConfirmModal(
+            "Final Save Confirmation [Stage 2 of 2]",
+            "All unsaved progress will be permanently confirmed.",
+            () => {
+              addLog("Project state saved to local storage.", "log-success");
+              status("Project saved.");
+            }
+          );
+        }
+      );
+      break;
+
+    case "extrude":
+      addLog("Extrude command accepted. Select a planar 2D curve (Phase 2 capability).", "log-warn");
+      status("Extrude: Requires 2D profile.");
+      break;
+
+    case "help":
+    case "tutorial":
+      document.getElementById("modal-onboarding").showModal();
+      addLog("Onboarding handbook presented.", "log-success");
+      break;
+
+    case "clear":
+      requestLogBox.innerHTML = "";
+      addLog("Command log cleared.", "log-success");
+      break;
+
+    default:
+      addLog(`Request refused: Unknown operation '${cmd}'.`, "log-nope");
+      status(`Unknown operation '${cmd}'`);
+      shakeRequestBar();
+      break;
+  }
+}
+
+function handleDelete() {
+  if (selectedObjects.length === 0) {
+    addLog("No objects selected to delete.", "log-warn");
+    return;
+  }
+
+  const protectedHits = selectedObjects.filter(o => o.userData.protected);
+  if (protectedHits.length > 0) {
+    addLog("The starting object resists deletion. Standard delete has no power here.", "log-nope");
+    status("Deletion failed: Starting object is protected.");
+    shakeRequestBar();
+    return;
+  }
+
+  const toRemove = [...selectedObjects];
+  toRemove.forEach(obj => {
+    scene.remove(obj);
+    const idx = sceneObjects.indexOf(obj);
+    if (idx !== -1) sceneObjects.splice(idx, 1);
+  });
+  selectedObjects = [];
+  updateObjectsTree();
+  updatePropertiesPanel();
+  addLog(`Deleted ${toRemove.length} object(s).`, "log-success");
+  status(`Deleted ${toRemove.length} object(s).`);
+}
+
+// Request Bar Events
+requestInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    processRequest(requestInput.value);
+    requestInput.value = "";
+  }
+});
+document.getElementById("btn-submit-request").onclick = () => {
+  processRequest(requestInput.value);
+  requestInput.value = "";
+};
+
+/* =========================================================================
+   7. WANDERING TOOLBAR MECHANIC
+   ========================================================================= */
+const toolbar = document.getElementById("left-toolbar");
+
+function relocateToolbarIcons() {
+  const buttons = Array.from(toolbar.querySelectorAll(".tool-btn"));
+  if (buttons.length < 2) return;
+
+  // Pick two random distinct indices and swap them
+  const i = Math.floor(Math.random() * buttons.length);
+  let j = Math.floor(Math.random() * buttons.length);
+  while (j === i) {
+    j = Math.floor(Math.random() * buttons.length);
+  }
+
+  const btnA = buttons[i];
+  const btnB = buttons[j];
+
+  const parent = toolbar;
+  const nextA = btnA.nextSibling;
+  const nextB = btnB.nextSibling;
+
+  if (nextA === btnB) {
+    parent.insertBefore(btnB, btnA);
+  } else if (nextB === btnA) {
+    parent.insertBefore(btnA, btnB);
+  } else {
+    parent.insertBefore(btnB, nextA);
+    parent.insertBefore(btnA, nextB);
+  }
+
+  addLog("Toolbar buttons relocated for ergonomic optimization.", "log-warn");
+}
+
+toolbar.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tool-btn");
+  if (!btn) return;
+
+  const cmd = btn.dataset.cmd;
+  const name = btn.querySelector("span").textContent;
+
+  if (DEBUG) {
+    // In debug mode, execute immediately without dialog
+    executeToolbarCommand(cmd);
+    relocateToolbarIcons();
+    return;
+  }
+
+  showConfirmModal(
+    `Execute ${name}?`,
+    `Are you sure you want to invoke the ${name} command from the toolbar?`,
+    () => {
+      executeToolbarCommand(cmd);
+      relocateToolbarIcons();
+    }
+  );
+});
+
+function executeToolbarCommand(cmd) {
+  switch (cmd) {
+    case "box": createBoxPrimitive(); break;
+    case "sphere": createSpherePrimitive(); break;
+    case "cylinder": createCylinderPrimitive(); break;
+    case "cone": createConePrimitive(); break;
+    case "extrude":
+      addLog("Extrude command invoked. Requires closed 2D sketch profile (Phase 2).", "log-warn");
+      break;
+    case "spline":
+      addLog("Spline curve sketch tool scheduled for Phase 2.", "log-warn");
+      break;
+    case "explode":
+      addLog("Explode requires solid BREP structure with multiple boundary faces.", "log-warn");
+      break;
+    case "join":
+      addLog("Select 2 or more contiguous boundary surfaces to join.", "log-warn");
+      break;
+    case "union":
+      addLog("Boolean Union scheduled for Phase 2 (CSG Engine).", "log-warn");
+      break;
+    case "difference":
+      addLog("Boolean Difference scheduled for Phase 2 (CSG Engine).", "log-warn");
+      break;
+    case "chamfer":
+    case "fillet":
+      addLog(`Paid operation (${cmd.toUpperCase()} - $49.00) scheduled for Phase 2 geometry engine.`, "log-warn");
+      break;
+  }
+}
+
+/* =========================================================================
+   8. KEYBOARD NAVIGATION & STRICT TRACKPAD LOCK
+   ========================================================================= */
+const navToast = document.getElementById("nav-toast");
+let navToastTimer = 0;
+
+function showNavToast(msg) {
+  navToast.textContent = msg;
+  navToast.classList.add("show");
+  clearTimeout(navToastTimer);
+  navToastTimer = setTimeout(() => navToast.classList.remove("show"), 2200);
+}
+
+// STRICT REQUIREMENT: Viewport navigation MUST NOT respond to trackpad scrolling or gestures!
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  showNavToast("Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.");
+}, { passive: false });
+
+// Viewport click activates quadrant and raycasts selection
+canvas.addEventListener("pointerdown", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const w = rect.width;
+  const h = rect.height;
+  const hw = w / 2;
+  const hh = h / 2;
+
+  // Determine which quadrant was clicked
+  let vp = "perspective";
+  let vpX = 0, vpY = 0, vpW = hw, vpH = hh;
+
+  if (x < hw && y < hh) {
+    vp = "perspective";
+    vpX = 0; vpY = 0; vpW = hw; vpH = hh;
+  } else if (x >= hw && y < hh) {
+    vp = "top";
+    vpX = hw; vpY = 0; vpW = hw; vpH = hh;
+  } else if (x < hw && y >= hh) {
+    vp = "front";
+    vpX = 0; vpY = hh; vpW = hw; vpH = hh;
+  } else {
+    vp = "right";
+    vpX = hw; vpY = hh; vpW = hw; vpH = hh;
+  }
+
+  setActiveViewport(vp);
+
+  // Compute NDC for this sub-viewport
+  const ndcX = ((x - vpX) / vpW) * 2 - 1;
+  const ndcY = -(((y - vpY) / vpH) * 2 - 1);
+  mouse.set(ndcX, ndcY);
+
+  // Raycast
+  const cam = cameras[vp];
+  raycaster.setFromCamera(mouse, cam);
+
+  // Collect selectable children
+  const candidates = [];
+  sceneObjects.forEach(obj => {
+    obj.traverse(child => {
+      if (child.isMesh) candidates.push(child);
+    });
+  });
+
+  const hits = raycaster.intersectObjects(candidates, false);
+  if (hits.length > 0) {
+    // Find top-level registered object
+    let hitMesh = hits[0].object;
+    let target = hitMesh;
+    while (target.parent && target.parent !== scene) {
+      if (sceneObjects.includes(target.parent)) {
+        target = target.parent;
+        break;
+      }
+      target = target.parent;
+    }
+    selectObject(target, e.shiftKey);
+  } else if (!e.shiftKey) {
+    clearSelection();
+  }
+});
+
+function setActiveViewport(vp) {
+  activeViewport = vp;
+  document.querySelectorAll(".viewport-label").forEach(lbl => {
+    lbl.classList.toggle("active-vp", lbl.dataset.vp === vp);
+  });
+}
+
+document.querySelectorAll(".viewport-label").forEach(lbl => {
+  lbl.onclick = () => setActiveViewport(lbl.dataset.vp);
+});
+
+// Keyboard controls
+window.addEventListener("keydown", (e) => {
+  // If typing in an input field, do not hijack keys
+  if (e.target.matches("input, textarea")) return;
+
+  const code = e.code;
+  const shift = e.shiftKey;
+
+  // Orbit Vertically: W / S
+  if (code === "KeyW") {
+    if (activeViewport === "perspective") {
+      camState.perspective.phi -= 0.05;
+      updatePerspectiveCamera();
+    } else {
+      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
+    }
+    e.preventDefault();
+  } else if (code === "KeyS") {
+    if (activeViewport === "perspective") {
+      camState.perspective.phi += 0.05;
+      updatePerspectiveCamera();
+    } else {
+      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
+    }
+    e.preventDefault();
+  }
+
+  // Orbit Horizontally: A / D
+  else if (code === "KeyA") {
+    if (activeViewport === "perspective") {
+      camState.perspective.theta -= 0.05;
+      updatePerspectiveCamera();
+    } else {
+      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
+    }
+    e.preventDefault();
+  } else if (code === "KeyD") {
+    if (activeViewport === "perspective") {
+      camState.perspective.theta += 0.05;
+      updatePerspectiveCamera();
+    } else {
+      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
+    }
+    e.preventDefault();
+  }
+
+  // Zoom: Shift + Up / Down
+  else if (shift && code === "ArrowUp") {
+    if (activeViewport === "perspective") {
+      camState.perspective.radius *= 0.92;
+      updatePerspectiveCamera();
+    } else {
+      camState[activeViewport].zoom *= 1.1;
+    }
+    e.preventDefault();
+  } else if (shift && code === "ArrowDown") {
+    if (activeViewport === "perspective") {
+      camState.perspective.radius *= 1.08;
+      updatePerspectiveCamera();
+    } else {
+      camState[activeViewport].zoom *= 0.9;
+    }
+    e.preventDefault();
+  }
+
+  // Pan Vertically: Up / Down arrows (without Shift)
+  else if (!shift && code === "ArrowUp") {
+    panActiveCamera(0, 2);
+    e.preventDefault();
+  } else if (!shift && code === "ArrowDown") {
+    panActiveCamera(0, -2);
+    e.preventDefault();
+  }
+
+  // Pan Horizontally: Left / Right arrows
+  else if (code === "ArrowLeft") {
+    panActiveCamera(-2, 0);
+    e.preventDefault();
+  } else if (code === "ArrowRight") {
+    panActiveCamera(2, 0);
+    e.preventDefault();
+  }
+
+  // Delete key
+  else if (code === "Delete" || code === "Backspace") {
+    handleDelete();
+    e.preventDefault();
+  }
+});
+
+function panActiveCamera(dx, dy) {
+  if (activeViewport === "perspective") {
+    const cam = cameras.perspective;
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    cam.matrix.extractBasis(right, up, new THREE.Vector3());
+    camState.perspective.target.addScaledVector(right, dx * (camState.perspective.radius / 100));
+    camState.perspective.target.addScaledVector(up, dy * (camState.perspective.radius / 100));
+    updatePerspectiveCamera();
+  } else if (activeViewport === "top") {
+    camState.top.target.x += dx / camState.top.zoom;
+    camState.top.target.z -= dy / camState.top.zoom;
+  } else if (activeViewport === "front") {
+    camState.front.target.x += dx / camState.front.zoom;
+    camState.front.target.y += dy / camState.front.zoom;
+  } else if (activeViewport === "right") {
+    camState.right.target.z += dx / camState.right.zoom;
+    camState.right.target.y += dy / camState.right.zoom;
+  }
+}
+
+/* =========================================================================
+   9. MODAL DIALOGS & DIALOG LOGIC
+   ========================================================================= */
+const modalConfirm = document.getElementById("modal-confirm");
+let confirmCallback = null;
+
+function showConfirmModal(title, body, onConfirm) {
+  document.getElementById("confirm-title").textContent = title;
+  document.getElementById("confirm-body").textContent = body;
+  confirmCallback = onConfirm;
+  modalConfirm.showModal();
+}
+
+document.getElementById("btn-confirm-ok").onclick = () => {
+  modalConfirm.close();
+  if (confirmCallback) confirmCallback();
+  confirmCallback = null;
+};
+document.getElementById("btn-confirm-cancel").onclick = () => {
+  modalConfirm.close();
+  confirmCallback = null;
+};
+
+// Onboarding Modal
+const modalOnboarding = document.getElementById("modal-onboarding");
+document.getElementById("btn-tutorial-open").onclick = () => modalOnboarding.showModal();
+document.getElementById("btn-close-onboarding").onclick = () => {
+  modalOnboarding.close();
+  localStorage.setItem("cadnt_onboarded", "true");
+};
+if (!localStorage.getItem("cadnt_onboarded") && !new URLSearchParams(location.search).has("no_auto_onboard")) {
+  setTimeout(() => modalOnboarding.showModal(), 350);
+}
+
+// Economy Construction Modal
+const modalConstruction = document.getElementById("modal-construction");
+document.getElementById("btn-buy-credits").onclick = () => modalConstruction.showModal();
+document.getElementById("btn-close-construction").onclick = () => modalConstruction.close();
+
+// About Modal
+const modalAbout = document.getElementById("modal-about");
+document.getElementById("btn-about-open").onclick = () => modalAbout.showModal();
+document.getElementById("btn-close-about").onclick = () => modalAbout.close();
+
+// Help Modal with Ring Glow
+const modalHelp = document.getElementById("modal-help");
+const HELP_INDEX = [
+  { title: "Box Primitive", body: "Type 'Can I box' or click Box in toolbar.", control: "#tool-box", keys: "Can I box" },
+  { title: "Sphere Primitive", body: "Type 'Can I sphere' or click Sphere.", control: "#tool-sphere", keys: "Can I sphere" },
+  { title: "Cylinder Primitive", body: "Type 'Can I cylinder'.", control: "#tool-cylinder", keys: "Can I cylinder" },
+  { title: "Cone Primitive", body: "Type 'Can I cone'.", control: "#tool-cone", keys: "Can I cone" },
+  { title: "Remove Starting Object", body: "The secret command to remove the Michigan geometry.", control: "#request-input", keys: "Can I remove starting object" },
+  { title: "Orbit Perspective", body: "Orbit viewport camera vertically and horizontally.", control: "#cad-canvas", keys: "W / S / A / D" },
+  { title: "Pan Viewport", body: "Pan camera plane.", control: "#cad-canvas", keys: "Arrow Keys" },
+  { title: "Zoom Viewport", body: "Zoom in and out.", control: "#cad-canvas", keys: "Shift + Up/Down" },
+  { title: "Request Bar", body: "Execute commands with polite deference.", control: "#request-input", keys: "Can I [cmd]" }
+];
+
+function ring(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.scrollIntoView({ block: "nearest" });
+  el.classList.add("ring");
+  setTimeout(() => el.classList.remove("ring"), 1600);
+}
+
+function renderHelpList(filter = "") {
+  const list = document.getElementById("help-list");
+  list.innerHTML = "";
+  const f = filter.toLowerCase();
+  HELP_INDEX.filter(h => h.title.toLowerCase().includes(f) || h.body.toLowerCase().includes(f) || h.keys.toLowerCase().includes(f))
+    .forEach(h => {
+      const li = document.createElement("li");
+      li.style.padding = "6px 8px";
+      li.style.marginBottom = "4px";
+      li.style.background = "#242424";
+      li.style.borderRadius = "3px";
+      li.style.cursor = "pointer";
+      li.innerHTML = `
+        <div style="font-weight:bold; color:var(--rhino-yellow); display:flex; justify-content:space-between;">
+          <span>${h.title}</span>
+          <span style="font-family:var(--font-mono); font-size:10px; color:var(--toxic-green);">${h.keys}</span>
+        </div>
+        <div style="font-size:11px; color:#aaa; margin-top:2px;">${h.body}</div>
+      `;
+      li.onclick = () => {
+        modalHelp.close();
+        ring(h.control);
+      };
+      list.appendChild(li);
+    });
+}
+renderHelpList();
+document.getElementById("help-search").oninput = (e) => renderHelpList(e.target.value);
+document.getElementById("btn-help-open").onclick = () => modalHelp.showModal();
+document.getElementById("btn-close-help").onclick = () => modalHelp.close();
+
+// Update Chip
+document.getElementById("chip").onclick = () => {
+  status("You have the latest version: " + APP.version);
+};
+
+function status(msg) {
+  document.getElementById("status-message").textContent = msg;
+}
+
+/* =========================================================================
+   10. RENDERING LOOP (4 VIEWPORTS ON A SINGLE CANVAS)
+   ========================================================================= */
+let lastStageW = 0;
+let lastStageH = 0;
+
+function resizeRenderer() {
+  const w = stageContainer.clientWidth || 800;
+  const h = stageContainer.clientHeight || 600;
+  if (w !== lastStageW || h !== lastStageH) {
+    lastStageW = w;
+    lastStageH = h;
+    renderer.setSize(w, h, false);
+  }
+}
+
+function render() {
+  requestAnimationFrame(render);
+  resizeRenderer();
+
+  // WebGL setViewport and setScissor operate on the physical drawing buffer:
+  const width = canvas.width;
+  const height = canvas.height;
+  if (!width || !height) return;
+
+  const halfW = Math.floor(width / 2);
+  const halfH = Math.floor(height / 2);
+  if (halfW <= 0 || halfH <= 0) return;
+
+  renderer.clear();
+  renderer.setScissorTest(true);
+
+  // 1. TOP-LEFT: Perspective Viewport
+  renderer.setViewport(0, height - halfH, halfW, halfH);
+  renderer.setScissor(0, height - halfH, halfW, halfH);
+  cameras.perspective.aspect = halfW / halfH;
+  cameras.perspective.updateProjectionMatrix();
+  gridPerspective.visible = true;
+  gridTop.visible = false;
+  renderer.render(scene, cameras.perspective);
+
+  // 2. TOP-RIGHT: Top Viewport
+  renderer.setViewport(halfW, height - halfH, width - halfW, halfH);
+  renderer.setScissor(halfW, height - halfH, width - halfW, halfH);
+  updateOrthoCamera("top", cameras.top, camState.top, width - halfW, halfH);
+  gridPerspective.visible = false;
+  gridTop.visible = true;
+  renderer.render(scene, cameras.top);
+
+  // 3. BOTTOM-LEFT: Front Viewport
+  renderer.setViewport(0, 0, halfW, height - halfH);
+  renderer.setScissor(0, 0, halfW, height - halfH);
+  updateOrthoCamera("front", cameras.front, camState.front, halfW, height - halfH);
+  gridPerspective.visible = true;
+  gridTop.visible = false;
+  renderer.render(scene, cameras.front);
+
+  // 4. BOTTOM-RIGHT: Right Viewport
+  renderer.setViewport(halfW, 0, width - halfW, height - halfH);
+  renderer.setScissor(halfW, 0, width - halfW, height - halfH);
+  updateOrthoCamera("right", cameras.right, camState.right, width - halfW, height - halfH);
+  gridPerspective.visible = true;
+  gridTop.visible = false;
+  renderer.render(scene, cameras.right);
+
+  renderer.setScissorTest(false);
+}
+
+// Start rendering loop
+render();
+
+// Service Worker for offline PWA functionality
+if ("serviceWorker" in navigator && !["localhost", "127.0.0.1"].includes(location.hostname)) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+/* =========================================================================
+   11. AUTOMATED TEST SUITE (?run_tests=1)
+   ========================================================================= */
+if (new URLSearchParams(location.search).has("run_tests")) {
+  window.__TEST_RESULTS__ = { total: 0, passed: 0, failed: 0, details: [] };
+  const resDiv = document.createElement("pre");
+  resDiv.id = "test-results-log";
+  resDiv.style.cssText = "position:fixed; top:0; left:0; z-index:99999; background:black; color:lime; font-size:12px; padding:10px; max-height:100vh; overflow:auto;";
+  document.body.appendChild(resDiv);
+
+  function logTestMsg(msg) {
+    resDiv.textContent += msg + "\n";
+    console.log(msg);
+  }
+
+  function assertTest(name, condition) {
+    window.__TEST_RESULTS__.total++;
+    if (condition) {
+      window.__TEST_RESULTS__.passed++;
+      window.__TEST_RESULTS__.details.push({ name, status: "PASS" });
+      logTestMsg(`[TEST-PASS] ${name}`);
+    } else {
+      window.__TEST_RESULTS__.failed++;
+      window.__TEST_RESULTS__.details.push({ name, status: "FAIL" });
+      logTestMsg(`[TEST-FAIL] ${name}`);
+    }
+  }
+
+  function runAllTests() {
+    logTestMsg("=== STARTING CADN'T PHASE 1 AUTOMATED TESTS ===");
+
+    // Test 1: App Identity
+    assertTest("App Name is CADN'T", APP.name === "CADN'T");
+    assertTest("Version chip initialized", document.getElementById("chip").textContent.includes(APP.version));
+
+    // Test 2: Viewport Engine
+    assertTest("4 Cameras initialized", !!(cameras.perspective && cameras.top && cameras.front && cameras.right));
+    assertTest("Canvas WebGL context active", !!renderer.getContext());
+
+    // Test 3: Starting Michigan Model
+    assertTest("Starting Michigan model loaded", !!michiganModel && sceneObjects.includes(michiganModel));
+    assertTest("Michigan model has Upper & Lower peninsulas", michiganModel && michiganModel.children.length >= 4);
+    assertTest("Michigan model is protected", michiganModel && michiganModel.userData.protected === true);
+
+    // Test 4: Request Bar 'Nope.' on unprefixed command
+    const countBefore = sceneObjects.length;
+    processRequest("box");
+    const lastLogs = Array.from(requestLogBox.children).map(c => c.textContent);
+    assertTest("Command without 'Can I' receives 'Nope.'", lastLogs.some(l => l.includes("Nope.")));
+    assertTest("Unprefixed command created no geometry", sceneObjects.length === countBefore);
+
+    // Test 5: Request Bar polite primitive creation
+    processRequest("Can I box");
+    assertTest("'Can I box' creates box primitive", sceneObjects.length === countBefore + 1 && sceneObjects[sceneObjects.length - 1].userData.type === "Box");
+
+    processRequest("Can I sphere");
+    assertTest("'Can I sphere' creates sphere primitive", sceneObjects[sceneObjects.length - 1].userData.type === "Sphere");
+
+    processRequest("Can I cylinder");
+    assertTest("'Can I cylinder' creates cylinder primitive", sceneObjects[sceneObjects.length - 1].userData.type === "Cylinder");
+
+    processRequest("Can I cone");
+    assertTest("'Can I cone' creates cone primitive", sceneObjects[sceneObjects.length - 1].userData.type === "Cone");
+
+    // Test 6: Michigan Immune to Deletion
+    selectObject(michiganModel);
+    handleDelete();
+    assertTest("Michigan cannot be deleted via standard delete", sceneObjects.includes(michiganModel));
+
+    // Test 7: Secret Michigan Deletion Command
+    const origShowConfirm = showConfirmModal;
+    showConfirmModal = (title, body, cb) => cb(); // auto-confirm for test
+    processRequest("Can I remove starting object");
+    showConfirmModal = origShowConfirm;
+    assertTest("'Can I remove starting object' successfully deletes Michigan", !sceneObjects.includes(michiganModel));
+
+    // Test 8: Wandering Toolbar Relocation
+    const tbBefore = Array.from(toolbar.querySelectorAll(".tool-btn")).map(b => b.dataset.cmd).join(",");
+    relocateToolbarIcons();
+    const tbAfter = Array.from(toolbar.querySelectorAll(".tool-btn")).map(b => b.dataset.cmd).join(",");
+    assertTest("Toolbar icon relocation shifts layout order", tbBefore !== tbAfter);
+
+    // Test 9: Trackpad Navigation Lock
+    const wheelEvt = new WheelEvent("wheel", { cancelable: true });
+    canvas.dispatchEvent(wheelEvt);
+    assertTest("Trackpad wheel event is strictly cancelled/prevented", wheelEvt.defaultPrevented);
+
+    // Test 10: Onboarding quote verification
+    const onbHtml = document.getElementById("modal-onboarding").innerHTML;
+    assertTest("Tutorial contains exact quote: 'The command to delete the starting object exists.'", onbHtml.includes("The command to delete the starting object exists."));
+
+    // Test 11: Economy $249
+    assertTest("Starting balance is $249.00", document.getElementById("credit-val").textContent.includes("$249.00"));
+
+    logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
+    window.__TESTS_DONE__ = true;
+  }
+
+  // Run immediately after setup
+  runAllTests();
+}
+
+</script>
 </body>
 </html>
