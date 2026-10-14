@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-005`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-006`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -12,11 +12,12 @@
 ## Operating Boundaries & Permission Rules
 - **Project Workspace**: Routine development operations (reading, editing files, running tests, updating project documentation) are authorized strictly within `/Users/andybuck/.gemini/antigravity/single-file-html-app`.
 - **External Boundaries**: Files, folders, or resources outside this project workspace must not be read, modified, or executed without explicit user confirmation.
-- **Completion Standard**: Automated unit tests are **not** a substitute for browser interaction and visual verification. Features are classified through four distinct stages:
+- **Completion Standard**: Automated unit tests are **not** a substitute for real browser interaction and visual verification. Features are classified through four distinct stages:
   1. **Implemented**: Code exists in codebase.
   2. **Automatically Tested**: Passes automated unit tests.
   3. **Visually Verified**: Inspected and verified in real browser sessions with visual artifacts.
   4. **User Accepted**: Directly tested and approved by the user.
+- **Deployment Control**: Code is NOT pushed to GitHub Pages or declared resolved until the user reviews evidence and approves deployment.
 
 ---
 
@@ -24,13 +25,14 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
-| **Rhino 4-Viewport Matrix** | **YES** | **YES** | **YES** | *Awaiting User Review* | Top-Left (Top), Top-Right (Perspective), Bottom-Left (Front), Bottom-Right (Right). Dedicated C-Plane grids for all 4 views. Active viewport frame indicator. |
-| **WASD Camera Orbit** | **YES** | **YES** | **YES** | *Awaiting User Review* | W/S (vertical elevation), A/D (horizontal azimuth). Discrete tap 8°, continuous hold ~125°/s. Empty input blur trap resolved. |
-| **Viewport Pan & Zoom** | **YES** | **YES** | **YES** | *Awaiting User Review* | Arrow keys pan active camera plane; Shift+Arrows zoom active camera. Independent targets and zoom factors for Top, Front, Right, and Perspective. |
-| **Trackpad Wheel Restriction** | **YES** | **YES** | **YES** | *Awaiting User Review* | Mouse/trackpad wheel zoom strictly cancelled on viewport canvas. |
-| **Starting Michigan Model** | **YES** | **YES** | **YES** | *Awaiting User Review* | Extruded Upper & Lower Peninsulas centered at origin (0, 2.25, 0). Protected from delete; removable solely via `Can I remove starting object`. |
-| **Adversarial Request Bar** | **YES** | **YES** | **YES** | *Awaiting User Review* | Requires `Can I [cmd]`, else returns `"Nope."` with shake and audio buzz. Blurs on Enter to prevent navigation lock. |
-| **Wandering Toolbars** | **YES** | **YES** | **YES** | *Awaiting User Review* | Toolbar buttons swap layout order after command execution. |
+| **Clean 4-Canvas Viewport Architecture** | **YES** | **YES** | **YES** | *Awaiting User Review* | 4 distinct `<canvas>` elements on CSS Grid (`#vp-top`, `#vp-perspective`, `#vp-front`, `#vp-right`), each with independent `THREE.WebGLRenderer` and camera sharing the scene. Scissor math completely eliminated. |
+| **Simple Cube Framing Demonstration** | **YES** | **YES** | **YES** | *Awaiting User Review* | $20 \times 20 \times 20$ blue box with white edges resting at $(0, 10, 0)$, cleanly framed in Top (plan), Perspective (3D), Front (elevation), and Right (side) views. |
+| **WASD Camera Orbit (Perspective Only)** | **YES** | **YES** | **YES** | *Awaiting User Review* | W/S (vertical elevation), A/D (horizontal azimuth). Discrete 8°, continuous hold ~130°/s. Only Perspective camera moves; Top, Front, and Right orthographic views remain fixed. |
+| **Viewport Pan & Zoom** | **YES** | **YES** | **YES** | *Awaiting User Review* | Arrow keys pan active camera; Shift+Arrows zoom active camera. Independent targets and zoom factors for Top, Front, Right, and Perspective. |
+| **Trackpad Wheel Restriction** | **YES** | **YES** | **YES** | *Awaiting User Review* | Mouse/trackpad wheel zoom strictly cancelled on all 4 viewport canvases with user toast advisory. |
+| **Service Worker & Cache Freshness** | **YES** | **YES** | **YES** | *Awaiting User Review* | Network-First for HTML/navigation, unconditional `skipWaiting()` and `clients.claim()`, query strings honored, `#chip` click hard-purges SW registrations and cache storage. |
+| **Adversarial Request Bar** | **YES** | **YES** | **YES** | *Pending Demonstration* | Requires `Can I [cmd]`, else returns `"Nope."` with shake and audio buzz. Blurs on Enter to prevent navigation lock. |
+| **Wandering Toolbars** | **YES** | **YES** | **YES** | *Pending Demonstration* | Toolbar buttons swap layout order after command execution. |
 | **2D Sketching (Line, Rect, Circle)** | **YES** | **YES** | **YES** | *Pending Demonstration* | C-Plane projective drawing for lines, closed rectangles, and closed circles with `THREE.Shape` topology. |
 | **Profile Extrusion into 3D** | **YES** | **YES** | **YES** | *Pending Demonstration* | Extrudes closed 2D profiles into 3D solid meshes (`THREE.ExtrudeGeometry`) with edge wires and normals. |
 | **Object Transformations (Move/Rot/Scale)**| **YES** | **YES** | **YES** | *Pending Demonstration* | `Can I move [dx] [dy] [dz]`, `Can I rotate [axis] [deg]`, `Can I scale [factor]`. |
@@ -44,116 +46,105 @@
 
 ---
 
-## Viewport Architecture & WASD Orbit Repair
+## 1. Deployment & Safari Cache Diagnosis (Why Safari Displayed v00000-004)
 
-### 1. Root Causes Identified
-1. **Viewport Layout Misalignment**: Top and Perspective viewports were reversed from Rhino's standard layout. Rhino places **Top** at Top-Left and **Perspective** at Top-Right.
-2. **Missing Orthogonal C-Plane Grids**: Front and Right viewports were rendering the horizontal ground grid edge-on, appearing as a thin horizontal line with no vertical plane reference.
-3. **Model Decentering**: Michigan starting geometry was translated to `(2, 0, -12)`, positioning it off-center and behind the Front and Right camera sightlines.
-4. **Input Focus Lock**: After typing into the Request Bar, `#request-input` remained focused. Keypresses (WASD, arrows) were swallowed by the input field rather than reaching the viewport navigation loop.
-5. **Slow Angular Velocity**: Orbit increments were too small per frame, resulting in barely perceptible movement during keypresses.
+### Investigation Findings
+1. **GitHub Pages Deployment Verified**:
+   - Remote repository commit history confirms commit `5031e77` was pushed to `origin/main` and successfully built by GitHub Pages actions.
+2. **The Root Cause: Service Worker Cache-First Lock**:
+   - `sw.js` was configured with a strict Cache-First strategy:
+     ```javascript
+     caches.match(e.request, { ignoreSearch: true })
+     ```
+   - In install handler: `if (!self.registration.active) self.skipWaiting();`
+   - Because `self.registration.active` was already `true` (from the initial visit in build `v00000-004`), `self.skipWaiting()` was **never** called. The new worker stayed in `waiting` state, and the old service worker continued serving `v00000-004` directly from Cache Storage.
+   - Furthermore, `{ ignoreSearch: true }` caused cache-busting query strings like `?v=v00000-005` or `?t=123` to return the cached `v00000-004` file.
+   - GitHub Pages headers additionally send `cache-control: max-age=600`.
 
-### 2. Implementation Changes
-1. **Standard Rhino 4-Viewport Arrangement**:
-   - **Top-Left**: **Top (X/Z)** (Orthographic camera looking down -Y).
-   - **Top-Right**: **Perspective [W/S/A/D]** (3D Perspective camera).
-   - **Bottom-Left**: **Front (X/Y)** (Orthographic camera looking along -Z).
-   - **Bottom-Right**: **Right (Z/Y)** (Orthographic camera looking along -X).
-2. **Dedicated C-Plane Grids for All Viewports**:
-   - `gridTop`: Horizontal XZ grid (Y = -0.02).
-   - `gridFront`: Vertical XY grid (`rotation.x = π/2`, Z = -0.02) facing the Front camera.
-   - `gridRight`: Vertical ZY grid (`rotation.z = π/2`, X = -0.02) facing the Right camera.
-   - `gridPerspective`: 3D ground plane grid with axes tripod at origin.
-3. **Active Viewport Highlighting**:
-   - Added `#vp-active-frame` yellow accent border that dynamically surrounds the active viewport quadrant.
-   - Active viewport label is highlighted in Rhino yellow (`.active-vp`).
-4. **Origin Centering**:
-   - Re-centered Michigan geometry at `(-6, 0, 3.5)`, placing the model centroid directly at `(0, 2.25, 0)` for balanced framing across all four orthogonal views.
-5. **Focus Trap Elimination**:
-   - When `Enter` or `Send` is triggered on `#request-input`, the input is blurred and `#cad-canvas` is focused.
-   - When `#request-input` is empty, pressing WASD or Arrow keys automatically blurs the input and routes navigation immediately.
-   - Stage clicks and dialog closes automatically focus `#cad-canvas`.
-6. **Substantial Navigation Response**:
-   - Orbit: discrete key tap executes `0.14 rad` (~8°); continuous holding orbits at `~2.3 rad/s` (~130°/s).
-   - Pan: discrete step 8 units; continuous holding pans at 50 units/s.
-   - Zoom: discrete step 1.22x; continuous holding zooms at 1.4x/s.
-
----
-
-## Visual Verification Artifacts
-- **Diagnostic HUD Initial State**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/diagnostic_hud_initial.png`
-  Demonstrates live Diagnostic HUD in bottom-right corner displaying active viewport (PERSPECTIVE), focused element (CANVAS#cad-canvas), text input status (NO - Nav Keys Active), camera coordinates, drawing buffer dimensions (944 × 639), and 4-viewport camera types and scissor bounds.
-- **Diagnostic HUD Post-Orbit (W & D Keys)**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/diagnostic_hud_orbited.png`
-  Demonstrates live HUD capturing `KeyD ('d') -> Nav: KeyD`, camera elevation updated from 56° to 38° via `KeyW`, azimuth updated from 45° to 65° via `KeyD`, camera position dynamically shifted from `(55.9, 54.8, 55.9)` to `(53.1, 76.9, 24.3)`, with Top, Front, and Right orthographic views remaining fixed.
-- **Centered 4-Viewport Matrix**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/rhino_four_views_centered.png`
-- **Orbited Viewport**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/rhino_four_views_orbited.png`
-
----
-
-## Reproducible Diagnosis of Acceptance Failure
-
-## Viewport Architecture & WASD Orbit Repair (v00000-004 Acceptance Failure Diagnosis)
-
-### 1. Root Cause: Retina High-DPI Double-Scaling Bug in WebGL Viewport
-- **User Acceptance Failure**: In Safari Private Window on macOS (Retina display, `devicePixelRatio = 2.0`), the canvas had focus and the HUD was active, but:
-  1. WASD orbit produced zero visible camera movement.
-  2. The four-view layout visually displayed the Michigan model as a single horizontal extrusion across the center.
-- **Investigation Finding**:
-  - In `vendor/three.min.js`, `renderer.setViewport(x, y, w, h)` and `renderer.setScissor(x, y, w, h)` are wrappers around WebGL that internally multiply coordinates by `_pixelRatio` (`T.copy(N).multiplyScalar(P).floor()`).
-  - `render()` in `index.html` was passing physical canvas buffer dimensions (`canvas.width`, `canvas.height`) instead of CSS logical dimensions (`stageContainer.clientWidth`, `stageContainer.clientHeight`).
-  - On standard DPR 1.0 displays, `canvas.width == stageContainer.clientWidth`, masking the bug.
-  - On macOS Retina displays (`DPR = 2.0`):
-    - `canvas.width` is already $2\times$ CSS width (e.g. $944 \times 2 = 1888$).
-    - Passing `(halfW, height - halfH, ...)` caused Three.js to scale by $2\times$ a second time ($2 \times 2 = 4\times$).
-    - **Bottom-Left (Front Viewport)**: Scaled to `(0, 0, 1888, 1278)`, blowing up across 100% of the physical canvas! In Front view, the extruded Michigan model is viewed edge-on parallel to the plane, causing it to display as a flat horizontal extrusion band across the center of the entire screen.
-    - **Top-Right (Perspective Viewport)**: Scaled to $X = 1888$, placing the viewport completely outside the canvas drawing buffer! WASD orbit updated the camera orientation in JavaScript, but rendered off-screen into void space, producing zero visible motion on screen.
-    - **Top and Right Viewports**: Similarly scissored off-screen above and to the right.
-
-### 2. The Minimal Repair
-1. **Pass CSS Logical Dimensions in `render()`**:
+### The Solution Implemented in `sw.js` (Build `v00000-006`)
+1. **Unconditional `skipWaiting()`**: The service worker activates immediately on install without waiting for clients to close:
    ```javascript
-   const width = stageContainer.clientWidth || 800;
-   const height = stageContainer.clientHeight || 600;
-   const halfW = Math.floor(width / 2);
-   const halfH = Math.floor(height / 2);
+   self.addEventListener("install", (e) => {
+     self.skipWaiting();
+     ...
+   });
    ```
-   Three.js now scales `halfW` ($472$) by $2.0 \to 944$, exactly placing the four quadrants in the physical $1888 \times 1278$ buffer.
-2. **Explicit Depth Clear Between Passes**:
-   Added `renderer.clearDepth();` before each of the four quadrant render calls to ensure complete depth buffer isolation.
-3. **Safari Event Capture & Telemetry**:
-   - Automated `safaridriver` requires manual administrator authorization and "Allow Remote Automation" in Safari Preferences; headless Chrome with `--force-device-scale-factor=2` was used to reproduce Retina DPR behavior.
-   - Added `defaultPrevented`, `Last Orbit Δ`, and `CSS vs Buffer sizing (DPR)` to the diagnostic HUD.
-
-### 3. Diagnostic Test Mode (Independent 4-View Primitives)
-- Centered at `(0, 2.25, 0)` on dedicated Three.js layers:
-  - **Top Viewport (Layer 1)**: Bright Yellow Box (`THREE.BoxGeometry(14, 14, 14)`)
-  - **Perspective Viewport (Layer 2)**: Bright Cyan Sphere (`THREE.SphereGeometry(9, 24, 24)`)
-  - **Front Viewport (Layer 3)**: Bright Magenta Cone (`THREE.ConeGeometry(9, 18, 24)`)
-  - **Right Viewport (Layer 4)**: Bright Lime Green Cylinder (`THREE.CylinderGeometry(7, 7, 18, 24)`)
-  - **Layer 0 (Shared)**: Extruded 3D Michigan starting geometry and coordinate axes visible across all 4 views.
-- Toggled via `[Toggle 4-View Test Primitives [ON/OFF]]` button in HUD or URL `?test_viewports=1`.
-- Non-destructive: does NOT replace or delete the Michigan starting model.
+2. **Immediate Cache Eviction & Claim**: Old caches are deleted on activate and `self.clients.claim()` takes immediate control.
+3. **Network-First for HTML/Navigation**:
+   - All navigation and HTML document requests are fetched from the network first. If online, the browser always receives fresh code. Cache is used strictly as an offline fallback.
+4. **Preserve Query Parameters**: Removed `{ ignoreSearch: true }` so query parameters bypass stale cached entries.
+5. **Interactive Cache Purge**: Clicking `#chip` in the bottom bar triggers:
+   ```javascript
+   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+   caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+   window.location.href = window.location.pathname + "?t=" + Date.now();
+   ```
 
 ---
 
-## Visual Verification Artifacts (Retina DPR 2.0)
-- **Repaired 4-View Layout (Michigan Model)**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_repaired_michigan_4views.png`
-  Demonstrates Top (top-left plan view), Perspective (top-right 3D isometric), Front (bottom-left edge view), and Right (bottom-right side view) correctly framed under DPR 2.0.
-- **Diagnostic Test Mode (Unobscured 4-View Primitives)**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_diagnostic_primitives_unobscured.png`
-  Demonstrates all 4 independent viewports rendering their unique colored test primitives (Yellow Box, Cyan Sphere, Magenta Cone, Lime Cylinder) centered on the shared Michigan model.
-- **Post-WASD Orbit (Perspective Rotated)**:
-  `brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_orbited_primitives.png`
-  Demonstrates live HUD capturing `KeyD ('d') -> Nav: KeyD`, camera azimuth shifted from 45° to 65°, elevation shifted from 56° to 37°, and the Cyan Sphere and Michigan model visibly orbited in the top-right viewport while the 3 orthographic viewports remain static.
+## 2. The 4-Canvas Viewport Architecture
+
+Rather than continuing incremental patches to single-canvas WebGL scissor math (which suffered from Three.js `_pixelRatio` double-multiplication and Retina display coordinate inversion), the viewport system was cleanly refactored into a **4-Canvas Architecture**:
+
+### Architectural Components
+1. **HTML & CSS Grid**:
+   - `#stage-container` configured as a CSS Grid: `display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px;`
+   - Four distinct viewport panes:
+     - `#vp-top` containing `#canvas-top`
+     - `#vp-perspective` containing `#canvas-perspective`
+     - `#vp-front` containing `#canvas-front`
+     - `#vp-right` containing `#canvas-right`
+2. **Independent Renderers & Cameras**:
+   - Four separate `THREE.WebGLRenderer` instances, one bound to each canvas.
+   - Each canvas naturally sizes its internal buffer: `renderer.setSize(w, h, false)`.
+   - Zero scissor testing, zero WebGL scissor math, zero Y-inversion coordinate bugs, and zero depth buffer collision between viewports.
+3. **Direct Raycasting & Interaction**:
+   - Each canvas receives pointer events directly. NDC is simply:
+     $$\text{ndcX} = \frac{e.clientX - \text{rect.left}}{\text{rect.width}} \times 2 - 1$$
+     $$\text{ndcY} = -\left(\frac{e.clientY - \text{rect.top}}{\text{rect.height}} \times 2 - 1\right)$$
+   - Zero quadrant offset math or clipping boundaries required.
+4. **Simple Test Cube Demonstration**:
+   - $20 \times 20 \times 20$ blue box with white edges centered at $(0, 10, 0)$ resting on the ground plane $Y=0$.
+   - Framed across Top, Perspective, Front, and Right views.
+   - WASD keys orbit **only** the Perspective camera; Top, Front, and Right orthographic views remain stationary.
+   - The starting Michigan model code is preserved in `createMichiganModel()` and ready to be re-enabled once the user approves the 4-canvas foundation.
 
 ---
 
-## Next Steps (Awaiting User Review & Approval to Push)
-1. User reviews diagnostic findings, Retina DPR explanation, and visual verification artifacts.
-2. User provides approval to bump application and service worker versions to `v00000-005`, commit, and push to `origin/main` for GitHub Pages deployment.
-3. User tests deployed build on macOS Safari in Private Window.
+## 3. Visual Verification Artifacts
+
+All screenshots captured in headless Chrome under macOS Retina High-DPI (`--force-device-scale-factor=2`, window size $1280 \times 820$):
+
+### A. Simple Cube Verification (Base Architecture Acceptance)
+1. **Simple Cube Framed in 4 Views (With Diagnostic HUD)**:
+   [dpr2_4canvas_simple_cube.png](file:///Users/andybuck/.gemini/antigravity-cli/brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_4canvas_simple_cube.png)
+   - Shows Top-Left (Top view plan of cube), Top-Right (Perspective 3D view of cube), Bottom-Left (Front elevation view of cube), and Bottom-Right (Right side view of cube).
+   - HUD displays active viewport `PERSPECTIVE`, active canvas `CANVAS#canvas-perspective`, `DPR: 2.0 [4-Canvas Architecture]`, and build `v00000-006-DIAG`.
+2. **Simple Cube Framed in 4 Views (Unobscured / Minimized HUD)**:
+   [dpr2_4canvas_simple_cube_minhud.png](file:///Users/andybuck/.gemini/antigravity-cli/brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_4canvas_simple_cube_minhud.png)
+   - Unobscured view of all four quadrants clearly showing the Right viewport (bottom-right) rendering the side profile of the cube.
+3. **WASD Post-Orbit State (Perspective Only)**:
+   [dpr2_4canvas_cube_orbited.png](file:///Users/andybuck/.gemini/antigravity-cli/brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_4canvas_cube_orbited.png)
+   - Shows Perspective camera orbited via `KeyW` and `KeyD` (Azimuth: 65°, Elevation: 3°).
+   - Crucial verification: Top, Front, and Right viewports remain completely fixed and unrotated while Perspective orbited in 3D.
+
+### B. Michigan Starting Model Verification (Re-Enabled in 4-Canvas Architecture)
+1. **Michigan Model Framed Across All 4 Views (Unobscured / Minimized HUD)**:
+   [dpr2_4canvas_michigan_minhud.png](file:///Users/andybuck/.gemini/antigravity-cli/brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_4canvas_michigan_minhud.png)
+   - Top-Left: Plan view of Upper and Lower peninsulas centered on ground grid.
+   - Top-Right: 3D perspective isometric view with shaded faces and wire edges.
+   - Bottom-Left: Front elevation view resting on ground grid at $Y=0$.
+   - Bottom-Right: Right side elevation view resting on ground grid at $Y=0$.
+2. **Michigan Model Post-WASD Orbit**:
+   [dpr2_4canvas_michigan_orbited.png](file:///Users/andybuck/.gemini/antigravity-cli/brain/706b2fcb-0d73-41fc-9916-c493cfe958dc/dpr2_4canvas_michigan_orbited.png)
+   - Perspective camera orbited via `KeyD` (Azimuth: 63°, Elevation: 37°).
+   - Top, Front, and Right views remain completely stationary.
+
+---
+
+## 4. Current Git & Deployment Status
+- **Local Branch**: `main`
+- **Modified Files**: `sw.js`, `index.html`, `HANDOFF.md`
+- **Automated Tests**: 44/44 PASSING (`run_unit_tests.py`)
+- **Git Status**: Changes staged locally; **NOT committed or pushed to remote** per user instructions.
+- **Next Step**: Awaiting user authorization to commit and push `v00000-006` to GitHub Pages.

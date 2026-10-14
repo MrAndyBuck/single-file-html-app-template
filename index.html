@@ -239,19 +239,40 @@
   #stage-container {
     grid-column: 2 / 3;
     position: relative;
-    background: #111111;
+    background: var(--border-dark);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
     overflow: hidden;
   }
-  #cad-canvas {
+  .viewport-pane {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #181818;
+    overflow: hidden;
+    outline: none;
+  }
+  .viewport-pane canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     display: block;
     cursor: crosshair;
+    outline: none;
+  }
+  .viewport-pane.active-vp-pane {
+    box-shadow: inset 0 0 0 2px var(--rhino-yellow), inset 0 0 16px rgba(255, 255, 0, 0.08);
   }
 
   /* Overlay Viewport Labels */
   .viewport-label {
     position: absolute;
+    top: 8px;
+    left: 8px;
     background: rgba(24, 24, 24, 0.85);
     border: 1px solid var(--border-dark);
     color: var(--fg-muted);
@@ -272,46 +293,6 @@
     color: var(--rhino-yellow);
     background: rgba(40, 40, 0, 0.8);
     font-weight: 700;
-  }
-  .vp-tl { top: 8px; left: 8px; }
-  .vp-tr { top: 8px; left: calc(50% + 8px); }
-  .vp-bl { top: calc(50% + 8px); left: 8px; }
-  .vp-br { top: calc(50% + 8px); left: calc(50% + 8px); }
-
-  /* Active Viewport Highlighting Frame */
-  #vp-active-frame {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 50%;
-    height: 50%;
-    border: 2px solid var(--rhino-yellow);
-    box-shadow: inset 0 0 16px rgba(255, 255, 0, 0.08);
-    pointer-events: none;
-    z-index: 6;
-    transition: all 0.15s ease-out;
-  }
-
-  /* Viewport Splitter Lines */
-  .vp-divider-v {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 2px;
-    background: var(--border-dark);
-    pointer-events: none;
-    z-index: 5;
-  }
-  .vp-divider-h {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 2px;
-    background: var(--border-dark);
-    pointer-events: none;
-    z-index: 5;
   }
 
   /* Navigation Advisory Toast */
@@ -785,30 +766,31 @@
     </button>
   </aside>
 
-  <!-- 4-Viewport Matrix Stage -->
+  <!-- 4-Viewport Matrix Stage (Clean 4-Canvas Architecture) -->
   <main id="stage-container" tabindex="-1">
-    <canvas id="cad-canvas" tabindex="0"></canvas>
-
-    <!-- Active Viewport Frame -->
-    <div id="vp-active-frame"></div>
-
-    <!-- Quadrant Viewport Labels (Rhino Standard Layout) -->
-    <div class="viewport-label vp-tl" id="lbl-top" data-vp="top">
-      <span>●</span> Top (X/Z)
-    </div>
-    <div class="viewport-label vp-tr active-vp" id="lbl-perspective" data-vp="perspective">
-      <span>●</span> Perspective [W/S/A/D]
-    </div>
-    <div class="viewport-label vp-bl" id="lbl-front" data-vp="front">
-      <span>●</span> Front (X/Y)
-    </div>
-    <div class="viewport-label vp-br" id="lbl-right" data-vp="right">
-      <span>●</span> Right (Z/Y)
+    <!-- Top-Left: Top Viewport (X/Z) -->
+    <div class="viewport-pane" id="vp-top" data-vp="top">
+      <div class="viewport-label" id="lbl-top" data-vp="top"><span>●</span> Top (X/Z)</div>
+      <canvas id="canvas-top" tabindex="0"></canvas>
     </div>
 
-    <!-- Dividing Crosshair Borders -->
-    <div class="vp-divider-v"></div>
-    <div class="vp-divider-h"></div>
+    <!-- Top-Right: Perspective Viewport (3D Orbit) -->
+    <div class="viewport-pane active-vp-pane" id="vp-perspective" data-vp="perspective">
+      <div class="viewport-label active-vp" id="lbl-perspective" data-vp="perspective"><span>●</span> Perspective [W/S/A/D]</div>
+      <canvas id="canvas-perspective" tabindex="0"></canvas>
+    </div>
+
+    <!-- Bottom-Left: Front Viewport (X/Y) -->
+    <div class="viewport-pane" id="vp-front" data-vp="front">
+      <div class="viewport-label" id="lbl-front" data-vp="front"><span>●</span> Front (X/Y)</div>
+      <canvas id="canvas-front" tabindex="0"></canvas>
+    </div>
+
+    <!-- Bottom-Right: Right Viewport (Z/Y) -->
+    <div class="viewport-pane" id="vp-right" data-vp="right">
+      <div class="viewport-label" id="lbl-right" data-vp="right"><span>●</span> Right (Z/Y)</div>
+      <canvas id="canvas-right" tabindex="0"></canvas>
+    </div>
 
     <!-- Navigation Advisory Toast -->
     <div id="nav-toast">Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.</div>
@@ -817,7 +799,7 @@
     <div id="debug-overlay">
       <div class="debug-hud-header" id="debug-hud-toggle">
         <span class="debug-hud-title">🔍 CADN'T DIAGNOSTIC HUD</span>
-        <span id="debug-hud-version" class="debug-badge">v00000-005-DIAG</span>
+        <span id="debug-hud-version" class="debug-badge">v00000-006-DIAG</span>
         <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
       </div>
       <div id="debug-hud-body" class="debug-hud-body">
@@ -934,7 +916,7 @@
     <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div id="status-message">Ready. Type polite request in Request Bar.</div>
     <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
-    <button id="chip" title="Check for newer version">v00000-005 ↻</button>
+    <button id="chip" title="Check for newer version">v00000-006 ↻</button>
   </footer>
 </div>
 
@@ -994,7 +976,7 @@
 <!-- About Modal -->
 <dialog id="modal-about">
   <h2>About CADN'T</h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-005</span></p>
+  <p><strong>Version</strong>: <span id="about-version">v00000-006</span></p>
   <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
   <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
   <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
@@ -1075,7 +1057,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-005",
+  version: "v00000-006",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -1093,12 +1075,48 @@ document.getElementById("about-version").textContent = APP.version;
 /* =========================================================================
    2. SCENE, CAMERAS & 4-VIEWPORT ENGINE
    ========================================================================= */
-const canvas = document.getElementById("cad-canvas");
 const stageContainer = document.getElementById("stage-container");
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.autoClear = false;
+// 4 Distinct Viewport Engines with Independent Canvases and WebGLRenderers
+const viewports = {
+  top: {
+    id: "top",
+    pane: document.getElementById("vp-top"),
+    canvas: document.getElementById("canvas-top"),
+    label: document.getElementById("lbl-top"),
+    renderer: new THREE.WebGLRenderer({ canvas: document.getElementById("canvas-top"), antialias: true, alpha: false })
+  },
+  perspective: {
+    id: "perspective",
+    pane: document.getElementById("vp-perspective"),
+    canvas: document.getElementById("canvas-perspective"),
+    label: document.getElementById("lbl-perspective"),
+    renderer: new THREE.WebGLRenderer({ canvas: document.getElementById("canvas-perspective"), antialias: true, alpha: false })
+  },
+  front: {
+    id: "front",
+    pane: document.getElementById("vp-front"),
+    canvas: document.getElementById("canvas-front"),
+    label: document.getElementById("lbl-front"),
+    renderer: new THREE.WebGLRenderer({ canvas: document.getElementById("canvas-front"), antialias: true, alpha: false })
+  },
+  right: {
+    id: "right",
+    pane: document.getElementById("vp-right"),
+    canvas: document.getElementById("canvas-right"),
+    label: document.getElementById("lbl-right"),
+    renderer: new THREE.WebGLRenderer({ canvas: document.getElementById("canvas-right"), antialias: true, alpha: false })
+  }
+};
+
+// Compatibility aliases
+const canvas = viewports.perspective.canvas;
+const renderer = viewports.perspective.renderer;
+
+Object.values(viewports).forEach(vp => {
+  vp.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  vp.renderer.setClearColor(0x181818, 1);
+});
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x181818);
@@ -1222,14 +1240,14 @@ let activeViewport = "perspective"; // 'perspective' | 'top' | 'front' | 'right'
 
 const camState = {
   perspective: {
-    target: new THREE.Vector3(0, 2, 0),
+    target: new THREE.Vector3(0, 2.25, 0),
     radius: 95,
     theta: Math.PI / 4, // azimuth
     phi: Math.PI / 3.2   // polar elevation
   },
   top: { target: new THREE.Vector3(0, 0, 0), zoom: 1.0 },
-  front: { target: new THREE.Vector3(0, 2, 0), zoom: 1.0 },
-  right: { target: new THREE.Vector3(0, 2, 0), zoom: 1.0 }
+  front: { target: new THREE.Vector3(0, 2.25, 0), zoom: 1.0 },
+  right: { target: new THREE.Vector3(0, 2.25, 0), zoom: 1.0 }
 };
 
 function updatePerspectiveCamera() {
@@ -1360,8 +1378,42 @@ function createMichiganModel() {
   return group;
 }
 
-// Instantiate initial Michigan model
+function createDiagnosticTestCube() {
+  const geo = new THREE.BoxGeometry(20, 20, 20);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x0099ff,
+    roughness: 0.35,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, 10, 0);
+
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geo),
+    new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 })
+  );
+  mesh.add(edges);
+
+  mesh.name = "Test Cube (20×20×20)";
+  mesh.userData = {
+    id: "test_cube",
+    type: "SolidBox",
+    layer: "Starting Geometry",
+    protected: true
+  };
+
+  scene.add(mesh);
+  sceneObjects.push(mesh);
+  updateObjectsTree();
+  return mesh;
+}
+
+// Instantiate Michigan starting model
 let michiganModel = createMichiganModel();
+let diagnosticCube = null;
 
 /* =========================================================================
    4. LAYERS, SKETCHING, PRIMITIVES & MODELING OPERATIONS
@@ -2349,11 +2401,15 @@ function applyTheme(theme) {
   if (theme === "light") {
     document.body.classList.add("light-theme");
     if (btn) btn.textContent = "☀️ Light";
-    renderer.setClearColor(0xc0c0c0, 1);
+    if (typeof viewports !== "undefined") {
+      Object.values(viewports).forEach(vp => vp.renderer.setClearColor(0xc0c0c0, 1));
+    }
   } else {
     document.body.classList.remove("light-theme");
     if (btn) btn.textContent = "🌙 Dark";
-    renderer.setClearColor(0x181818, 1);
+    if (typeof viewports !== "undefined") {
+      Object.values(viewports).forEach(vp => vp.renderer.setClearColor(0x181818, 1));
+    }
   }
   status(`Theme set to ${theme.toUpperCase()}`);
 }
@@ -2982,21 +3038,23 @@ function executeCommand(rawCmd) {
   const args = tokens.slice(1);
 
   if (trimmed === "remove starting object") {
-    if (!michiganModel || !sceneObjects.includes(michiganModel)) {
+    const targetObj = michiganModel || diagnosticCube;
+    if (!targetObj || !sceneObjects.includes(targetObj)) {
       addLog("Starting object is already gone.", "log-warn");
       status("Starting object does not exist.");
       return;
     }
     showConfirmModal(
       "Are you sure you want to remove this?",
-      "Removing the starting State of Michigan geometry is irreversible.",
+      "Removing the starting geometry is irreversible.",
       () => {
-        recordUndoState("Remove Michigan Starting Object");
-        scene.remove(michiganModel);
-        const idx = sceneObjects.indexOf(michiganModel);
+        recordUndoState("Remove Starting Object");
+        scene.remove(targetObj);
+        const idx = sceneObjects.indexOf(targetObj);
         if (idx !== -1) sceneObjects.splice(idx, 1);
-        selectedObjects = selectedObjects.filter(o => o !== michiganModel);
-        michiganModel = null;
+        selectedObjects = selectedObjects.filter(o => o !== targetObj);
+        if (targetObj === michiganModel) michiganModel = null;
+        if (targetObj === diagnosticCube) diagnosticCube = null;
         updateObjectsTree();
         updatePropertiesPanel();
         addLog("Starting object permanently removed. Hope you're happy.", "log-success");
@@ -3361,11 +3419,6 @@ function showNavToast(msg) {
 }
 
 // STRICT REQUIREMENT: Viewport navigation MUST NOT respond to trackpad scrolling or gestures!
-canvas.addEventListener("wheel", (e) => {
-  e.preventDefault();
-  showNavToast("Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.");
-}, { passive: false });
-
 function updateCameraStatusReadout() {
   const readout = document.getElementById("coords-readout");
   if (!readout) return;
@@ -3386,97 +3439,45 @@ function updateCameraStatusReadout() {
   }
 }
 
-function setActiveViewport(vp) {
-  activeViewport = vp;
-  document.querySelectorAll(".viewport-label").forEach(lbl => {
-    lbl.classList.toggle("active-vp", lbl.dataset.vp === vp);
+function setActiveViewport(vpId) {
+  activeViewport = vpId;
+  Object.values(viewports).forEach(v => {
+    v.pane.classList.toggle("active-vp-pane", v.id === vpId);
+    v.label.classList.toggle("active-vp", v.id === vpId);
   });
-  stageContainer.dataset.activeViewport = vp;
-
-  const frame = document.getElementById("vp-active-frame");
-  if (frame) {
-    if (vp === "top") {
-      frame.style.top = "0"; frame.style.left = "0"; frame.style.width = "50%"; frame.style.height = "50%";
-    } else if (vp === "perspective") {
-      frame.style.top = "0"; frame.style.left = "50%"; frame.style.width = "50%"; frame.style.height = "50%";
-    } else if (vp === "front") {
-      frame.style.top = "50%"; frame.style.left = "0"; frame.style.width = "50%"; frame.style.height = "50%";
-    } else if (vp === "right") {
-      frame.style.top = "50%"; frame.style.left = "50%"; frame.style.width = "50%"; frame.style.height = "50%";
-    }
-  }
-
+  stageContainer.dataset.activeViewport = vpId;
   updateCameraStatusReadout();
 }
 
-document.querySelectorAll(".viewport-label").forEach(lbl => {
-  lbl.onclick = (e) => {
-    e.stopPropagation();
-    if (document.activeElement && document.activeElement.matches("input, textarea")) {
-      document.activeElement.blur();
-    }
-    canvas.focus({ preventScroll: true });
-    setActiveViewport(lbl.dataset.vp);
-  };
-});
+function focusActiveCanvas() {
+  const vp = viewports[activeViewport] || viewports.perspective;
+  if (vp && vp.canvas) vp.canvas.focus({ preventScroll: true });
+}
 
-// Focus management on stage
-stageContainer.addEventListener("pointerdown", () => {
+function handleViewportPointerDown(e, vpId) {
   if (document.activeElement && document.activeElement.matches("input, textarea")) {
     document.activeElement.blur();
   }
-  canvas.focus({ preventScroll: true });
-});
-
-// Viewport click activates quadrant and raycasts selection / sketch placement
-canvas.addEventListener("pointerdown", (e) => {
-  if (document.activeElement && document.activeElement.matches("input, textarea")) {
-    document.activeElement.blur();
+  const vp = viewports[vpId];
+  if (vp && vp.canvas) {
+    vp.canvas.focus({ preventScroll: true });
   }
-  canvas.focus({ preventScroll: true });
+  setActiveViewport(vpId);
 
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const w = rect.width;
-  const h = rect.height;
-  const hw = w / 2;
-  const hh = h / 2;
-
-  // Determine which quadrant was clicked (Rhino standard: Top-Left Top, Top-Right Perspective, Bottom-Left Front, Bottom-Right Right)
-  let vp = "perspective";
-  let vpX = 0, vpY = 0, vpW = hw, vpH = hh;
-
-  if (x < hw && y < hh) {
-    vp = "top";
-    vpX = 0; vpY = 0; vpW = hw; vpH = hh;
-  } else if (x >= hw && y < hh) {
-    vp = "perspective";
-    vpX = hw; vpY = 0; vpW = w - hw; vpH = hh;
-  } else if (x < hw && y >= hh) {
-    vp = "front";
-    vpX = 0; vpY = hh; vpW = hw; vpH = h - hh;
-  } else {
-    vp = "right";
-    vpX = hw; vpY = hh; vpW = w - hw; vpH = h - hh;
-  }
-
-  setActiveViewport(vp);
-
-  // Compute NDC for this sub-viewport
-  const ndcX = ((x - vpX) / vpW) * 2 - 1;
-  const ndcY = -(((y - vpY) / vpH) * 2 - 1);
+  const rect = vp.canvas.getBoundingClientRect();
+  const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const ndcY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
   mouse.set(ndcX, ndcY);
 
-  const cam = cameras[vp];
+  const cam = cameras[vpId];
   raycaster.setFromCamera(mouse, cam);
 
   // If in sketch mode, project onto C-Plane and place vertex
   if (activeSketchMode) {
-    const plane = getCPlane(vp);
+    const plane = getCPlane(vpId);
     const intersectPt = new THREE.Vector3();
     if (raycaster.ray.intersectPlane(plane, intersectPt)) {
-      handleSketchClick(intersectPt, vp);
+      handleSketchClick(intersectPt, vpId);
     }
     return;
   }
@@ -3506,42 +3507,51 @@ canvas.addEventListener("pointerdown", (e) => {
   } else if (!e.shiftKey) {
     clearSelection();
   }
-});
+}
 
-// Viewport pointermove updates C-Plane coordinates and live rubberband
-canvas.addEventListener("pointermove", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const w = rect.width;
-  const h = rect.height;
-  const hw = w / 2;
-  const hh = h / 2;
+function handleViewportPointerMove(e, vpId) {
+  const vp = viewports[vpId];
+  if (!vp || !vp.canvas) return;
 
-  let vp = "perspective";
-  let vpX = 0, vpY = 0, vpW = hw, vpH = hh;
-
-  if (x < hw && y < hh) {
-    vp = "top"; vpX = 0; vpY = 0; vpW = hw; vpH = hh;
-  } else if (x >= hw && y < hh) {
-    vp = "perspective"; vpX = hw; vpY = 0; vpW = w - hw; vpH = hh;
-  } else if (x < hw && y >= hh) {
-    vp = "front"; vpX = 0; vpY = hh; vpW = hw; vpH = h - hh;
-  } else {
-    vp = "right"; vpX = hw; vpY = hh; vpW = w - hw; vpH = h - hh;
-  }
-
-  const ndcX = ((x - vpX) / vpW) * 2 - 1;
-  const ndcY = -(((y - vpY) / vpH) * 2 - 1);
-  const cam = cameras[vp];
+  const rect = vp.canvas.getBoundingClientRect();
+  const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const ndcY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+  const cam = cameras[vpId];
   raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
 
-  const plane = getCPlane(vp);
+  const plane = getCPlane(vpId);
   const intersectPt = new THREE.Vector3();
   if (raycaster.ray.intersectPlane(plane, intersectPt)) {
     if (activeSketchMode) {
-      updateRubberband(intersectPt, vp);
+      updateRubberband(intersectPt, vpId);
     }
+  }
+}
+
+// Attach independent event listeners to all 4 viewports
+Object.values(viewports).forEach(vp => {
+  vp.canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    showNavToast("Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.");
+  }, { passive: false });
+
+  vp.canvas.addEventListener("pointerdown", (e) => handleViewportPointerDown(e, vp.id));
+  vp.canvas.addEventListener("pointermove", (e) => handleViewportPointerMove(e, vp.id));
+
+  vp.label.onclick = (e) => {
+    e.stopPropagation();
+    if (document.activeElement && document.activeElement.matches("input, textarea")) {
+      document.activeElement.blur();
+    }
+    vp.canvas.focus({ preventScroll: true });
+    setActiveViewport(vp.id);
+  };
+});
+
+// Stage container backup focus management
+stageContainer.addEventListener("pointerdown", (e) => {
+  if (e.target === stageContainer) {
+    focusActiveCanvas();
   }
 });
 
@@ -3898,15 +3908,20 @@ document.getElementById("help-search").oninput = (e) => renderHelpList(e.target.
 document.getElementById("btn-help-open").onclick = () => modalHelp.showModal();
 document.getElementById("btn-close-help").onclick = () => modalHelp.close();
 
-// Update Chip
+// Update Chip (Click forces complete cache purge & reload)
 document.getElementById("chip").onclick = () => {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg) reg.update();
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
     });
+    if ("caches" in window) {
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    }
   }
-  status("Refreshing cache and reloading: " + APP.version);
-  setTimeout(() => location.reload(), 400);
+  status("Purging cache and reloading: " + APP.version);
+  setTimeout(() => {
+    window.location.href = window.location.pathname + "?t=" + Date.now();
+  }, 400);
 };
 
 function status(msg) {
@@ -4062,19 +4077,21 @@ CADNT_AUDIO.setMute(CADNT_AUDIO.mute);
 updateEconomyDisplay();
 
 /* =========================================================================
-   10. RENDERING LOOP (4 VIEWPORTS ON A SINGLE CANVAS)
+   10. RENDERING LOOP (4 INDEPENDENT CANVASES & RENDERERS)
    ========================================================================= */
-let lastStageW = 0;
-let lastStageH = 0;
-
 function resizeRenderer() {
-  const w = stageContainer.clientWidth || 800;
-  const h = stageContainer.clientHeight || 600;
-  if (w !== lastStageW || h !== lastStageH) {
-    lastStageW = w;
-    lastStageH = h;
-    renderer.setSize(w, h, false);
-  }
+  Object.values(viewports).forEach(vp => {
+    const w = vp.canvas.clientWidth;
+    const h = vp.canvas.clientHeight;
+    if (w > 0 && h > 0) {
+      const pr = vp.renderer.getPixelRatio();
+      const needW = Math.round(w * pr);
+      const needH = Math.round(h * pr);
+      if (vp.canvas.width !== needW || vp.canvas.height !== needH) {
+        vp.renderer.setSize(w, h, false);
+      }
+    }
+  });
 }
 
 function render() {
@@ -4082,36 +4099,23 @@ function render() {
   updateContinuousNavigation();
   resizeRenderer();
 
-  // Three.js setViewport and setScissor expect CSS (logical) dimensions;
-  // Three.js internally multiplies these values by renderer.getPixelRatio() to set gl.viewport / gl.scissor!
-  const width = stageContainer.clientWidth || 800;
-  const height = stageContainer.clientHeight || 600;
-  if (!width || !height) return;
-
-  const halfW = Math.floor(width / 2);
-  const halfH = Math.floor(height / 2);
-  if (halfW <= 0 || halfH <= 0) return;
-
-  renderer.clear();
-  renderer.setScissorTest(true);
-
-  // 1. TOP-LEFT: Top Viewport (XZ Orthographic)
-  renderer.setViewport(0, height - halfH, halfW, halfH);
-  renderer.setScissor(0, height - halfH, halfW, halfH);
-  renderer.clearDepth();
-  updateOrthoCamera("top", cameras.top, camState.top, halfW, halfH);
+  // 1. TOP VIEWPORT (Top-Left: XZ Orthographic)
+  const topVp = viewports.top;
+  const topW = topVp.canvas.clientWidth || 400;
+  const topH = topVp.canvas.clientHeight || 300;
+  updateOrthoCamera("top", cameras.top, camState.top, topW, topH);
   gridTop.visible = true;
   gridPerspective.visible = false;
   gridFront.visible = false;
   gridRight.visible = false;
   originAxes.visible = true;
-  renderer.render(scene, cameras.top);
+  topVp.renderer.render(scene, cameras.top);
 
-  // 2. TOP-RIGHT: Perspective Viewport (3D Orbit)
-  renderer.setViewport(halfW, height - halfH, width - halfW, halfH);
-  renderer.setScissor(halfW, height - halfH, width - halfW, halfH);
-  renderer.clearDepth();
-  cameras.perspective.aspect = (width - halfW) / halfH;
+  // 2. PERSPECTIVE VIEWPORT (Top-Right: 3D Orbit)
+  const pVp = viewports.perspective;
+  const pW = pVp.canvas.clientWidth || 400;
+  const pH = pVp.canvas.clientHeight || 300;
+  cameras.perspective.aspect = pW / pH;
   cameras.perspective.updateProjectionMatrix();
   updatePerspectiveCamera();
   gridTop.visible = false;
@@ -4119,33 +4123,31 @@ function render() {
   gridFront.visible = false;
   gridRight.visible = false;
   originAxes.visible = true;
-  renderer.render(scene, cameras.perspective);
+  pVp.renderer.render(scene, cameras.perspective);
 
-  // 3. BOTTOM-LEFT: Front Viewport (XY Orthographic)
-  renderer.setViewport(0, 0, halfW, height - halfH);
-  renderer.setScissor(0, 0, halfW, height - halfH);
-  renderer.clearDepth();
-  updateOrthoCamera("front", cameras.front, camState.front, halfW, height - halfH);
+  // 3. FRONT VIEWPORT (Bottom-Left: XY Orthographic)
+  const fVp = viewports.front;
+  const fW = fVp.canvas.clientWidth || 400;
+  const fH = fVp.canvas.clientHeight || 300;
+  updateOrthoCamera("front", cameras.front, camState.front, fW, fH);
   gridTop.visible = false;
   gridPerspective.visible = false;
   gridFront.visible = true;
   gridRight.visible = false;
   originAxes.visible = true;
-  renderer.render(scene, cameras.front);
+  fVp.renderer.render(scene, cameras.front);
 
-  // 4. BOTTOM-RIGHT: Right Viewport (ZY Orthographic)
-  renderer.setViewport(halfW, 0, width - halfW, height - halfH);
-  renderer.setScissor(halfW, 0, width - halfW, height - halfH);
-  renderer.clearDepth();
-  updateOrthoCamera("right", cameras.right, camState.right, width - halfW, height - halfH);
+  // 4. RIGHT VIEWPORT (Bottom-Right: ZY Orthographic)
+  const rVp = viewports.right;
+  const rW = rVp.canvas.clientWidth || 400;
+  const rH = rVp.canvas.clientHeight || 300;
+  updateOrthoCamera("right", cameras.right, camState.right, rW, rH);
   gridTop.visible = false;
   gridPerspective.visible = false;
   gridFront.visible = false;
   gridRight.visible = true;
   originAxes.visible = true;
-  renderer.render(scene, cameras.right);
-
-  renderer.setScissorTest(false);
+  rVp.renderer.render(scene, cameras.right);
 
   // Update Diagnostic Debug Overlay in real time
   updateDebugOverlay();
@@ -4213,11 +4215,12 @@ function updateDebugOverlay() {
 
   const cssW = stageContainer.clientWidth || 800;
   const cssH = stageContainer.clientHeight || 600;
-  const bufW = canvas.width;
-  const bufH = canvas.height;
+  const activeVpCanvas = (viewports[activeViewport] && viewports[activeViewport].canvas) || viewports.perspective.canvas;
+  const bufW = activeVpCanvas.width;
+  const bufH = activeVpCanvas.height;
   const dpr = (window.devicePixelRatio || 1).toFixed(1);
   const elDims = document.getElementById("dbg-canvas-dims");
-  if (elDims) elDims.textContent = `${cssW}×${cssH} CSS (${bufW}×${bufH} buf, DPR:${dpr})`;
+  if (elDims) elDims.textContent = `${cssW}×${cssH} stage (${bufW}×${bufH} active-buf, DPR:${dpr}) [4-Canvas Architecture]`;
 }
 
 // Debug HUD Minimize Toggle & Test Primitive Toggle
@@ -4331,10 +4334,10 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     assertTest("4 Cameras initialized", !!(cameras.perspective && cameras.top && cameras.front && cameras.right));
     assertTest("Canvas WebGL context active", !!renderer.getContext());
 
-    // Test 3: Starting Michigan Model
-    assertTest("Starting Michigan model loaded", !!michiganModel && sceneObjects.includes(michiganModel));
-    assertTest("Michigan model has Upper & Lower peninsulas", michiganModel && michiganModel.children.length >= 4);
-    assertTest("Michigan model is protected", michiganModel && michiganModel.userData.protected === true);
+    // Test 3: Starting Geometry
+    const startingObj = michiganModel || diagnosticCube;
+    assertTest("Starting geometry loaded", !!startingObj && sceneObjects.includes(startingObj));
+    assertTest("Starting geometry is protected", startingObj && startingObj.userData.protected === true);
 
     // Test 4: Request Bar 'Nope.' on unprefixed command
     const countBefore = sceneObjects.length;
@@ -4356,17 +4359,17 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     processRequest("Can I cone");
     assertTest("'Can I cone' creates cone primitive", sceneObjects[sceneObjects.length - 1].userData.type === "Cone");
 
-    // Test 6: Michigan Immune to Deletion
-    selectObject(michiganModel);
+    // Test 6: Starting Object Immune to Casual Deletion
+    selectObject(startingObj);
     handleDelete();
-    assertTest("Michigan cannot be deleted via standard delete", sceneObjects.includes(michiganModel));
+    assertTest("Starting object cannot be deleted via standard delete", sceneObjects.includes(startingObj));
 
-    // Test 7: Secret Michigan Deletion Command
+    // Test 7: Secret Starting Object Deletion Command
     const origShowConfirm = showConfirmModal;
     showConfirmModal = (title, body, cb) => cb(); // auto-confirm for test
     processRequest("Can I remove starting object");
     showConfirmModal = origShowConfirm;
-    assertTest("'Can I remove starting object' successfully deletes Michigan", !sceneObjects.includes(michiganModel));
+    assertTest("'Can I remove starting object' successfully deletes starting object", !sceneObjects.includes(startingObj));
 
     // Test 8: Wandering Toolbar Relocation
     const tbBefore = Array.from(toolbar.querySelectorAll(".tool-btn")).map(b => b.dataset.cmd).join(",");
