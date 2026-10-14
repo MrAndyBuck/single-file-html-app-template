@@ -278,6 +278,20 @@
   .vp-bl { top: calc(50% + 8px); left: 8px; }
   .vp-br { top: calc(50% + 8px); left: calc(50% + 8px); }
 
+  /* Active Viewport Highlighting Frame */
+  #vp-active-frame {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 50%;
+    border: 2px solid var(--rhino-yellow);
+    box-shadow: inset 0 0 16px rgba(255, 255, 0, 0.08);
+    pointer-events: none;
+    z-index: 6;
+    transition: all 0.15s ease-out;
+  }
+
   /* Viewport Splitter Lines */
   .vp-divider-v {
     position: absolute;
@@ -320,6 +334,53 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.7);
   }
   #nav-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* Diagnostic Debug Overlay */
+  #debug-overlay {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 360px;
+    background: rgba(14, 14, 14, 0.94);
+    border: 1px solid var(--rhino-yellow);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #ddd;
+    z-index: 100;
+    pointer-events: auto;
+    user-select: none;
+    line-height: 1.4;
+  }
+  #debug-overlay.minimized .debug-hud-body { display: none; }
+  .debug-hud-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: #1c1c1c;
+    border-bottom: 1px solid #333;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .debug-hud-title { color: var(--rhino-yellow); font-size: 11px; letter-spacing: 0.5px; }
+  .debug-badge { background: #2a2a2a; color: #88cc88; padding: 1px 6px; border-radius: 3px; font-size: 10px; border: 1px solid #3a3a3a; }
+  .debug-min-btn { background: none; border: 1px solid #444; color: #aaa; cursor: pointer; padding: 0 5px; font-size: 11px; border-radius: 2px; }
+  .debug-min-btn:hover { color: #fff; border-color: var(--rhino-yellow); }
+  .debug-hud-body { padding: 8px 10px; max-height: 380px; overflow-y: auto; }
+  .debug-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .debug-label { color: #888; }
+  .debug-val { color: #fff; font-weight: 600; text-align: right; }
+  .debug-val.highlight { color: var(--rhino-yellow); }
+  .debug-val.status-ok { color: var(--toxic-green); }
+  .debug-val.status-warn { color: var(--alert-pink); font-weight: bold; }
+  .debug-divider { border: none; border-top: 1px solid #282828; margin: 6px 0; }
+  .debug-section-title { font-size: 10px; text-transform: uppercase; color: #777; margin-bottom: 4px; font-weight: 700; }
+  .debug-viewport-list { font-size: 10px; color: #aaa; margin: 4px 0; background: #0a0a0a; padding: 6px; border-radius: 3px; border: 1px solid #222; }
+  .debug-vp-entry { margin-bottom: 2px; }
+  .debug-note { font-size: 9px; color: #777; font-style: italic; margin-top: 4px; }
+  #cad-canvas:focus { outline: none; }
 
   /* Right Sidebar (Layers & Properties) */
   #right-sidebar {
@@ -728,12 +789,15 @@
   <main id="stage-container" tabindex="-1">
     <canvas id="cad-canvas" tabindex="0"></canvas>
 
-    <!-- Quadrant Viewport Labels -->
-    <div class="viewport-label vp-tl active-vp" id="lbl-perspective" data-vp="perspective">
-      <span>●</span> Perspective [W/S/A/D]
-    </div>
-    <div class="viewport-label vp-tr" id="lbl-top" data-vp="top">
+    <!-- Active Viewport Frame -->
+    <div id="vp-active-frame"></div>
+
+    <!-- Quadrant Viewport Labels (Rhino Standard Layout) -->
+    <div class="viewport-label vp-tl" id="lbl-top" data-vp="top">
       <span>●</span> Top (X/Z)
+    </div>
+    <div class="viewport-label vp-tr active-vp" id="lbl-perspective" data-vp="perspective">
+      <span>●</span> Perspective [W/S/A/D]
     </div>
     <div class="viewport-label vp-bl" id="lbl-front" data-vp="front">
       <span>●</span> Front (X/Y)
@@ -748,6 +812,68 @@
 
     <!-- Navigation Advisory Toast -->
     <div id="nav-toast">Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.</div>
+
+    <!-- Diagnostic Debug Overlay -->
+    <div id="debug-overlay">
+      <div class="debug-hud-header" id="debug-hud-toggle">
+        <span class="debug-hud-title">🔍 CADN'T DIAGNOSTIC HUD</span>
+        <span id="debug-hud-version" class="debug-badge">v00000-004-DIAG</span>
+        <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
+      </div>
+      <div id="debug-hud-body" class="debug-hud-body">
+        <div class="debug-row">
+          <span class="debug-label">Active Viewport:</span>
+          <span id="dbg-active-vp" class="debug-val highlight">PERSPECTIVE</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Focused Element:</span>
+          <span id="dbg-focused-elem" class="debug-val">CANVAS#cad-canvas</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Text Input Focused:</span>
+          <span id="dbg-input-focused" class="debug-val status-ok">NO (Nav Keys Active)</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Last Key Received:</span>
+          <span id="dbg-last-key" class="debug-val">None</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Keys Held:</span>
+          <span id="dbg-held-keys" class="debug-val">[]</span>
+        </div>
+        <hr class="debug-divider">
+        <div class="debug-section-title">Perspective Camera Orbit</div>
+        <div class="debug-row">
+          <span class="debug-label">Azimuth (θ) / Elev (φ):</span>
+          <span id="dbg-cam-angles" class="debug-val">Az: 45.0° | El: 56.2°</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Radius / Distance:</span>
+          <span id="dbg-cam-radius" class="debug-val">95.0</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Camera Pos (X, Y, Z):</span>
+          <span id="dbg-cam-pos" class="debug-val">(55.4, 54.8, 55.4)</span>
+        </div>
+        <div class="debug-row">
+          <span class="debug-label">Camera Target:</span>
+          <span id="dbg-cam-target" class="debug-val">(0.0, 2.0, 0.0)</span>
+        </div>
+        <hr class="debug-divider">
+        <div class="debug-section-title">4-Viewport Geometry & Architecture</div>
+        <div class="debug-row">
+          <span class="debug-label">Drawing Buffer:</span>
+          <span id="dbg-canvas-dims" class="debug-val">-</span>
+        </div>
+        <div class="debug-viewport-list">
+          <div class="debug-vp-entry"><strong>TL: Top (X/Z)</strong> — OrthoCamera | scissor: [0, halfH, halfW, halfH]</div>
+          <div class="debug-vp-entry"><strong>TR: Perspective</strong> — PerspCamera (45°) | scissor: [halfW, halfH, halfW, halfH]</div>
+          <div class="debug-vp-entry"><strong>BL: Front (X/Y)</strong> — OrthoCamera | scissor: [0, 0, halfW, halfH]</div>
+          <div class="debug-vp-entry"><strong>BR: Right (Z/Y)</strong> — OrthoCamera | scissor: [halfW, 0, halfW, halfH]</div>
+        </div>
+        <div class="debug-note">4 independent camera instances rendered via 4 distinct gl.scissor / gl.viewport passes.</div>
+      </div>
+    </div>
   </main>
 
   <!-- Right Sidebar: Layers & Properties -->
@@ -792,7 +918,7 @@
     <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div id="status-message">Ready. Type polite request in Request Bar.</div>
     <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
-    <button id="chip" title="Check for newer version">v00000-003 ↻</button>
+    <button id="chip" title="Check for newer version">v00000-004 ↻</button>
   </footer>
 </div>
 
@@ -852,7 +978,7 @@
 <!-- About Modal -->
 <dialog id="modal-about">
   <h2>About CADN'T</h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-001</span></p>
+  <p><strong>Version</strong>: <span id="about-version">v00000-004</span></p>
   <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
   <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
   <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
@@ -933,7 +1059,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-003",
+  version: "v00000-004",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -973,15 +1099,26 @@ const dirLight2 = new THREE.DirectionalLight(0x778899, 0.4);
 dirLight2.position.set(-60, -40, -80);
 scene.add(dirLight2);
 
-// Coordinate Grids (Rhino C-Planes)
+// Coordinate Grids (Rhino C-Planes for each viewport)
 const gridPerspective = new THREE.GridHelper(120, 24, 0x444444, 0x242424);
 gridPerspective.position.y = -0.01;
 scene.add(gridPerspective);
 
-// Separate orthographic grids
 const gridTop = new THREE.GridHelper(120, 24, 0x444444, 0x222222);
 gridTop.position.y = -0.02;
 scene.add(gridTop);
+
+// Dedicated Front C-Plane Grid (XY plane, facing Front camera)
+const gridFront = new THREE.GridHelper(120, 24, 0x444444, 0x222222);
+gridFront.rotation.x = Math.PI / 2;
+gridFront.position.z = -0.02;
+scene.add(gridFront);
+
+// Dedicated Right C-Plane Grid (ZY plane, facing Right camera)
+const gridRight = new THREE.GridHelper(120, 24, 0x444444, 0x222222);
+gridRight.rotation.z = Math.PI / 2;
+gridRight.position.x = -0.02;
+scene.add(gridRight);
 
 // Axes Helper at Origin
 const originAxes = new THREE.AxesHelper(15);
@@ -1014,19 +1151,19 @@ let activeViewport = "perspective"; // 'perspective' | 'top' | 'front' | 'right'
 
 const camState = {
   perspective: {
-    target: new THREE.Vector3(0, 4, 0),
+    target: new THREE.Vector3(0, 2, 0),
     radius: 95,
     theta: Math.PI / 4, // azimuth
     phi: Math.PI / 3.2   // polar elevation
   },
   top: { target: new THREE.Vector3(0, 0, 0), zoom: 1.0 },
-  front: { target: new THREE.Vector3(0, 4, 0), zoom: 1.0 },
-  right: { target: new THREE.Vector3(0, 4, 0), zoom: 1.0 }
+  front: { target: new THREE.Vector3(0, 2, 0), zoom: 1.0 },
+  right: { target: new THREE.Vector3(0, 2, 0), zoom: 1.0 }
 };
 
 function updatePerspectiveCamera() {
   const p = camState.perspective;
-  p.radius = Math.max(10, Math.min(600, p.radius));
+  p.radius = Math.max(8, Math.min(600, p.radius));
   p.phi = Math.max(0.05, Math.min(Math.PI - 0.05, p.phi));
 
   const x = p.target.x + p.radius * Math.sin(p.phi) * Math.sin(p.theta);
@@ -1040,7 +1177,7 @@ updatePerspectiveCamera();
 
 function updateOrthoCamera(name, cam, state, width, height) {
   const aspect = width / height;
-  const baseSize = 50 / state.zoom;
+  const baseSize = 45 / state.zoom;
   cam.left = -baseSize * aspect;
   cam.right = baseSize * aspect;
   cam.top = baseSize;
@@ -1112,8 +1249,8 @@ function createMichiganModel() {
   upGeo.rotateX(-Math.PI / 2);
 
   // Center around scene origin
-  lpGeo.translate(2, 0, -12);
-  upGeo.translate(2, 0, -12);
+  lpGeo.translate(-6, 0, 3.5);
+  upGeo.translate(-6, 0, 3.5);
 
   const group = new THREE.Group();
   group.name = "Michigan (Starting Model)";
@@ -3040,11 +3177,15 @@ requestInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     processRequest(requestInput.value);
     requestInput.value = "";
+    requestInput.blur();
+    canvas.focus({ preventScroll: true });
   }
 });
 document.getElementById("btn-submit-request").onclick = () => {
   processRequest(requestInput.value);
   requestInput.value = "";
+  requestInput.blur();
+  canvas.focus({ preventScroll: true });
 };
 
 /* =========================================================================
@@ -3180,6 +3321,20 @@ function setActiveViewport(vp) {
     lbl.classList.toggle("active-vp", lbl.dataset.vp === vp);
   });
   stageContainer.dataset.activeViewport = vp;
+
+  const frame = document.getElementById("vp-active-frame");
+  if (frame) {
+    if (vp === "top") {
+      frame.style.top = "0"; frame.style.left = "0"; frame.style.width = "50%"; frame.style.height = "50%";
+    } else if (vp === "perspective") {
+      frame.style.top = "0"; frame.style.left = "50%"; frame.style.width = "50%"; frame.style.height = "50%";
+    } else if (vp === "front") {
+      frame.style.top = "50%"; frame.style.left = "0"; frame.style.width = "50%"; frame.style.height = "50%";
+    } else if (vp === "right") {
+      frame.style.top = "50%"; frame.style.left = "50%"; frame.style.width = "50%"; frame.style.height = "50%";
+    }
+  }
+
   updateCameraStatusReadout();
 }
 
@@ -3217,15 +3372,15 @@ canvas.addEventListener("pointerdown", (e) => {
   const hw = w / 2;
   const hh = h / 2;
 
-  // Determine which quadrant was clicked
+  // Determine which quadrant was clicked (Rhino standard: Top-Left Top, Top-Right Perspective, Bottom-Left Front, Bottom-Right Right)
   let vp = "perspective";
   let vpX = 0, vpY = 0, vpW = hw, vpH = hh;
 
   if (x < hw && y < hh) {
-    vp = "perspective";
+    vp = "top";
     vpX = 0; vpY = 0; vpW = hw; vpH = hh;
   } else if (x >= hw && y < hh) {
-    vp = "top";
+    vp = "perspective";
     vpX = hw; vpY = 0; vpW = w - hw; vpH = hh;
   } else if (x < hw && y >= hh) {
     vp = "front";
@@ -3296,9 +3451,9 @@ canvas.addEventListener("pointermove", (e) => {
   let vpX = 0, vpY = 0, vpW = hw, vpH = hh;
 
   if (x < hw && y < hh) {
-    vp = "perspective"; vpX = 0; vpY = 0; vpW = hw; vpH = hh;
+    vp = "top"; vpX = 0; vpY = 0; vpW = hw; vpH = hh;
   } else if (x >= hw && y < hh) {
-    vp = "top"; vpX = hw; vpY = 0; vpW = w - hw; vpH = hh;
+    vp = "perspective"; vpX = hw; vpY = 0; vpW = w - hw; vpH = hh;
   } else if (x < hw && y >= hh) {
     vp = "front"; vpX = 0; vpY = hh; vpW = hw; vpH = h - hh;
   } else {
@@ -3350,21 +3505,21 @@ function applyNavigationStep(codeOrKey, isShift, mult = 1.0) {
   const isLeft = k === "arrowleft" || k === "left";
   const isRight = k === "arrowright" || k === "right";
 
+  const orbitStep = 0.14 * mult;
+
   // W / S: Orbit vertically
   if (isW) {
     if (activeViewport !== "perspective") {
       setActiveViewport("perspective");
-      showNavToast("Active view switched to Perspective for 3D orbit.");
     }
-    camState.perspective.phi -= 0.08 * mult;
+    camState.perspective.phi -= orbitStep;
     updatePerspectiveCamera();
     updateCameraStatusReadout();
   } else if (isS) {
     if (activeViewport !== "perspective") {
       setActiveViewport("perspective");
-      showNavToast("Active view switched to Perspective for 3D orbit.");
     }
-    camState.perspective.phi += 0.08 * mult;
+    camState.perspective.phi += orbitStep;
     updatePerspectiveCamera();
     updateCameraStatusReadout();
   }
@@ -3373,17 +3528,15 @@ function applyNavigationStep(codeOrKey, isShift, mult = 1.0) {
   else if (isA) {
     if (activeViewport !== "perspective") {
       setActiveViewport("perspective");
-      showNavToast("Active view switched to Perspective for 3D orbit.");
     }
-    camState.perspective.theta -= 0.08 * mult;
+    camState.perspective.theta -= orbitStep;
     updatePerspectiveCamera();
     updateCameraStatusReadout();
   } else if (isD) {
     if (activeViewport !== "perspective") {
       setActiveViewport("perspective");
-      showNavToast("Active view switched to Perspective for 3D orbit.");
     }
-    camState.perspective.theta += 0.08 * mult;
+    camState.perspective.theta += orbitStep;
     updatePerspectiveCamera();
     updateCameraStatusReadout();
   }
@@ -3391,34 +3544,34 @@ function applyNavigationStep(codeOrKey, isShift, mult = 1.0) {
   // Shift + Up / Down: Zoom in / out
   else if (isShift && isUp) {
     if (activeViewport === "perspective") {
-      camState.perspective.radius = Math.max(8, camState.perspective.radius * (1 - 0.15 * mult));
+      camState.perspective.radius = Math.max(8, camState.perspective.radius * (1 - 0.18 * mult));
       updatePerspectiveCamera();
     } else {
-      camState[activeViewport].zoom *= (1 + 0.18 * mult);
+      camState[activeViewport].zoom *= (1 + 0.22 * mult);
     }
     updateCameraStatusReadout();
   } else if (isShift && isDown) {
     if (activeViewport === "perspective") {
-      camState.perspective.radius = Math.min(700, camState.perspective.radius * (1 + 0.15 * mult));
+      camState.perspective.radius = Math.min(700, camState.perspective.radius * (1 + 0.18 * mult));
       updatePerspectiveCamera();
     } else {
-      camState[activeViewport].zoom = Math.max(0.08, camState[activeViewport].zoom * (1 - 0.18 * mult));
+      camState[activeViewport].zoom = Math.max(0.08, camState[activeViewport].zoom * (1 - 0.22 * mult));
     }
     updateCameraStatusReadout();
   }
 
   // Arrow keys (without Shift): Pan vertically & horizontally
   else if (!isShift && isUp) {
-    panActiveCamera(0, 6 * mult);
+    panActiveCamera(0, 8 * mult);
     updateCameraStatusReadout();
   } else if (!isShift && isDown) {
-    panActiveCamera(0, -6 * mult);
+    panActiveCamera(0, -8 * mult);
     updateCameraStatusReadout();
   } else if (!isShift && isLeft) {
-    panActiveCamera(-6 * mult, 0);
+    panActiveCamera(-8 * mult, 0);
     updateCameraStatusReadout();
   } else if (!isShift && isRight) {
-    panActiveCamera(6 * mult, 0);
+    panActiveCamera(8 * mult, 0);
     updateCameraStatusReadout();
   }
 }
@@ -3431,20 +3584,20 @@ function panActiveCamera(dx, dy) {
     const up = new THREE.Vector3();
     cam.matrixWorld.extractBasis(right, up, new THREE.Vector3());
 
-    const panScale = (camState.perspective.radius / 95) * 1.5;
+    const panScale = (camState.perspective.radius / 95) * 2.5;
     camState.perspective.target.addScaledVector(right, dx * panScale);
     camState.perspective.target.addScaledVector(up, dy * panScale);
     updatePerspectiveCamera();
   } else if (activeViewport === "top") {
-    const scale = 1.5 / camState.top.zoom;
+    const scale = 2.5 / camState.top.zoom;
     camState.top.target.x += dx * scale;
     camState.top.target.z -= dy * scale;
   } else if (activeViewport === "front") {
-    const scale = 1.5 / camState.front.zoom;
+    const scale = 2.5 / camState.front.zoom;
     camState.front.target.x += dx * scale;
     camState.front.target.y += dy * scale;
   } else if (activeViewport === "right") {
-    const scale = 1.5 / camState.right.zoom;
+    const scale = 2.5 / camState.right.zoom;
     camState.right.target.z += dx * scale;
     camState.right.target.y += dy * scale;
   }
@@ -3467,25 +3620,47 @@ function updateContinuousNavigation() {
   );
 
   pressedKeys.forEach((k) => {
-    applyNavigationStep(k, isShift, dt * 8);
+    applyNavigationStep(k, isShift, dt * 18);
   });
 }
 
+// Diagnostic Telemetry for User Acceptance Verification
+const debugTelemetry = {
+  lastCode: "None",
+  lastKey: "None",
+  lastShift: false,
+  lastTarget: "None",
+  lastHandled: "None"
+};
+
 // Global key listeners
 window.addEventListener("keydown", (e) => {
+  const code = e.code || "";
+  const key = e.key || "";
   const isInput = e.target && e.target.matches("input, textarea");
+
+  debugTelemetry.lastCode = code || key || "unknown";
+  debugTelemetry.lastKey = key || code || "unknown";
+  debugTelemetry.lastShift = !!e.shiftKey;
+  debugTelemetry.lastTarget = (e.target ? e.target.tagName + (e.target.id ? "#" + e.target.id : "") : "unknown");
+  debugTelemetry.lastHandled = isNavKey(code, key) ? (isInput ? "BLOCKED by input" : "Nav: " + (code || key)) : "Non-nav: " + (code || key);
+
   if (isInput) {
     if (e.key === "Escape") {
       e.target.blur();
       canvas.focus({ preventScroll: true });
       status("Viewport focused. Navigation keys active.");
       e.preventDefault();
+      return;
     }
-    return;
+    if (e.target.id === "request-input" && e.target.value.trim() === "" && isNavKey(e.code, e.key)) {
+      e.target.blur();
+      canvas.focus({ preventScroll: true });
+      debugTelemetry.lastHandled = "Nav: " + (code || key) + " (auto-unfocused input)";
+    } else {
+      return;
+    }
   }
-
-  const code = e.code || "";
-  const key = e.key || "";
 
   if (activeSketchMode) {
     if (e.key === "Enter") {
@@ -3638,7 +3813,13 @@ document.getElementById("btn-close-help").onclick = () => modalHelp.close();
 
 // Update Chip
 document.getElementById("chip").onclick = () => {
-  status("You have the latest version: " + APP.version);
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) reg.update();
+    });
+  }
+  status("Refreshing cache and reloading: " + APP.version);
+  setTimeout(() => location.reload(), 400);
 };
 
 function status(msg) {
@@ -3826,41 +4007,138 @@ function render() {
   renderer.clear();
   renderer.setScissorTest(true);
 
-  // 1. TOP-LEFT: Perspective Viewport
+  // 1. TOP-LEFT: Top Viewport (XZ Orthographic)
   renderer.setViewport(0, height - halfH, halfW, halfH);
   renderer.setScissor(0, height - halfH, halfW, halfH);
-  cameras.perspective.aspect = halfW / halfH;
-  cameras.perspective.updateProjectionMatrix();
-  gridPerspective.visible = true;
-  gridTop.visible = false;
-  renderer.render(scene, cameras.perspective);
-
-  // 2. TOP-RIGHT: Top Viewport
-  renderer.setViewport(halfW, height - halfH, width - halfW, halfH);
-  renderer.setScissor(halfW, height - halfH, width - halfW, halfH);
-  updateOrthoCamera("top", cameras.top, camState.top, width - halfW, halfH);
-  gridPerspective.visible = false;
+  updateOrthoCamera("top", cameras.top, camState.top, halfW, halfH);
   gridTop.visible = true;
+  gridPerspective.visible = false;
+  gridFront.visible = false;
+  gridRight.visible = false;
+  originAxes.visible = true;
   renderer.render(scene, cameras.top);
 
-  // 3. BOTTOM-LEFT: Front Viewport
+  // 2. TOP-RIGHT: Perspective Viewport (3D Orbit)
+  renderer.setViewport(halfW, height - halfH, width - halfW, halfH);
+  renderer.setScissor(halfW, height - halfH, width - halfW, halfH);
+  cameras.perspective.aspect = (width - halfW) / halfH;
+  cameras.perspective.updateProjectionMatrix();
+  updatePerspectiveCamera();
+  gridTop.visible = false;
+  gridPerspective.visible = true;
+  gridFront.visible = false;
+  gridRight.visible = false;
+  originAxes.visible = true;
+  renderer.render(scene, cameras.perspective);
+
+  // 3. BOTTOM-LEFT: Front Viewport (XY Orthographic)
   renderer.setViewport(0, 0, halfW, height - halfH);
   renderer.setScissor(0, 0, halfW, height - halfH);
   updateOrthoCamera("front", cameras.front, camState.front, halfW, height - halfH);
-  gridPerspective.visible = true;
   gridTop.visible = false;
+  gridPerspective.visible = false;
+  gridFront.visible = true;
+  gridRight.visible = false;
+  originAxes.visible = true;
   renderer.render(scene, cameras.front);
 
-  // 4. BOTTOM-RIGHT: Right Viewport
+  // 4. BOTTOM-RIGHT: Right Viewport (ZY Orthographic)
   renderer.setViewport(halfW, 0, width - halfW, height - halfH);
   renderer.setScissor(halfW, 0, width - halfW, height - halfH);
   updateOrthoCamera("right", cameras.right, camState.right, width - halfW, height - halfH);
-  gridPerspective.visible = true;
   gridTop.visible = false;
+  gridPerspective.visible = false;
+  gridFront.visible = false;
+  gridRight.visible = true;
+  originAxes.visible = true;
   renderer.render(scene, cameras.right);
 
   renderer.setScissorTest(false);
+
+  // Update Diagnostic Debug Overlay in real time
+  updateDebugOverlay();
 }
+
+function updateDebugOverlay() {
+  const overlay = document.getElementById("debug-overlay");
+  if (!overlay || overlay.classList.contains("minimized")) return;
+
+  const activeEl = document.activeElement;
+  const isInput = activeEl && activeEl.matches("input, textarea");
+  const elDesc = activeEl ? (activeEl.tagName + (activeEl.id ? "#" + activeEl.id : (activeEl.className ? "." + String(activeEl.className).split(" ")[0] : ""))) : "NONE";
+
+  const elActiveVp = document.getElementById("dbg-active-vp");
+  if (elActiveVp) elActiveVp.textContent = activeViewport.toUpperCase();
+
+  const elFocusedElem = document.getElementById("dbg-focused-elem");
+  if (elFocusedElem) elFocusedElem.textContent = elDesc;
+
+  const inFocusSpan = document.getElementById("dbg-input-focused");
+  if (inFocusSpan) {
+    if (isInput) {
+      inFocusSpan.textContent = "YES (Keys captured by input!)";
+      inFocusSpan.className = "debug-val status-warn";
+    } else {
+      inFocusSpan.textContent = "NO (Nav Keys Active)";
+      inFocusSpan.className = "debug-val status-ok";
+    }
+  }
+
+  const p = camState.perspective;
+  const azDeg = Math.round(((p.theta * 180) / Math.PI) % 360);
+  const elDeg = Math.round((p.phi * 180) / Math.PI);
+  const elAngles = document.getElementById("dbg-cam-angles");
+  if (elAngles) elAngles.textContent = `Az: ${azDeg}° | El: ${elDeg}°`;
+
+  const elRadius = document.getElementById("dbg-cam-radius");
+  if (elRadius) elRadius.textContent = p.radius.toFixed(1);
+
+  const cpos = cameras.perspective.position;
+  const elPos = document.getElementById("dbg-cam-pos");
+  if (elPos) elPos.textContent = `(${cpos.x.toFixed(1)}, ${cpos.y.toFixed(1)}, ${cpos.z.toFixed(1)})`;
+
+  const elTarget = document.getElementById("dbg-cam-target");
+  if (elTarget) elTarget.textContent = `(${p.target.x.toFixed(1)}, ${p.target.y.toFixed(1)}, ${p.target.z.toFixed(1)})`;
+
+  const elLastKey = document.getElementById("dbg-last-key");
+  if (elLastKey) {
+    elLastKey.textContent = debugTelemetry.lastCode !== "None"
+      ? `${debugTelemetry.lastCode} ('${debugTelemetry.lastKey}') -> ${debugTelemetry.lastHandled}`
+      : "None";
+  }
+
+  const elHeld = document.getElementById("dbg-held-keys");
+  if (elHeld) elHeld.textContent = JSON.stringify(Array.from(pressedKeys));
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const hw = Math.floor(w / 2);
+  const hh = Math.floor(h / 2);
+  const elDims = document.getElementById("dbg-canvas-dims");
+  if (elDims) elDims.textContent = `${w} × ${h} (quadrant: ${hw} × ${hh})`;
+}
+
+// Debug HUD Minimize Toggle
+const btnMinDebug = document.getElementById("btn-minimize-debug");
+const debugOverlay = document.getElementById("debug-overlay");
+if (btnMinDebug && debugOverlay) {
+  btnMinDebug.onclick = (e) => {
+    e.stopPropagation();
+    debugOverlay.classList.toggle("minimized");
+    btnMinDebug.textContent = debugOverlay.classList.contains("minimized") ? "+" : "_";
+  };
+  document.getElementById("debug-hud-toggle").onclick = () => {
+    debugOverlay.classList.toggle("minimized");
+    btnMinDebug.textContent = debugOverlay.classList.contains("minimized") ? "+" : "_";
+  };
+}
+
+// Refocus canvas whenever any modal closes
+document.querySelectorAll("dialog").forEach(d => {
+  d.addEventListener("close", () => {
+    canvas.focus({ preventScroll: true });
+  });
+});
 
 // Initialize Layers UI
 renderLayersList();
@@ -3872,8 +4150,9 @@ if (btnAddLayer) {
   };
 }
 
-// Start rendering loop
+// Start rendering loop & focus canvas
 render();
+canvas.focus({ preventScroll: true });
 
 // Service Worker for offline PWA functionality
 if ("serviceWorker" in navigator && !["localhost", "127.0.0.1"].includes(location.hostname)) {
