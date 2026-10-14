@@ -581,8 +581,8 @@
   </aside>
 
   <!-- 4-Viewport Matrix Stage -->
-  <main id="stage-container">
-    <canvas id="cad-canvas"></canvas>
+  <main id="stage-container" tabindex="-1">
+    <canvas id="cad-canvas" tabindex="0"></canvas>
 
     <!-- Quadrant Viewport Labels -->
     <div class="viewport-label vp-tl active-vp" id="lbl-perspective" data-vp="perspective">
@@ -1493,8 +1493,61 @@ canvas.addEventListener("wheel", (e) => {
   showNavToast("Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom.");
 }, { passive: false });
 
+function updateCameraStatusReadout() {
+  const readout = document.getElementById("coords-readout");
+  if (!readout) return;
+  if (activeViewport === "perspective") {
+    const p = camState.perspective;
+    const azDeg = Math.round(((p.theta * 180) / Math.PI) % 360);
+    const elDeg = Math.round((p.phi * 180) / Math.PI);
+    readout.textContent = `PERSP | Az: ${azDeg}° El: ${elDeg}° | Dist: ${p.radius.toFixed(0)}`;
+  } else if (activeViewport === "top") {
+    const t = camState.top;
+    readout.textContent = `TOP (X/Z) | Pan: (${t.target.x.toFixed(1)}, ${t.target.z.toFixed(1)}) | Zoom: ${(t.zoom * 100).toFixed(0)}%`;
+  } else if (activeViewport === "front") {
+    const f = camState.front;
+    readout.textContent = `FRONT (X/Y) | Pan: (${f.target.x.toFixed(1)}, ${f.target.y.toFixed(1)}) | Zoom: ${(f.zoom * 100).toFixed(0)}%`;
+  } else if (activeViewport === "right") {
+    const r = camState.right;
+    readout.textContent = `RIGHT (Z/Y) | Pan: (${r.target.z.toFixed(1)}, ${r.target.y.toFixed(1)}) | Zoom: ${(r.zoom * 100).toFixed(0)}%`;
+  }
+}
+
+function setActiveViewport(vp) {
+  activeViewport = vp;
+  document.querySelectorAll(".viewport-label").forEach(lbl => {
+    lbl.classList.toggle("active-vp", lbl.dataset.vp === vp);
+  });
+  stageContainer.dataset.activeViewport = vp;
+  updateCameraStatusReadout();
+}
+
+document.querySelectorAll(".viewport-label").forEach(lbl => {
+  lbl.onclick = (e) => {
+    e.stopPropagation();
+    if (document.activeElement && document.activeElement.matches("input, textarea")) {
+      document.activeElement.blur();
+    }
+    canvas.focus({ preventScroll: true });
+    setActiveViewport(lbl.dataset.vp);
+  };
+});
+
+// Focus management on stage
+stageContainer.addEventListener("pointerdown", () => {
+  if (document.activeElement && document.activeElement.matches("input, textarea")) {
+    document.activeElement.blur();
+  }
+  canvas.focus({ preventScroll: true });
+});
+
 // Viewport click activates quadrant and raycasts selection
 canvas.addEventListener("pointerdown", (e) => {
+  if (document.activeElement && document.activeElement.matches("input, textarea")) {
+    document.activeElement.blur();
+  }
+  canvas.focus({ preventScroll: true });
+
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
@@ -1512,13 +1565,13 @@ canvas.addEventListener("pointerdown", (e) => {
     vpX = 0; vpY = 0; vpW = hw; vpH = hh;
   } else if (x >= hw && y < hh) {
     vp = "top";
-    vpX = hw; vpY = 0; vpW = hw; vpH = hh;
+    vpX = hw; vpY = 0; vpW = w - hw; vpH = hh;
   } else if (x < hw && y >= hh) {
     vp = "front";
-    vpX = 0; vpY = hh; vpW = hw; vpH = hh;
+    vpX = 0; vpY = hh; vpW = hw; vpH = h - hh;
   } else {
     vp = "right";
-    vpX = hw; vpY = hh; vpW = hw; vpH = hh;
+    vpX = hw; vpY = hh; vpW = w - hw; vpH = h - hh;
   }
 
   setActiveViewport(vp);
@@ -1542,7 +1595,6 @@ canvas.addEventListener("pointerdown", (e) => {
 
   const hits = raycaster.intersectObjects(candidates, false);
   if (hits.length > 0) {
-    // Find top-level registered object
     let hitMesh = hits[0].object;
     let target = hitMesh;
     while (target.parent && target.parent !== scene) {
@@ -1558,127 +1610,205 @@ canvas.addEventListener("pointerdown", (e) => {
   }
 });
 
-function setActiveViewport(vp) {
-  activeViewport = vp;
-  document.querySelectorAll(".viewport-label").forEach(lbl => {
-    lbl.classList.toggle("active-vp", lbl.dataset.vp === vp);
+/* =========================================================================
+   KEYBOARD NAVIGATION & CONTINUOUS INPUT LOOP
+   ========================================================================= */
+const pressedKeys = new Set();
+let lastNavTimestamp = performance.now();
+
+function isNavKey(code, key) {
+  return (
+    code === "KeyW" || key === "w" || key === "W" ||
+    code === "KeyS" || key === "s" || key === "S" ||
+    code === "KeyA" || key === "a" || key === "A" ||
+    code === "KeyD" || key === "d" || key === "D" ||
+    code === "ArrowUp" || key === "ArrowUp" || key === "Up" ||
+    code === "ArrowDown" || key === "ArrowDown" || key === "Down" ||
+    code === "ArrowLeft" || key === "ArrowLeft" || key === "Left" ||
+    code === "ArrowRight" || key === "ArrowRight" || key === "Right"
+  );
+}
+
+function applyNavigationStep(codeOrKey, isShift, mult = 1.0) {
+  const k = (codeOrKey || "").toLowerCase();
+
+  const isW = k === "keyw" || k === "w";
+  const isS = k === "keys" || k === "s";
+  const isA = k === "keya" || k === "a";
+  const isD = k === "keyd" || k === "d";
+  const isUp = k === "arrowup" || k === "up";
+  const isDown = k === "arrowdown" || k === "down";
+  const isLeft = k === "arrowleft" || k === "left";
+  const isRight = k === "arrowright" || k === "right";
+
+  // W / S: Orbit vertically
+  if (isW) {
+    if (activeViewport !== "perspective") {
+      setActiveViewport("perspective");
+      showNavToast("Active view switched to Perspective for 3D orbit.");
+    }
+    camState.perspective.phi -= 0.08 * mult;
+    updatePerspectiveCamera();
+    updateCameraStatusReadout();
+  } else if (isS) {
+    if (activeViewport !== "perspective") {
+      setActiveViewport("perspective");
+      showNavToast("Active view switched to Perspective for 3D orbit.");
+    }
+    camState.perspective.phi += 0.08 * mult;
+    updatePerspectiveCamera();
+    updateCameraStatusReadout();
+  }
+
+  // A / D: Orbit horizontally
+  else if (isA) {
+    if (activeViewport !== "perspective") {
+      setActiveViewport("perspective");
+      showNavToast("Active view switched to Perspective for 3D orbit.");
+    }
+    camState.perspective.theta -= 0.08 * mult;
+    updatePerspectiveCamera();
+    updateCameraStatusReadout();
+  } else if (isD) {
+    if (activeViewport !== "perspective") {
+      setActiveViewport("perspective");
+      showNavToast("Active view switched to Perspective for 3D orbit.");
+    }
+    camState.perspective.theta += 0.08 * mult;
+    updatePerspectiveCamera();
+    updateCameraStatusReadout();
+  }
+
+  // Shift + Up / Down: Zoom in / out
+  else if (isShift && isUp) {
+    if (activeViewport === "perspective") {
+      camState.perspective.radius = Math.max(8, camState.perspective.radius * (1 - 0.15 * mult));
+      updatePerspectiveCamera();
+    } else {
+      camState[activeViewport].zoom *= (1 + 0.18 * mult);
+    }
+    updateCameraStatusReadout();
+  } else if (isShift && isDown) {
+    if (activeViewport === "perspective") {
+      camState.perspective.radius = Math.min(700, camState.perspective.radius * (1 + 0.15 * mult));
+      updatePerspectiveCamera();
+    } else {
+      camState[activeViewport].zoom = Math.max(0.08, camState[activeViewport].zoom * (1 - 0.18 * mult));
+    }
+    updateCameraStatusReadout();
+  }
+
+  // Arrow keys (without Shift): Pan vertically & horizontally
+  else if (!isShift && isUp) {
+    panActiveCamera(0, 6 * mult);
+    updateCameraStatusReadout();
+  } else if (!isShift && isDown) {
+    panActiveCamera(0, -6 * mult);
+    updateCameraStatusReadout();
+  } else if (!isShift && isLeft) {
+    panActiveCamera(-6 * mult, 0);
+    updateCameraStatusReadout();
+  } else if (!isShift && isRight) {
+    panActiveCamera(6 * mult, 0);
+    updateCameraStatusReadout();
+  }
+}
+
+function panActiveCamera(dx, dy) {
+  if (activeViewport === "perspective") {
+    const cam = cameras.perspective;
+    cam.updateMatrixWorld(true);
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    cam.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+
+    const panScale = (camState.perspective.radius / 95) * 1.5;
+    camState.perspective.target.addScaledVector(right, dx * panScale);
+    camState.perspective.target.addScaledVector(up, dy * panScale);
+    updatePerspectiveCamera();
+  } else if (activeViewport === "top") {
+    const scale = 1.5 / camState.top.zoom;
+    camState.top.target.x += dx * scale;
+    camState.top.target.z -= dy * scale;
+  } else if (activeViewport === "front") {
+    const scale = 1.5 / camState.front.zoom;
+    camState.front.target.x += dx * scale;
+    camState.front.target.y += dy * scale;
+  } else if (activeViewport === "right") {
+    const scale = 1.5 / camState.right.zoom;
+    camState.right.target.z += dx * scale;
+    camState.right.target.y += dy * scale;
+  }
+}
+
+function updateContinuousNavigation() {
+  if (pressedKeys.size === 0) {
+    lastNavTimestamp = performance.now();
+    return;
+  }
+  const now = performance.now();
+  const dt = Math.min((now - lastNavTimestamp) / 1000, 0.08);
+  lastNavTimestamp = now;
+
+  if (document.activeElement && document.activeElement.matches("input, textarea")) return;
+
+  const isShift = (
+    pressedKeys.has("ShiftLeft") || pressedKeys.has("ShiftRight") ||
+    pressedKeys.has("shift")
+  );
+
+  pressedKeys.forEach((k) => {
+    applyNavigationStep(k, isShift, dt * 8);
   });
 }
 
-document.querySelectorAll(".viewport-label").forEach(lbl => {
-  lbl.onclick = () => setActiveViewport(lbl.dataset.vp);
-});
-
-// Keyboard controls
+// Global key listeners
 window.addEventListener("keydown", (e) => {
-  // If typing in an input field, do not hijack keys
-  if (e.target.matches("input, textarea")) return;
-
-  const code = e.code;
-  const shift = e.shiftKey;
-
-  // Orbit Vertically: W / S
-  if (code === "KeyW") {
-    if (activeViewport === "perspective") {
-      camState.perspective.phi -= 0.05;
-      updatePerspectiveCamera();
-    } else {
-      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
+  const isInput = e.target && e.target.matches("input, textarea");
+  if (isInput) {
+    if (e.key === "Escape") {
+      e.target.blur();
+      canvas.focus({ preventScroll: true });
+      status("Viewport focused. Navigation keys active.");
+      e.preventDefault();
     }
-    e.preventDefault();
-  } else if (code === "KeyS") {
-    if (activeViewport === "perspective") {
-      camState.perspective.phi += 0.05;
-      updatePerspectiveCamera();
-    } else {
-      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
-    }
-    e.preventDefault();
+    return;
   }
 
-  // Orbit Horizontally: A / D
-  else if (code === "KeyA") {
-    if (activeViewport === "perspective") {
-      camState.perspective.theta -= 0.05;
-      updatePerspectiveCamera();
-    } else {
-      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
-    }
+  const code = e.code || "";
+  const key = e.key || "";
+
+  if (isNavKey(code, key)) {
     e.preventDefault();
-  } else if (code === "KeyD") {
-    if (activeViewport === "perspective") {
-      camState.perspective.theta += 0.05;
-      updatePerspectiveCamera();
-    } else {
-      showNavToast("Planar orthographic view locked. Orbit in Perspective viewport.");
-    }
-    e.preventDefault();
+    pressedKeys.add(code || key);
+    if (e.shiftKey) pressedKeys.add("shift");
+    // Immediate discrete action on initial press
+    applyNavigationStep(code || key, e.shiftKey, 1.0);
   }
 
-  // Zoom: Shift + Up / Down
-  else if (shift && code === "ArrowUp") {
-    if (activeViewport === "perspective") {
-      camState.perspective.radius *= 0.92;
-      updatePerspectiveCamera();
-    } else {
-      camState[activeViewport].zoom *= 1.1;
-    }
-    e.preventDefault();
-  } else if (shift && code === "ArrowDown") {
-    if (activeViewport === "perspective") {
-      camState.perspective.radius *= 1.08;
-      updatePerspectiveCamera();
-    } else {
-      camState[activeViewport].zoom *= 0.9;
-    }
-    e.preventDefault();
-  }
-
-  // Pan Vertically: Up / Down arrows (without Shift)
-  else if (!shift && code === "ArrowUp") {
-    panActiveCamera(0, 2);
-    e.preventDefault();
-  } else if (!shift && code === "ArrowDown") {
-    panActiveCamera(0, -2);
-    e.preventDefault();
-  }
-
-  // Pan Horizontally: Left / Right arrows
-  else if (code === "ArrowLeft") {
-    panActiveCamera(-2, 0);
-    e.preventDefault();
-  } else if (code === "ArrowRight") {
-    panActiveCamera(2, 0);
-    e.preventDefault();
-  }
-
-  // Delete key
-  else if (code === "Delete" || code === "Backspace") {
+  if (code === "Delete" || code === "Backspace" || key === "Delete" || key === "Backspace") {
     handleDelete();
     e.preventDefault();
   }
 });
 
-function panActiveCamera(dx, dy) {
-  if (activeViewport === "perspective") {
-    const cam = cameras.perspective;
-    const right = new THREE.Vector3();
-    const up = new THREE.Vector3();
-    cam.matrix.extractBasis(right, up, new THREE.Vector3());
-    camState.perspective.target.addScaledVector(right, dx * (camState.perspective.radius / 100));
-    camState.perspective.target.addScaledVector(up, dy * (camState.perspective.radius / 100));
-    updatePerspectiveCamera();
-  } else if (activeViewport === "top") {
-    camState.top.target.x += dx / camState.top.zoom;
-    camState.top.target.z -= dy / camState.top.zoom;
-  } else if (activeViewport === "front") {
-    camState.front.target.x += dx / camState.front.zoom;
-    camState.front.target.y += dy / camState.front.zoom;
-  } else if (activeViewport === "right") {
-    camState.right.target.z += dx / camState.right.zoom;
-    camState.right.target.y += dy / camState.right.zoom;
+window.addEventListener("keyup", (e) => {
+  const code = e.code || "";
+  const key = e.key || "";
+  pressedKeys.delete(code);
+  pressedKeys.delete(key);
+  pressedKeys.delete((code || "").toLowerCase());
+  pressedKeys.delete((key || "").toLowerCase());
+  if (!e.shiftKey) {
+    pressedKeys.delete("ShiftLeft");
+    pressedKeys.delete("ShiftRight");
+    pressedKeys.delete("shift");
   }
-}
+});
+
+window.addEventListener("blur", () => {
+  pressedKeys.clear();
+});
 
 /* =========================================================================
    9. MODAL DIALOGS & DIALOG LOGIC
@@ -1804,6 +1934,7 @@ function resizeRenderer() {
 
 function render() {
   requestAnimationFrame(render);
+  updateContinuousNavigation();
   resizeRenderer();
 
   // WebGL setViewport and setScissor operate on the physical drawing buffer:
