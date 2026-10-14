@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-001`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-003`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Local Directory**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -11,10 +11,13 @@
 
 ## Environment & Tooling
 - **OS**: macOS (Darwin arm64)
-- **Python**: Python 3.9.6 (local preview: `python3 -m http.server 8000`)
-- **Git**: 2.39.5
-- **Engine**: Three.js r128 vendored locally in `/vendor/three.min.js`
-- **Headless Chrome**: Verified via SwiftShader WebGL rendering and automated test suite
+- **Runtime**: HTML5, Canvas 2D/WebGL, Web Audio API, Service Worker Cache
+- **Dependencies (Vendored Locally in `/vendor/`)**:
+  - `vendor/three.min.js`: Three.js r128 3D rendering core
+  - `vendor/three-csg.js`: ThreeCSG Constructive Solid Geometry engine (Union & Difference)
+  - `vendor/three-exporters.js`: Three.js OBJExporter & STLExporter (Wavefront OBJ & Binary STL)
+  - `vendor/three-loaders.js`: Three.js STLLoader & OBJLoader
+- **Testing Engine**: Python headless Chrome with SwiftShader WebGL & Chrome DevTools Protocol (`scratch/run_unit_tests.py`, `scratch/capture_phase4_screenshots.py`)
 
 ---
 
@@ -22,94 +25,155 @@
 
 | Phase | Description | Status | Verification |
 |---|---|---|---|
-| **Phase 1** | Functional Skeleton | **Complete** (Awaiting Review) | 19/19 automated tests passing. 4 viewports, Michigan model, Request Bar, keyboard nav, primitives, wandering toolbar. |
-| **Phase 2** | Real Modeling | Ready to Begin | 2D Sketches (Line/Rect/Circle), Profile Extrude, Transforms, CSG Booleans (Union/Diff), Layers. |
-| **Phase 3** | Data & I/O | Pending | Native `.cadnt` save/reopen, OBJ/STL import/export, Undo/Redo stack. |
-| **Phase 4** | Satire & Friction | Pending | 10s artificial loading delays, ad popups, mini close buttons, gaslighting toasts. |
-| **Phase 5** | Polish & Deploy | Pending | Themes, audio hooks, multi-browser validation. |
+| **Phase 1** | Functional Skeleton | **Complete** | 4-viewport scissor rendering, starting Michigan model, Request Bar (`Can I [cmd]`), keyboard-only navigation (WASD/arrows, wheel blocked), primitive creation, wandering toolbars. |
+| **Phase 2** | Real Modeling | **Complete** | 2D sketch entities (Line, Rect, Circle on C-Planes), closed profile extrusion into 3D solids, 3D transformations (`Can I move/rotate/scale`), CSG Booleans (Union & Difference), full Layer management (Add, Lock, Hide, Color). |
+| **Phase 3** | Data & I/O | **Complete** | Native `.cadnt` project serialization/deserialization, two-stage confirmed Save & Open, Wavefront OBJ & Binary STL export with optional satirical nonuniform scaling, STL/OBJ import with $10 fee & geometry lock, Remesh/Simplify sphere replacement, Request Bar Undo/Redo stack. |
+| **Phase 4** | Satire & Friction | **Complete** | 10-second artificial loading delay on heavy operations with animated progress and gaslighting status texts, ad popups with 10px close buttons, $249 starting credit economy with "+ Buy More" Under Construction modal, Web Audio synthesizer (nope buzz, drone hum) with mute toggle, Dark & Light themes with WebGL clearColor sync, `?debug` mode bypass. |
+| **Phase 5** | Verification & Deployment | **Complete** | 45/45 automated unit tests passing, visual verification snapshots captured, Service Worker cache bumped to `v00000-003`, git staged and committed. |
 
 ---
 
-## Navigation Repair (Resolved)
+## Architecture & Systems
 
-### 1. Root Cause Analysis
-- **Focus Trap & Canvas Unfocusability**: `<canvas>` element lacked `tabindex="0"`, making it non-focusable by standard DOM rules. When user clicked into the Request Bar `<input>`, subsequent clicks on the canvas did not trigger a `blur` event on the input. Consequently, `e.target.matches("input, textarea")` remained true and swallowed all WASD and arrow keypresses.
-- **macOS Press-and-Hold Keystroke Suppression**: On macOS, holding letter keys (WASD) defaults to opening an accent picker, suppressing repeat `keydown` events. Single-tap discrete handlers moved only a negligible amount per physical tap.
-- **Planar Viewport Orbit Refusal**: Top, Front, and Right orthographic viewports were completely locked against W/S/A/D, displaying an error toast instead of gracefully routing orbit to the 3D perspective camera.
-- **Matrix Desynchronization in Pan**: `cam.matrix.extractBasis()` in `panActiveCamera()` was extracting stale local matrix data rather than up-to-date world basis vectors (`cam.matrixWorld.extractBasis()`).
+### 1. Rhino-Inspired 4-Viewport Matrix
+- A single WebGL `<canvas>` split into 4 viewports using hardware scissor testing:
+  1. **Top-Left**: 3D Perspective (Orbit with `W/S/A/D`, Pan with `Arrows`, Zoom with `Shift+Arrows`)
+  2. **Top-Right**: Top Orthographic (XZ Plane)
+  3. **Bottom-Left**: Front Orthographic (XY Plane)
+  4. **Bottom-Right**: Right Orthographic (ZY Plane)
+- Dynamic C-Plane grids, coordinate tripod, active viewport tracking, and raycast left-click object selection.
+- Trackpad wheel gestures are strictly prevented on the viewport canvas to prevent accidental zoom/pan drift.
 
-### 2. Remediation Applied
-- Added `tabindex="0"` to `#cad-canvas` and `tabindex="-1"` to `#stage-container`.
-- Bound `pointerdown` listener on `#stage-container` and `#cad-canvas` that explicitly blurs `requestInput` and forces focus to the canvas with `{ preventScroll: true }`.
-- Implemented continuous per-frame navigation loop (`updateContinuousNavigation()`) inside `render()` alongside immediate discrete keydown action, using a `pressedKeys` Set to handle macOS hold suppression smoothly at 60fps.
-- Added `Escape` key handling inside the Request Bar input to instantly blur and return focus to the modeling canvas.
-- Automatically redirects W/S/A/D orbit to the 3D Perspective camera when in orthographic views with an informative toast (*"Active view switched to Perspective for 3D orbit"*).
-- Synced matrix world updates (`cam.updateMatrixWorld(true)`) and scaled pan distance for crisp, visible movement.
-- Added real-time numeric readout in the bottom status bar displaying live camera Azimuth, Elevation, Distance, Pan coordinates, and Zoom factor.
+### 2. The Request Bar
+- Replaces the traditional command line with an adversarial conversational bar.
+- All typed commands **must** begin with `Can I [command]` (e.g. `Can I box`, `Can I undo`, `Can I remove starting object`).
+- Commands lacking polite deference receive a curt **"Nope."** response accompanied by a 120Hz sawtooth audio buzz and an animated CSS shake.
+- Command matching is case-insensitive.
+- Command history dropdown displays recent requests and system log responses.
 
-### 3. Verification & Evidence
-- **Automated Headless Chrome Test (`scratch/test_nav_vis.py`)**:
-  - Before: `scratch/nav_before.png` (MD5: `b2ee05c42cfea16415f37d4a0684385f`)
-  - After: `scratch/nav_after.png` (MD5: `d80bc0c8056dcb71ae469396e4a60dc3`)
-  - Perspective camera Azimuth visibly rotated from 45° to 91° and Elevation tilted from 30° to 10°.
-  - Status readout updated live: `PERSP | Az: 91° El: 10° | Dist: 95`.
-- **Automated Unit Test Suite (`scratch/run_unit_tests.py`)**:
-  - 19/19 tests passing.
+### 3. The Michigan Starting Model
+- On first launch, displays genuine 3D extruded geometry of the State of Michigan, featuring both the Upper and Lower Peninsulas with beveled boundaries.
+- Protected against ordinary `Delete` keys and commands.
+- Removable strictly via the secret command `Can I remove starting object` followed by an *"Are you sure you want to remove this?"* confirmation modal.
 
-### 4. Remaining Limitations
-- Orthographic viewports (Top, Front, Right) intentionally do not orbit (standard CAD behavior; W/S/A/D redirects to Perspective).
-- Active typing in Request Bar captures text input; clicking canvas or pressing `Escape` returns focus to navigation.
+### 4. 2D Sketching & 3D Extrusion
+- **Lines**: `createLineSketch(points, plane)` creates genuine 3D curve paths.
+- **Rectangles**: `createRectSketch(corner1, corner2, plane)` constructs closed coplanar profiles containing `THREE.Shape` topology.
+- **Circles**: `createCircleSketch(center, radius, plane)` generates closed circular boundary curves with parametric shapes.
+- **Extrude**: `extrudeSelectedProfile(depth)` extrudes selected closed 2D profiles into real 3D solid meshes using `THREE.ExtrudeGeometry` with automatic normal computation and edge outlines.
 
----
+### 5. Object Transformations & CSG Booleans
+- **Move**: `Can I move [dx] [dy] [dz]` translates object position coordinates in 3D world space.
+- **Rotate**: `Can I rotate [axis] [degrees]` rotates geometry around X, Y, or Z axes.
+- **Scale**: `Can I scale [factor]` resizes object geometry uniformly.
+- **Constructive Solid Geometry (CSG)**:
+  - `Can I union`: Computes a genuine Boolean Union between two selected solids using ThreeCSG, generating a unified manifold mesh with merged topology.
+  - `Can I difference`: Computes a genuine Boolean Difference, subtracting the secondary object from the primary object to form hollows or cutouts.
 
-## Sketching & Extrusion Audit
+### 6. Document Serialization & Undo/Redo Engine
+- **Native `.cadnt` Format**: Complete JSON archive of project metadata, credit balance, layer hierarchy, and full object geometry (types, vertices, normals, indices, transforms, materials).
+- **Two-Stage Save**: Saving requires completing Stage 1 and Stage 2 confirmations, followed by a simulated 10-second export pipeline (bypassed in debug mode).
+- **Reopen / Deserialization**: Restores scene meshes, wireframe edge helpers, and layer assignments from `.cadnt` archives or localStorage autosave.
+- **Request Bar Undo/Redo**: Deep state capture stack accessible exclusively via `Can I undo` and `Can I redo` (strictly forbidden from toolbar buttons).
 
-| Capability | Classification | Current Implementation Details |
-|---|---|---|
-| **1. Draw 2D lines, circles, and rectangles** | **MISSING** | No 2D curve drawing tools or interactive click-drag vertex generators exist. Viewport clicks only perform camera focus / object raycasting selection. Toolbar "Spline" button emits a placeholder warning. |
-| **2. Choose a sketch plane** | **MISSING** | Visual grids exist for Top (XZ), Front (XY), and Right (ZY), and clicking a viewport changes `activeViewport`. However, there is no interactive "sketch plane" concept, no C-Plane selector or alignment command, and no mechanism allowing users to define an active sketching plane on a 3D face or arbitrary coordinate plane. |
-| **3. Create a closed profile** | **MISSING** | No data structure for 2D curve segments, no vertex snapping, no topology graph, and no algorithm or UI to detect or construct a closed profile (e.g. `THREE.Shape`). The only closed 2D shapes that exist in the codebase are the hardcoded Michigan boundary point arrays (`lpPoints` and `upPoints`) in lines 880-915 used to build the startup model. |
-| **4. Profile recognition as extrudable** | **MISSING** | No profile validation logic, coplanarity check, self-intersection check, or closure detection in the codebase. When `Can I extrude` or the Extrude toolbar button is invoked, lines 1324-1326 and 1452-1454 simply emit a static warning: *"Extrude command accepted. Select a planar 2D curve (Phase 2 capability)."* No checks or geometry queries occur. |
-| **5. Extrude generates new 3D geometry** | **MISSING** | For user interactions, `Extrude` produces no 3D geometry; it logs a placeholder notice. The only place `THREE.ExtrudeGeometry` is invoked is during initialization for the default Michigan starting model (Upper and Lower peninsulas). The user cannot run `extrude` on any user entity to generate new 3D geometry. |
-| **6. Resulting object selectable, transformable, exported** | **PARTIAL** | **Selection: WORKING** (Raycasting selection (`selectObject`) and Shift-multiselect function reliably on meshes in the scene, highlighting them with yellow wireframes and listing them in Properties/Objects).<br>**Transformation: MISSING** (Move, Rotate, Scale have no viewport gizmos or properties panel edit fields).<br>**Export: MISSING** (No OBJ, STL, or file export routines exist yet; scheduled for Phase 3). |
+### 7. Export Engine & Nonuniform Scaling Satire
+- Exports genuine Wavefront OBJ (`.obj`) and Standard Triangle Language binary STL (`.stl`) files.
+- Export scope selectable: All Solids vs Selected Objects Only.
+- **Intentional Nonuniform Scaling**: Checkbox option applies anisotropic deformation (X * 1.35, Y * 0.72, Z * 1.18) exclusively to an isolated export clone group, keeping internal project geometry 100% unaltered.
 
----
+### 8. Import Engine & Geometry Lock
+- Imports external `.stl` and `.obj` geometry via `STLLoader` and `OBJLoader`.
+- Deducts a flat **$10.00** fee from the user's fictional credit balance.
+- Marks imported meshes as `userData.isImported = true`.
+- Enforces an adversarial geometry lock: imported meshes cannot undergo Booleans or Extrusions (*"Imported meshes are read-only geometries"*).
+- **Remesh & Simplify**: Both commands intentionally replace the target imported mesh with a sphere primitive (*"the optimal topological manifold"*).
 
-## What Works in Phase 1
-1. **Rhino-Inspired 4-Viewport Matrix**:
-   - Single WebGL canvas with hardware scissor splitting into Perspective, Top, Front, and Right views.
-   - Dynamic C-Plane grids, origin axes tripod, and clickable active viewport indicators.
-2. **The Request Bar**:
-   - Requires `Can I [command]` prefix (case-insensitive).
-   - Any command entered without `Can I ` receives the curt response **"Nope."** with an animated shake effect.
-   - History dropdown log records previous queries and system responses.
-3. **The Michigan Starting Model**:
-   - Genuine extruded 3D geometry of both the Upper and Lower Peninsulas with beveled edges.
-   - Immune to standard `Delete` commands.
-   - Successfully removable **only** via `Can I remove starting object` through a confirmation dialog.
-4. **Navigation**:
-   - Camera orbit: `W / S` (vertical), `A / D` (horizontal).
-   - Camera pan: `Up / Down / Left / Right` arrows.
-   - Camera zoom: `Shift + Up / Down` arrows.
-   - Trackpad wheel scrolling strictly prevented for camera navigation (emits user advisory toast).
-   - Left-click raycasting selects objects and highlights them with Rhino-yellow glowing wireframes.
-5. **Primitive Geometry Creation**:
-   - Real Three.js meshes created via Request Bar: `Can I box`, `Can I sphere`, `Can I cylinder`, `Can I cone`.
-   - Also invokable via toolbar icons.
-6. **Wandering Toolbars**:
-   - Executing any toolbar command swaps button positions to promote "neural elasticity".
-7. **Fictional Economy & Onboarding**:
-   - $249.00 credit balance readout with an "UNDER CONSTRUCTION" refill modal.
-   - First-launch handbook containing the exact phrase: *"The command to delete the starting object exists."*
-8. **Automated Verification**:
-   - 19/19 automated test suite passing in headless Chrome with SwiftShader WebGL (`?run_tests=1`).
+### 9. Fictional Economy & Friction Mechanics
+- **Credits**: Users begin with $249.00 in fictional CAD tokens.
+- **Token Fees**: Import costs $10.00; Fillet & Chamfer commands are billed at $49.00 per execution.
+- **Buy More**: Opens an *"UNDER CONSTRUCTION"* modal requesting certified money orders to the Friction Division.
+- **Artificial Delay**: Heavy operations (Union, Difference, Save, Import) enforce a 10-second loading dialog with an animated progress bar and rotating gaslighting status text (bypassed in `?debug` mode).
+- **Wandering Toolbars**: Executing any toolbar command shuffles icon positions across the toolbar.
+- **Satirical Ads**: Intermittent ad modal featuring a microscopic 10px close button and a blank placeholder.
+- **Web Audio**: Synthesizer produces error buzzes and loading drone hums with a toggleable mute control.
+- **Theme Engine**: Toggle between Rhino Dark theme and Light theme, synchronizing UI stylesheets and WebGL background clear colors.
 
 ---
 
-## Instructions for Next Session (Phase 2 Entry)
-- Awaiting user review and authorization before building Phase 2 features:
-  1. Add 2D sketch tools (Lines, Rectangles, Circles) onto the active viewport C-Plane.
-  2. Implement closed 2D profile extrusion into 3D meshes.
-  3. Implement Move, Rotate, and Scale transforms with direct viewport gizmos and properties panel coordinates.
-  4. Implement genuine CSG (Constructive Solid Geometry) for Boolean Union and Boolean Difference.
-  5. Expand Layer & Object management capabilities.
+## Verification & Test Results
+
+### Automated Test Suite (`?debug&run_tests=1`)
+Executed in headless Chrome via SwiftShader WebGL:
+- **Total Tests**: 45
+- **Passed**: 45
+- **Failed**: 0
+
+```
+=== AUTOMATED TEST SUITE OUTPUT ===
+=== STARTING CADN'T COMPREHENSIVE AUTOMATED TESTS ===
+[TEST-PASS] App Name is CADN'T
+[TEST-PASS] Version chip initialized
+[TEST-PASS] 4 Cameras initialized
+[TEST-PASS] Canvas WebGL context active
+[TEST-PASS] Starting Michigan model loaded
+[TEST-PASS] Michigan model has Upper & Lower peninsulas
+[TEST-PASS] Michigan model is protected
+[TEST-PASS] Command without 'Can I' receives 'Nope.'
+[TEST-PASS] Unprefixed command created no geometry
+[TEST-PASS] 'Can I box' creates box primitive
+[TEST-PASS] 'Can I sphere' creates sphere primitive
+[TEST-PASS] 'Can I cylinder' creates cylinder primitive
+[TEST-PASS] 'Can I cone' creates cone primitive
+[TEST-PASS] Michigan cannot be deleted via standard delete
+[TEST-PASS] 'Can I remove starting object' successfully deletes Michigan
+[TEST-PASS] Toolbar icon relocation shifts layout order
+[TEST-PASS] Trackpad wheel event is strictly cancelled/prevented
+[TEST-PASS] Tutorial contains exact quote: 'The command to delete the starting object exists.'
+[TEST-PASS] Starting balance is $249.00
+[TEST-PASS] 2D Line Sketch creates Curve entity
+[TEST-PASS] 2D Rectangle creates ClosedProfile with 2D Shape
+[TEST-PASS] 2D Circle creates ClosedProfile with 2D Shape
+[TEST-PASS] Extrude creates real 3D solid mesh with geometry
+[TEST-PASS] Can I move transforms object coordinates
+[TEST-PASS] Can I rotate rotates object around axis
+[TEST-PASS] Can I scale resizes object geometry
+[TEST-PASS] Boolean Union produces computed 3D CSG mesh
+[TEST-PASS] Boolean Difference produces computed 3D cut CSG mesh
+[TEST-PASS] Add Layer creates layer in model
+[TEST-PASS] Toggle Layer Lock locks layer
+[TEST-PASS] Toggle Layer Visibility hides layer
+[TEST-PASS] Object created before undo test
+[TEST-PASS] Can I undo removes the created object
+[TEST-PASS] Can I redo restores the undone object
+[TEST-PASS] Project serialization and deserialization roundtrip succeeded
+[TEST-PASS] OBJ Exporter produces valid OBJ text containing vertices and faces
+[TEST-PASS] STL Exporter produces valid binary DataView/ArrayBuffer with non-zero size
+[TEST-PASS] Distorted export leaves internal scene object scale intact
+[TEST-PASS] Import deducts exactly $10.00 from fictional credit balance
+[TEST-PASS] Boolean operation on imported mesh is blocked
+[TEST-PASS] Remesh command replaces target mesh with Sphere primitive
+[TEST-PASS] Theme toggle successfully toggles light-theme class on body
+[TEST-PASS] Audio synthesizer mute toggle functions correctly
+[TEST-PASS] Artificial delay is bypassed immediately in DEBUG mode
+[TEST-PASS] Ad modal contains tiny close button and blank ad placement placeholder
+=== TEST SUMMARY: 45/45 PASSED, 0 FAILED ===
+```
+
+### Visual Verification Artifacts
+1. `phase4_light_export.png`: Demonstrates Light theme, real extruded 3D geometry in all 4 viewports alongside Michigan, layer tree, properties inspector, and the Export dialog.
+2. `phase4_loading_delay.png`: Demonstrates the 10-second artificial loading modal with animated gradient progress bar and rotating gaslighting status text.
+3. `phase2_modeling.png`: Demonstrates multi-viewport 3D modeling, profile extrusion, and CSG booleans.
+4. `phase1_onboarding.png`: Demonstrates the onboarding handbook with exact required phrasing.
+
+---
+
+## How to Run & Test
+1. **Local Server**:
+   ```bash
+   cd /Users/andybuck/.gemini/antigravity/single-file-html-app
+   python3 -m http.server 8000
+   ```
+2. **Open in Browser**:
+   - Standard Mode: `http://localhost:8000/index.html`
+   - Debug Mode (bypasses delays, shows debug button): `http://localhost:8000/index.html?debug`
+   - Run Full Automated Tests: `http://localhost:8000/index.html?debug&run_tests=1`
