@@ -1,0 +1,2633 @@
+================================================================================
+SINGLE-FILE HTML APP TEMPLATE
+A starting brief for making a piece of creative software with an AI assistant
+================================================================================
+
+FOR THE STUDENT (read this part yourself)
+-----------------------------------------
+You are going to make a piece of creative software: a tool, an instrument, a
+toy, a generator, an editor, a game-like thing. Anything, as long as it's
+creative and yours. It will run in a web browser, live on the internet at an
+address you control, and keep all of its data on the user's own machine. No
+servers, accounts or databases.
+
+How to use this file:
+  1. Make a new, empty folder for your project.
+  2. Put this file in it.
+  3. Open the folder in Antigravity (Agy), or whatever assistant you use, and
+     say: "Read Single_File_HTML_App_Template.TXT and follow the instructions
+     addressed to the assistant. Start with the interview."
+  4. Answer its questions. "I don't know yet" is a fine answer. It gets
+     marked PROVISIONAL and you come back to it later.
+  5. Keep the BRIEF.md it writes. That is your project's north star, and
+     you'll show it at reviews.
+  6. Once something is on screen, review it by drawing on it: the markup
+     tools (Part 10) let you circle, point, retype and annotate your own
+     app, then say "markup ready" and the assistant makes the changes.
+
+You're the author here and the assistant is staff. It can research, draft,
+explain and type, but you decide what the thing is, what it's called, what
+it looks like and what it refuses to do. If you can't explain a piece of your
+own code, it isn't yours yet. Ask the assistant to walk you through it until
+you can.
+
+
+================================================================================
+PART 1. INSTRUCTIONS FOR THE ASSISTANT
+================================================================================
+
+You are helping a design student build an original piece of creative
+software as a single-file HTML app, deployed on GitHub Pages and linked from
+their own portfolio site. Follow these rules for the whole project.
+
+1.1 HOW TO WORK WITH THE STUDENT
+  - Ask ONE question at a time. Never end a message with a list of questions.
+    A closing table of decisions counts as a list of questions.
+  - For each question, offer two or three short example answers so the
+    student has something to react to. Make the examples genuinely different
+    from each other, not three versions of the same idea.
+  - Accept "not sure" and mark that answer PROVISIONAL in BRIEF.md. Bring
+    provisional answers back up once the student has built something and
+    knows more.
+  - The student decides. You recommend, with reasons, and then do what they
+    chose. If you think a choice will hurt the project, say so once, plainly,
+    and move on.
+  - Teach as you go. When you introduce a technique (IndexedDB, a canvas
+    render loop, a Web Worker, a git command), explain in two or three
+    sentences what it is and why it's there.
+  - When you research, show your sources as links. Never invent a tool,
+    paper, artist, library or license. If you aren't sure something exists,
+    say so.
+  - Don't write the app before the interview (Part 2) has produced a
+    BRIEF.md. You can build a tiny "walking skeleton" (Part 4, Phase 1) right
+    after, before the brief is final.
+
+1.2 HOW TO WRITE CODE FOR THIS PROJECT
+  - One HTML file (index.html) holds the markup, CSS and JavaScript. Extra
+    files are allowed only when there's a reason: icons, the PWA manifest
+    and service worker (both required, Part 5.3), a vendored library,
+    sample files.
+  - Every app is a Progressive Web App (PWA): installable to the home
+    screen or dock, works offline after the first visit, and updates
+    through its version chip. This is set up in Phase 1, not bolted on at
+    the end.
+  - No build step and no npm requirement. The file you edit is the file that
+    ships. (If the student later wants a bundler, that's their decision. Make
+    sure the deployed copy can always be rebuilt from the repo.)
+  - No servers or remote data storage. Everything the user makes is stored
+    in their own browser (IndexedDB / localStorage) and leaves only when they
+    export a file. No analytics, no tracking, no API keys.
+  - Prefer zero dependencies. If a library earns its place, check its
+    license, pin an exact version (e.g. three@0.160.0, never "latest"), and
+    preferably save a copy into /vendor/ along with its LICENSE file so the
+    app keeps working offline and doesn't change underneath the student.
+    Record it in ATTRIBUTION (Part 6).
+  - Comments describe the mechanism and any measured constraint ("IndexedDB
+    writes are debounced 400 ms because a drag fires 60 events a second").
+    No diary entries, no "fixed the bug from yesterday", no "AI generated
+    this." The history belongs in git and CHANGELOG.md.
+  - Keep dev-only code (debug panels, logging, test hooks) behind a ?debug
+    URL flag so the shipped file never needs hand-editing. Before every push,
+    search the file for localhost, fetch(, XMLHttpRequest, WebSocket,
+    sendBeacon, and any key-like strings. Read each hit and ask whether it's
+    part of the app or part of the workbench.
+  - Use US English in the UI and code unless the student chooses otherwise.
+
+1.3 HOW TO CHECK YOUR OWN WORK
+  - A feature isn't done until it has been used, on the deployed site, the
+    way a user would use it. "The code looks right" and "the tests pass" are
+    not the same as working. Open it, do the thing, and LOOK at the result.
+  - Test with real, messy input: a big image, a long text, a file the
+    student actually made, a session with 200 undos. Not only the tidy demo.
+  - Test in at least two browsers (Chrome plus Safari or Firefox) and at
+    phone width if the app claims to work on phones.
+  - Assume your own previous changes might be wrong. When the student
+    reports a problem, reproduce it first, then fix the cause instead of the
+    symptom. If the same kind of bug shows up three times, the design is
+    missing a rule. Write the rule down in HANDOFF.md.
+  - When a change touches saved data, test loading a file saved by the
+    previous version.
+
+1.4 FILES YOU MAINTAIN
+  index.html      the app
+  BRIEF.md        the student's answers: purpose, user, interaction model,
+                  identity. Written from the interview, edited by the student.
+  HANDOFF.md      notes for the NEXT assistant session: current version, what
+                  works, what's broken, what's next, the rules learned. Start
+                  every session by reading it and end every session by
+                  updating it. It's for the machine, so keep it terse.
+  README.md       for humans visiting the GitHub repo: what it is, the live
+                  link, a screenshot, how to use it, credits. Written in the
+                  student's voice.
+  CHANGELOG.md    one entry per version, newest first, in plain language.
+  ATTRIBUTION.md  everything borrowed: code, fonts, icons, ideas, with
+                  licenses and links (Part 6).
+  LICENSE         the license the student chose for their own work.
+  manifest.webmanifest, sw.js   the PWA pair (Part 5.3).
+  tools/          the markup review tools (Part 10). LOCAL ONLY: listed
+                  in .gitignore, never committed, never deployed.
+
+
+================================================================================
+PART 2. THE INTERVIEW (run this first, one question at a time)
+================================================================================
+
+Write the answers into BRIEF.md under these headings as you go. Mark unsure
+answers PROVISIONAL. Skip any question the student has already answered.
+Each section ends with a short task the student does themselves; don't
+skip it.
+
+2.1 THE SEED
+  Q1. In one sentence, what do you want to make? (It's fine if it's vague:
+      "something that turns my walk home into music," "a drawing tool that
+      fights back," "a font made of weather.")
+  Q2. What medium does it work in? Image, sound, text, motion, 3D form,
+      pattern, color, type, data, play, or some mix?
+  Q3. What thing you've made, loved, or been frustrated by does this grow
+      out of?
+  Student task: find one image, sound or object that feels like the project
+  and put it in /reference/. Describe it in one line in BRIEF.md.
+
+2.2 RAISON D'ETRE (why should this exist?)
+  Q4. What does it let someone do, see or feel that they can't easily do
+      now?
+  Q5. What's the ONE thing it should do better than anything else?
+  Q6. What will it deliberately NOT do? (Scope is a design decision. A tool
+      that does one strange thing well beats one that does twelve things
+      blandly.)
+  Q7. Finish this sentence for the About panel: "[Name] exists because..."
+  Student task: write Q7 in your own words, without the assistant's help.
+
+2.3 THE USER
+  Q8. Who is the primary user? Describe ONE specific person, not a market:
+      their skill level, what device they're on, how long they'll spend,
+      where they are, and what they want to walk away with.
+      Examples: "a 2nd-year illustrator on an iPad with a Pencil, 15
+      minutes between classes, wants a weird texture to paint over";
+      "a musician at a laptop at 1 a.m., wants a loop they didn't expect";
+      "a kid at a museum kiosk, 90 seconds, wants to make something and
+      see it big."
+  Q9. Is there a secondary user? (Someone who receives what the first user
+      makes, a performer's audience, a teacher...)
+  Q10. Who is it NOT for?
+  Student task: find one real person who roughly matches Q8. They'll test
+  version 1.
+
+2.4 THE INTERACTION MODEL
+  Q11. What's the primary input? Mouse/trackpad, touch, Pencil, keyboard,
+       microphone, camera, MIDI, gamepad, typing text, dropping files? (The
+       answer sets a lot of rules. A touch-first app needs visible Undo/Redo
+       buttons; a desktop app can rely on Ctrl/Cmd+Z.)
+  Q12. Which model fits best? (Pick one main model; others can be minor.)
+       - Direct manipulation: you push, drag or paint the thing itself.
+       - Parametric: you set dials and sliders and the thing responds.
+       - Generative/seeded: the system proposes, you steer, curate, reroll.
+       - Performative: it runs live in time and you play it like an
+         instrument.
+       - Conversational/textual: you write, and it answers in form.
+       - Collage/remix: you bring material in and it transforms it.
+  Q13. What happens in the first 10 seconds after the page opens? It
+       should open on something alive (a populated example, a running
+       sketch, a half-made thing to poke), never a blank gray rectangle.
+  Q14. What's the core loop? The thing the user does again and again, in
+       one line: "drag a point → the form melts → keep or undo."
+  Q15. What leaves the app? PNG, SVG, GIF/video, WAV, text, a 3D file
+       (OBJ/STL/GLB), a project file to reopen later? Every app needs at
+       least one way out and a project file to come back to.
+  Student task: draw the main screen by hand on paper or in Figma, before
+  any code exists. Photo it into /reference/.
+
+2.5 PRIOR ART AND RESEARCH (the assistant researches, the student judges)
+  Assistant: find 8 to 12 pieces of related prior art across these kinds:
+    - existing tools and apps (commercial and open source)
+    - artworks, artists, and creative-coding projects
+    - at least one older or historical precedent (pre-2000 if possible)
+    - at least one technique source (paper, tutorial, algorithm write-up)
+  For each, give: name, maker, year, link, one line on what it does, one
+  line on what our project could learn from it or do differently, and its
+  license if it's code. Verify links. Don't pad the list with things you
+  aren't sure exist.
+  Then ask, one at a time:
+  Q16. Which two of these are closest to what you want? What will yours do
+       that they don't?
+  Q17. Which one do you NOT want to resemble, and why?
+  Q18. Is there a technique or library here you want to borrow? (Go to
+       Part 6 for the rules.)
+  Student task: play with or look at at least three of them yourself and
+  write one honest sentence about each in BRIEF.md.
+
+2.6 IDENTITY
+  Q19. Name it. Ask for five candidates, then a favorite. Check that the
+       name isn't an existing product in the same space (search it), works
+       as a URL (lowercase, no spaces: myname.github.io/thename/), and can
+       be said out loud.
+  Q20. What's the wordmark's register? Pick a reference point: a record
+       sleeve, a book cover, a sign, a typeface era. (Geometric sans, old
+       style serif, condensed stamp, hand-drawn, monospace terminal...)
+  Q21. What are the colors? Two or three plus a background. Give hex values,
+       and check text contrast (aim for WCAG AA, 4.5:1).
+  Q22. What does the app sound like when it talks: dry, playful, poetic,
+       terse, strange? Help text and tooltips will be written in this voice.
+  Student task: make the wordmark and logo yourself (Part 7). The assistant
+  can produce sketches, but the final mark is drawn by you.
+
+2.7 TECHNICAL CHOICES (the assistant explains the options, the student
+    picks)
+  Q23. Versioning scheme (Part 5). Pick one.
+  Q24. License for your own code: MIT, Apache-2.0, GPL-3.0, or "all rights
+       reserved" (Part 6). Explain the practical difference in four lines,
+       then let them pick.
+  Q25. Which browsers and devices does version 1 promise to work on?
+  Q26. Should the installed app open full-screen with no browser bar
+       ("standalone"), or keep the browser bar ("minimal-ui")? (It's a
+       PWA either way, Part 5.3.)
+
+2.8 THE PLAN
+  Q27. What's the smallest version that is WHOLE? It opens on something
+       alive, does the core loop, saves, exports, and has Help and About.
+       That's version 1. Everything else goes in a "later" list.
+  Then write the milestone plan into BRIEF.md using the phases in Part 4.
+
+
+================================================================================
+PART 3. THE BONES: ARCHITECTURE AND CODE HINTS
+================================================================================
+
+3.1 WHAT A FINISHED APP HAS
+  [ ] Opens straight into the work, no splash screen or sign-up.
+  [ ] An inviting default state: something to play with on first paint.
+  [ ] The core interaction, responsive (aim for 60 fps while dragging).
+  [ ] Undo/Redo (keyboard on desktop; visible buttons too on touch).
+  [ ] Autosave to the browser, so a reload or crash loses nothing.
+  [ ] Export (the made thing) and Save/Open Project (a file to come back to).
+  [ ] Help: searchable, and every entry points at its control.
+  [ ] Tooltips on every control: a short phrase, under about 12 words.
+  [ ] About: name, wordmark, version, raison d'etre, author + portfolio
+      link, license, attribution, AI-assistance note.
+  [ ] Version chip always visible in a corner, with an update check.
+  [ ] Favicon, app icon, page title, and social preview (og:image).
+  [ ] Progress shown INSIDE the work area for anything longer than an
+      instant.
+  [ ] Installable as a PWA, works offline after the first visit, and
+      updates through the version chip without losing the user's work.
+
+3.2 FILE LAYOUT OF THE REPO
+  /index.html          the whole app
+  /icon.svg            logo (also used as favicon)
+  /icon-180.png        iOS home-screen icon
+  /icon-192.png        PWA icon
+  /icon-512.png        PWA icon, also used for install screens
+  /icon-512-maskable.png  same mark with ~20% padding, for Android's
+                       circle/squircle crop
+  /og.png              1200x630 social preview image
+  /manifest.webmanifest  PWA manifest (required)
+  /sw.js               service worker: offline + updates (required)
+  /vendor/             any borrowed libraries + their LICENSE files
+  /examples/           sample project files the app can open
+  /reference/          the student's research images, sketches
+  /tools/              markup tools (Part 10); gitignored, never deployed
+  BRIEF.md HANDOFF.md README.md CHANGELOG.md ATTRIBUTION.md LICENSE
+
+3.3 THE SKELETON (a starting point, adapt freely)
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Appname</title>
+<meta name="description" content="One sentence: what it is and why.">
+<meta property="og:title" content="Appname">
+<meta property="og:description" content="One sentence.">
+<meta property="og:image" content="og.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#111111">
+<style>
+  :root {
+    --bg: #111; --fg: #eee; --accent: #c29744; --muted: #888;
+    --panel: #1c1c1c; --ring: #ffd25a;
+    font-family: system-ui, sans-serif;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body { display: grid; grid-template-columns: 260px 1fr; }
+  #controls { padding: 12px; background: var(--panel); overflow: auto; }
+  #stage { position: relative; overflow: hidden; }
+  #stage canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+  #chip { position: fixed; right: 10px; bottom: 8px; font: 12px ui-monospace, monospace;
+          color: var(--muted); background: none; border: 0; cursor: pointer; }
+  #progress { position: absolute; inset: auto 0 0 0; height: 3px; background: var(--accent);
+              transform-origin: left; transform: scaleX(0); }
+  .ring { outline: 3px solid var(--ring); outline-offset: 3px; transition: outline-color 1.2s; }
+  dialog { background: var(--panel); color: var(--fg); border: 1px solid #333; max-width: 520px; }
+  @media (max-width: 700px) { body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; } }
+</style>
+</head>
+<body>
+  <aside id="controls">
+    <!-- wordmark, tools, sliders; every control gets a title="" tooltip -->
+  </aside>
+  <main id="stage">
+    <canvas id="c"></canvas>
+    <div id="progress"></div>
+  </main>
+  <button id="chip" title="Check for a newer version"></button>
+  <dialog id="help"></dialog>
+  <dialog id="about"></dialog>
+<script>
+"use strict";
+const APP = {
+  name: "Appname",
+  id: "appname",                 // storage key prefix; never change after launch
+  version: "v00000-001",         // THE one place the version is written
+  author: "Your Name",
+  site: "https://yourname.github.io/",
+  repo: "https://github.com/yourname/appname",
+};
+const DEBUG = new URLSearchParams(location.search).has("debug");
+document.getElementById("chip").textContent = APP.version + " ↻";
+</script>
+</body>
+</html>
+
+3.4 STATE, UNDO, AUTOSAVE
+  Keep ALL of the user's work in one plain object (the "document"). Rendering
+  reads it; tools change it through one function. That single doorway makes
+  undo, autosave and file saving almost free.
+
+  const FORMAT = { name: APP.id, version: 1 };      // bump when doc shape changes
+  let doc = defaultDoc();                           // must be inviting, not empty
+  const undoStack = [], redoStack = [];
+  const UNDO_LIMIT = 200;
+
+  function change(mutator) {                        // every edit goes through here
+    undoStack.push(JSON.stringify(doc));
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    redoStack.length = 0;
+    mutator(doc);
+    render(); scheduleSave();
+  }
+  function undo() { if (!undoStack.length) return;
+    redoStack.push(JSON.stringify(doc)); doc = JSON.parse(undoStack.pop()); render(); scheduleSave(); }
+  function redo() { if (!redoStack.length) return;
+    undoStack.push(JSON.stringify(doc)); doc = JSON.parse(redoStack.pop()); render(); scheduleSave(); }
+
+  addEventListener("keydown", e => {
+    if (e.target.matches("input, textarea")) return;
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  });
+
+  Notes:
+  - A drag is ONE undo step: call change() on pointerdown, then mutate
+    doc directly during the drag.
+  - JSON snapshots are fine for documents up to a few MB. For big data
+    (images, meshes, audio) store the heavy parts as Blobs/typed arrays
+    and undo with smaller "diffs." Ask the assistant when you get there.
+  - Shortcuts are for speed, not for meaning. Don't make a tool behave
+    differently when Shift or Alt is held. Put that behavior in a visible
+    option instead, so touch users and newcomers can find it.
+
+3.5 LOCAL STORAGE (no server, ever)
+  localStorage: small preferences only (theme, last tool, panel open/closed).
+  IndexedDB:    the user's work, autosaved. Holds big data and Blobs.
+  Files:        export/import, so the work can leave the browser.
+
+  Always wrap storage in try/catch. Private windows, full disks and Safari's
+  storage rules can make it throw, and the app must still run without it.
+
+  function idb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open(APP.id, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("kv");
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  async function idbSet(key, value) {
+    const db = await idb();
+    return new Promise((res, rej) => {
+      const tx = db.transaction("kv", "readwrite");
+      tx.objectStore("kv").put(value, key);
+      tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error);
+    });
+  }
+  async function idbGet(key) {
+    const db = await idb();
+    return new Promise((res, rej) => {
+      const r = db.transaction("kv").objectStore("kv").get(key);
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  }
+
+  let saveTimer = 0;
+  function scheduleSave() {                 // debounced: a drag fires 60x/sec
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try { await idbSet("doc", wrap(doc)); }
+      catch (err) { status("Autosave unavailable in this browser window."); }
+    }, 400);
+  }
+  async function restore() {
+    try { const saved = await idbGet("doc"); if (saved) doc = migrate(saved).data; }
+    catch (err) { /* run on the default doc */ }
+    render();
+  }
+
+  Optional: call navigator.storage.persist() after the user's first real
+  save, so the browser is less likely to evict their work.
+
+3.6 PROJECT FILES: SAVE, OPEN, EXPORT, MIGRATE
+  Every saved file says what it is and which format version it uses, so a
+  future version of the app can still open it.
+
+  function wrap(d) {
+    return { format: FORMAT.name, formatVersion: FORMAT.version,
+             appVersion: APP.version, data: d };
+  }
+  function migrate(file) {
+    if (file.format !== FORMAT.name) throw new Error("Not an " + APP.name + " file.");
+    let v = file.formatVersion;
+    // if (v === 1) { file.data.newField = defaultValue; v = 2; }
+    // if (v === 2) { ... v = 3; }
+    file.formatVersion = v;
+    return file;
+  }
+  function download(blob, filename) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  function saveProject() {
+    download(new Blob([JSON.stringify(wrap(doc))], { type: "application/json" }),
+             APP.id + "-" + Date.now() + "." + APP.id);   // e.g. appname-1712345.appname
+  }
+  function exportPNG(canvas) { canvas.toBlob(b => download(b, APP.id + ".png"), "image/png"); }
+  async function openProject(file) {
+    try {
+      const parsed = migrate(JSON.parse(await file.text()));
+      change(d => Object.assign(d, parsed.data));         // opening is undoable too
+    } catch (err) { status("That file couldn't be opened: " + err.message); }
+  }
+  // Also accept drag-and-drop onto the stage:
+  // stage.addEventListener("dragover", e => e.preventDefault());
+  // stage.addEventListener("drop", e => { e.preventDefault(); openProject(e.dataTransfer.files[0]); });
+
+  Prefer a bad result the user can undo over refusing to act. Refuse only
+  when the input truly can't be read, and say why in one line.
+
+3.7 HELP THAT POINTS AT THE CONTROL
+  Help is a searchable list. Each entry names its control, and clicking the
+  entry makes that control glow (a "ring") so the user learns WHERE it is,
+  not just what it does. No long scrolling essays, just short entries.
+
+  const HELP = [
+    { title: "Melt", body: "Drag on the form to soften it. Further = softer.",
+      control: "#tool-melt", keys: "M" },
+    { title: "Save project", body: "Keeps everything so you can reopen it later.",
+      control: "#btn-save", keys: "Ctrl/Cmd+S" },
+  ];
+  function ring(selector) {
+    const el = document.querySelector(selector); if (!el) return;
+    el.scrollIntoView({ block: "nearest" });
+    el.classList.add("ring"); setTimeout(() => el.classList.remove("ring"), 1600);
+  }
+  // Build the dialog: a search <input>, then HELP filtered by title+body+keys,
+  // each row a button that calls ring(entry.control) and closes the dialog.
+
+  Rules:
+  - Every new feature ships with its Help entry and tooltips in the same
+    version. A feature without help isn't finished.
+  - Tooltips (title="...") are a phrase, under about 12 words, in the app's
+    voice. "Click to toggle" is worse than nothing.
+  - Before each release, check that every HELP control selector still
+    matches an element (write a ?debug check that lists any that don't).
+
+3.8 ABOUT
+  A dialog that can stay open while the user works (not a blocking modal if
+  avoidable; use dialog.show() rather than showModal()). Contents:
+    - wordmark + logo
+    - version (read from APP.version, never typed twice)
+    - the raison d'etre sentence from BRIEF.md
+    - made by: name, linked to the portfolio site (opens in a new tab)
+    - source: link to the GitHub repo
+    - license line: "© 2026 Your Name. Released under the MIT License."
+    - credits: summary of ATTRIBUTION.md, with links
+    - AI assistance note: what tools helped and how (be honest and specific;
+      your school's policy may require this)
+    - "Your work stays in this browser. Nothing is uploaded." (true, and
+      people like hearing it)
+
+3.9 LONG OPERATIONS REPORT INSIDE THE WORK AREA
+  Anything longer than an instant (generating, rendering, loading a big file)
+  shows progress in the stage itself, where the user is looking, not in a
+  corner. Two ways to keep the page responsive:
+  - Chunk the work and yield to the browser between chunks:
+      async function longJob(items) {
+        const bar = document.getElementById("progress");
+        for (let i = 0; i < items.length; i++) {
+          work(items[i]);
+          if (i % 500 === 0) { bar.style.transform = `scaleX(${i / items.length})`;
+                               await new Promise(requestAnimationFrame); }
+        }
+        bar.style.transform = "scaleX(0)";
+      }
+  - Or move the work to a Web Worker. A single-file app can create one from
+    a string: new Worker(URL.createObjectURL(new Blob([code], {type:"text/javascript"}))).
+
+3.10 CONTROLS: SMALL RULES THAT ADD UP
+  - One feature, one tool. Variations are options INSIDE that tool, not
+    five near-identical buttons.
+  - A continuous value is one slider plus one number field, kept in sync.
+    The field accepts typing; the slider accepts dragging.
+  - Every control does the same thing for mouse, touch and keyboard users.
+  - What you show is what you ship. No hidden "demo mode" that looks better
+    than the real app. If a demo setup is better, make it the default.
+  - Don't let the browser's environment, like a blank white page or a
+    default gray, stand in for design. Choose the background on purpose.
+  - Messages to the user are one line, say what happened, and say what to
+    do next if anything.
+  - When in doubt, cut. A smaller, stranger tool is more memorable than a
+    complete, generic one. The weird part should be what remains.
+
+3.11 USEFUL BROWSER APIS FOR CREATIVE SOFTWARE (all local, no server)
+  Canvas 2D, WebGL / WebGPU        drawing, shaders, 3D
+  SVG                              crisp vector output, easy export
+  Web Audio API                    synthesis, effects, analysis
+  Web MIDI                         hardware controllers (Chrome/Edge)
+  getUserMedia                     camera/mic, processed locally
+  Pointer Events                   mouse + touch + pen pressure (e.pressure)
+  MediaRecorder                    record canvas/audio to video/audio files
+  File System Access API           open/save in place (Chromium only;
+                                   always keep the download fallback)
+  OffscreenCanvas + Workers        heavy rendering off the main thread
+  Ask the assistant to check browser support on caniuse.com before
+  depending on any of these, and to plan a fallback.
+
+
+================================================================================
+PART 4. BUILD PHASES (each phase ends DEPLOYED, not just "working locally")
+================================================================================
+
+  A version isn't shipped until it's live at the public URL and you've used
+  it there. Your laptop is not the gallery.
+
+  Phase 0  Interview → BRIEF.md. GitHub account + portfolio site (Part 8).
+  Phase 1  Walking skeleton: index.html with the name, version chip, an
+           empty About and Help, and ONE visible thing moving on screen,
+           plus the PWA pair (manifest + sw.js) and the markup tools in
+           tools/ (gitignored). Pushed and live; install it on your phone
+           and laptop; push v00000-002 and update it through the chip. (Do this on day one. Getting deployment working
+           early removes the scariest unknown.)
+  Phase 2  The core loop from Q14, with an inviting default state.
+           Undo/redo.
+  Phase 3  Autosave, Save/Open Project, Export. Test reload, test opening
+           an old file.
+  Phase 4  Identity: wordmark, logo, favicon, colors, voice. Help entries
+           and tooltips for everything. About filled in. ATTRIBUTION done.
+  Phase 5  User test with the real person from Q8. Watch them; don't help.
+           Write down where they got stuck, and fix the top three. Mark up
+           every screen yourself with the markup tools (Part 10) and work
+           the batch.
+  Phase 6  Version 1 release: tag it, write the CHANGELOG entry, add it to
+           the portfolio with screenshots and a short description, check
+           the social preview.
+  Later    Everything from the "later" list, one version at a time.
+
+
+================================================================================
+PART 5. VERSIONING AND UPDATES (pick a standard and stick to it)
+================================================================================
+
+5.1 PICK ONE SCHEME (Q23)
+  Semantic Versioning (semver.org): MAJOR.MINOR.PATCH, e.g. 1.4.2
+     MAJOR = old project files may break, MINOR = new features,
+     PATCH = fixes. The industry default for libraries and apps.
+  Calendar Versioning (calver.org): e.g. 2026.10.3 (year.month.release)
+     Tells users how fresh it is. Good for tools that ship often.
+  Build counter: e.g. v00000-001, v00000-002 ... one number that goes up
+     by one for every release and never resets or takes letters. (This is
+     the house style behind renato.design. It reads like a serial number
+     and never needs a decision about "how big" a change was.)
+
+5.2 RULES WHATEVER THE SCHEME
+  - The version is written in ONE place in the code (APP.version) and
+    everything else reads from it: the chip, About, saved files.
+  - Docs (README, HANDOFF, CHANGELOG) carry it too. On every bump, search
+    the whole repo for the OLD version string and update every hit.
+  - The version also lives in sw.js (VERSION, 5.3). Bumping it there is
+    what makes installed copies notice the update. Miss it and nobody
+    gets the new version.
+  - Every release gets: a version bump, a CHANGELOG entry, a git commit, and
+    a git tag (git tag v00000-004 && git push --tags), or a GitHub Release
+    with notes.
+  - The file FORMAT version (3.6) is separate from the APP version. It only
+    goes up when saved files change shape.
+
+5.3 THE APP IS A PWA: INSTALL, OFFLINE, UPDATES (required)
+  A Progressive Web App is a website that can be installed like an app
+  (its own icon, its own window), keeps working offline, and updates
+  itself. It takes two small files beside index.html: a manifest (what the
+  app is called and what it looks like when installed) and a service
+  worker (a script the browser runs in the background that keeps a copy
+  of the app's files and checks for new ones).
+
+  The version chip is ALWAYS visible as "v00000-004 ↻". The ↻ is how a
+  user asks "is there a newer one?", so it has to be there even when
+  there's nothing new. No glow or badge, just the number and the glyph.
+
+  manifest.webmanifest
+    {
+      "name": "Appname",
+      "short_name": "Appname",
+      "description": "One sentence: what it is and why.",
+      "id": "./",
+      "start_url": "./",
+      "scope": "./",
+      "display": "standalone",
+      "background_color": "#111111",
+      "theme_color": "#111111",
+      "icons": [
+        { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+        { "src": "icon-512-maskable.png", "sizes": "512x512",
+          "type": "image/png", "purpose": "maskable" }
+      ]
+    }
+  (Relative paths matter: the app lives at USERNAME.github.io/APPNAME/,
+  not at the root of the domain.)
+
+  sw.js
+    const APP_ID = "appname";            // same as APP.id in index.html
+    const VERSION = "v00000-001";        // bump with APP.version, every release
+    const CACHE = APP_ID + "-" + VERSION;
+    const FILES = ["./", "./index.html", "./manifest.webmanifest",
+                   "./icon.svg", "./icon-192.png", "./icon-512.png"];
+                   // add vendored libraries and anything else the app loads
+
+    self.addEventListener("install", e => {
+      // cache: "reload" skips the browser's HTTP cache, so a release never
+      // installs a stale index.html.
+      e.waitUntil(caches.open(CACHE).then(c =>
+        c.addAll(FILES.map(f => new Request(f, { cache: "reload" })))));
+      // First install takes over at once; later updates WAIT until the
+      // user asks, so the app never swaps underneath someone mid-edit.
+      if (!self.registration.active) self.skipWaiting();
+    });
+    self.addEventListener("activate", e => {
+      // Delete only THIS app's old caches. Several apps can share one
+      // USERNAME.github.io origin, and caches.keys() sees all of them.
+      e.waitUntil(caches.keys().then(keys => Promise.all(keys
+        .filter(k => k.startsWith(APP_ID + "-") && k !== CACHE)
+        .map(k => caches.delete(k)))).then(() => self.clients.claim()));
+    });
+    self.addEventListener("message", e => {
+      if (e.data === "SKIP_WAITING") self.skipWaiting();
+    });
+    self.addEventListener("fetch", e => {
+      if (e.request.method !== "GET") return;
+      e.respondWith(caches.match(e.request, { ignoreSearch: true })
+        .then(hit => hit || fetch(e.request)));
+    });
+
+  In index.html
+    const chip = document.getElementById("chip");
+    // Not on localhost: while developing (and under the markup server) you
+    // want every reload to show your latest edit, not a cached copy.
+    const SW_ON = "serviceWorker" in navigator &&
+                  !["localhost", "127.0.0.1"].includes(location.hostname);
+    if (SW_ON) {
+      const hadController = !!navigator.serviceWorker.controller;
+      navigator.serviceWorker.register("sw.js");
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (hadController) location.reload();   // an update was accepted
+      });
+    }
+    async function checkForUpdate() {
+      const reg = SW_ON && await navigator.serviceWorker.getRegistration();
+      if (!reg) { location.reload(); return; }
+      try { await reg.update(); }
+      catch { status("Couldn't check for updates (offline?)."); return; }
+      const w = reg.installing;
+      if (w) await new Promise(r => w.addEventListener("statechange",
+                                     () => w.state !== "installing" && r()));
+      if (reg.waiting) { status("Updating…"); reg.waiting.postMessage("SKIP_WAITING"); }
+      else status("You have the latest: " + APP.version);
+    }
+    chip.onclick = checkForUpdate;
+
+  Why the user's work survives an update: autosave (3.5) has already
+  written the document to IndexedDB, and the reload restores it. Test this
+  for real: make something, push a new version, tap the chip, check that
+  the work is still there.
+
+  How users install it:
+    - Chrome/Edge (desktop and Android): the install icon in the address
+      bar, or menu → "Install app".
+    - Safari on iPhone/iPad: Share → "Add to Home Screen".
+    - Safari on Mac: File → "Add to Dock".
+  Put these three lines in the Help panel and the README.
+
+  Testing checklist (Chrome DevTools → Application tab):
+    [ ] Manifest panel shows the name and icons with no errors.
+    [ ] Service Workers panel shows sw.js "activated and is running".
+    [ ] Tick "Offline", reload: the app still opens and works.
+    [ ] Push a new version, tap the chip: the new number appears and the
+        work is still there.
+    [ ] Install it on a phone and open it from the home screen.
+
+  Pitfalls:
+    - Forgetting to bump VERSION in sw.js. The browser only notices an
+      update when sw.js itself changes.
+    - Forgetting to list a new file in FILES. The app works online and
+      breaks offline. Test offline after adding any file.
+    - Cache names without the app-id prefix, or a cleanup that deletes
+      every cache. That wipes your other apps' offline copies on the same
+      origin.
+    - Have the assistant explain every line of sw.js to the student. Service
+      workers are powerful and easy to get subtly wrong.
+
+================================================================================
+PART 6. BORROWING, PRIOR ART, AND MAKING IT YOURS
+================================================================================
+
+6.1 THE LINE
+  You can use open-source libraries, techniques from papers and tutorials,
+  and ideas from other artists' work. What you can't do is fork an existing
+  open project, rename it, and call it yours. The test: if you removed every
+  borrowed library, would the idea, the interaction, the look and the reason
+  for being still be recognizably yours? It should be.
+
+  Ask the assistant to keep a "What's mine" paragraph in BRIEF.md and update
+  it as the project grows: the concept, the interaction model, the specific
+  behaviors, the visual identity, the voice. Be ready to defend it at review.
+
+6.2 LICENSES IN FOUR LINES
+  MIT / BSD / Apache-2.0  "Permissive." Use it freely; keep their copyright
+                          notice and license text. (Apache also covers
+                          patents and asks you to note changes.)
+  GPL / AGPL              "Copyleft." If you include it, your whole app must
+                          be released under the GPL too. Fine if you choose
+                          that; make it a decision, not an accident.
+  Creative Commons        For media (images, sounds, fonts sometimes). Check
+                          the letters: BY = credit, SA = share alike, NC = no
+                          commercial use, ND = no changes.
+  No license at all       = all rights reserved. You may NOT copy it, even if
+                          it's public on GitHub. Learn from it; don't paste it.
+  Fonts: Google Fonts are mostly SIL OFL, free to use and embed.
+
+6.3 ATTRIBUTION.md (and the About panel's summary of it)
+  For each borrowed thing:
+    - Name, author, link
+    - What you used it for
+    - License, with the license file kept in /vendor/ if it's code
+    - What you changed, if anything
+  Ideas and inspiration get credited too, even though the law doesn't
+  require it: "The interaction borrows from X's Y (year)." Generous credit
+  makes the work look more serious, not less original.
+
+6.4 CODE THE ASSISTANT WRITES
+  Assistants sometimes reproduce code from their training data. If a block
+  looks like it came from somewhere specific (an unusual algorithm, a known
+  library's internals), ask the assistant where the technique comes from and
+  credit the source. Disclose AI assistance in About and README in the way
+  your course asks.
+
+
+================================================================================
+PART 7. IDENTITY: NAME, WORDMARK, LOGO, ICON
+================================================================================
+
+  Wordmark: the name set in type. Choose a typeface whose register matches
+  Q20. Draw it in Figma/Illustrator/Inkscape and export as SVG with text
+  converted to outlines (so it looks the same everywhere without the font).
+  Letterspacing, case and one considered detail (a split color, a cut, a
+  ligature) turn a typed name into a mark.
+
+  Logo/emblem: a small square mark that works at 16 px (favicon) and at
+  512 px (app icon). Test it tiny, in black-and-white, and on both light and
+  dark backgrounds.
+
+  A neat trick: one SVG can be the favicon, the in-app mark, and the About
+  image. Generate icon-512.png and og.png (1200x630, wordmark + a
+  screenshot) from it.
+
+  Keep the app's mark and YOUR personal/studio mark separate. The app wears
+  its own name. Your name appears in About and on the portfolio.
+
+  Don't imitate a real company's logo or a band's wordmark. Match a
+  register, not a trademark.
+
+
+================================================================================
+PART 8. GITHUB, GITHUB PAGES, AND YOUR PORTFOLIO
+================================================================================
+
+  The assistant should walk the student through each step, one at a time,
+  and wait for "done" before moving on. Explain what each step is FOR.
+
+8.1 ACCOUNT
+  1. Sign up at github.com. Use an email you'll keep after graduating, then
+     add your school email under Settings → Emails as well.
+  2. Choose a username you'd put on a business card. It becomes your web
+     address: USERNAME.github.io.
+  3. Turn on two-factor authentication (Settings → Password and
+     authentication).
+  4. Optional: apply for the GitHub Student Developer Pack
+     (education.github.com) with your school email. It includes free tools
+     and sometimes a free domain for a year.
+
+8.2 TOOLS
+  Choose one:
+    - GitHub Desktop (desktop.github.com): buttons instead of commands. Best
+      for beginners.
+    - git on the command line, with the assistant explaining each command
+      before running it.
+  Either way, YOU approve every commit and push. Don't let the assistant
+  push code you haven't run and looked at.
+
+8.3 THE APP REPO
+  1. Create a new PUBLIC repository named after the app (lowercase, e.g.
+     "meltbox"). Add a README and choose your LICENSE when creating it.
+  2. Clone it to your computer and move your project files into that folder.
+  3. Add a .gitignore containing at least these three lines:
+        .DS_Store
+        *.log
+        tools/
+     The last one keeps the markup tools and your review notes private.
+     GitHub Pages serves EVERY committed file, so anything tracked is
+     public, even in a private repo.
+  4. Commit ("v00000-001 walking skeleton") and push.
+  5. On GitHub: Settings → Pages → Build and deployment → Source: "Deploy
+     from a branch" → Branch: main, folder: / (root) → Save.
+  6. Wait a minute or two. Your app is live at:
+        https://USERNAME.github.io/APPNAME/
+  7. Open that URL on your phone and on a friend's computer. Bookmark it.
+
+8.4 THE PORTFOLIO REPO (your own site, like renato.design)
+  1. Create a public repository named exactly USERNAME.github.io.
+  2. Its index.html is your portfolio home page, live at
+     https://USERNAME.github.io/. Every app repo with Pages turned on
+     appears beneath it automatically (USERNAME.github.io/APPNAME/), so
+     they read as one site.
+  3. The portfolio page has: your name + short statement, a grid of
+     projects (image, title, one line, link to the live app, link to the
+     source), and a way to reach you. Each app gets a project page or card
+     with screenshots, the raison d'etre, the current version, and credits.
+  4. Keep it hand-written HTML/CSS like the apps, or use a simple static
+     generator if you prefer. Again: no server needed.
+  5. Link both ways: the app's About links to the portfolio, and the
+     portfolio links to the app.
+
+8.5 OPTIONAL: YOUR OWN DOMAIN
+  Buy a domain (roughly $10–20/year) from a registrar. In the portfolio
+  repo's Settings → Pages → Custom domain, enter it, then add the DNS
+  records GitHub's docs list for your registrar. Turn on "Enforce HTTPS."
+  Your apps then live at yourdomain.com/APPNAME/. This is entirely
+  optional; a github.io address is a perfectly professional portfolio.
+
+8.6 BEFORE EVERY PUSH (a 2-minute checklist)
+  [ ] Version bumped everywhere (search for the old one).
+  [ ] CHANGELOG entry written.
+  [ ] Opened and used locally, in two browsers.
+  [ ] No dev hooks, localhost URLs, or secrets in the file (1.2).
+  [ ] git status shows nothing from tools/ (the markup tools stay local).
+  [ ] VERSION in sw.js matches APP.version; any new file is in FILES.
+  [ ] Help entries/tooltips for anything new.
+  After the push:
+  [ ] Open the LIVE URL (or the installed app), tap the chip, confirm it
+      shows the new version and your work survived.
+  [ ] Do the core loop once on the live site.
+
+
+================================================================================
+PART 9. WORKING WITH THE ASSISTANT SESSION TO SESSION
+================================================================================
+
+  - Start each session with: "Read HANDOFF.md and BRIEF.md, then tell me
+    where we are in two lines."
+  - End each session with: "Update HANDOFF.md: version, what works, what's
+    broken, next step, rules learned."
+  - Ask for small changes, one at a time. Commit after each one that works,
+    so you can always go back.
+  - Treat assistant output as a draft from a fast, confident intern. Read
+    the diff, run it, and look at the result before you accept it. If it
+    says "fixed," check for yourself.
+  - When something breaks, describe what you SEE ("the shape jumps to the
+    corner when I let go"), not what you think the cause is. Attach a
+    screenshot. Give it the file that broke it.
+  - If a fix doesn't work twice in a row, stop and ask the assistant to
+    explain the cause before it tries a third time.
+  - If you want to understand a piece of code, ask: "Explain this function
+    to me like I'll have to defend it in a critique."
+
+
+================================================================================
+PART 10. THE MARKUP TOOLS (review your app by drawing on it)
+================================================================================
+
+10.1 WHAT THEY ARE
+  A small local server plus a floating toolbar that appears over your app
+  while you develop. Instead of describing a visual problem in a sentence
+  ("the thing on the left is kind of too big and the label is weird"), you
+  circle it, point an arrow at it, retype the label in place, and pin a
+  note. The assistant reads all of it as one batch and makes the changes.
+  This is how designers review work, and it's much faster and more
+  precise than typing.
+
+  Toolbar modes (mouse or touch, no keyboard shortcuts needed):
+    select    use the app normally
+    edit      click any text on the page and retype it in place
+    note      click anywhere to pin a comment bubble
+    draw      freehand pen over the page
+    arrow     drag to draw an arrow
+    compare   choose between old and new wordings the assistant proposed
+  The toolbar floats and never covers your interface. Drag it by its
+  handle (it remembers where you left it). Double-click the handle to
+  collapse it. Notes are kept per page, so you can mark several pages and
+  send them all as one batch.
+
+  The tools are the two files in APPENDIX A and APPENDIX B at the end of
+  this document. They're written in Python and JavaScript, run only on your
+  computer, and are never deployed.
+
+10.2 SETUP (the assistant does this in Phase 1)
+  1. Create tools/markup-server.py and tools/markup-inject.js from the
+     appendices, copied EXACTLY, character for character.
+  2. Make sure .gitignore contains  tools/  (Part 8.3). Your review notes
+     land in tools/markup-feedback.json, and anything committed to a Pages
+     repo is public.
+  3. Check Python 3 is installed: python3 --version (macOS: if it's missing,
+     the system offers to install the command-line tools; Windows: install
+     from python.org and use "python" instead of "python3").
+  4. From the project folder, start the server and leave it running in a
+     terminal tab or as a background task:
+        python3 tools/markup-server.py
+     It opens http://localhost:8765/ with the toolbar on top of your app.
+     If that port is busy, give it another: python3 tools/markup-server.py 8766
+  5. NEVER put a <script> tag for the toolbar into index.html. The server
+     adds it to every page it serves. A tag in the file would load the
+     toolbar twice (dead buttons) and ship it to the public.
+  6. The service worker is switched off on localhost (5.3), so every reload
+     under the markup server shows your latest edit.
+
+10.3 THE LOOP
+  1. The assistant makes changes. You reload http://localhost:8765/.
+  2. You mark up: edit text, pin notes, circle and point.
+  3. You click "send batch to assistant" → review the brief → "save to
+     file". (If saving fails, the toolbar downloads the JSON instead; drag
+     it into tools/ and name it markup-feedback.json.)
+  4. In the assistant chat you type:  markup ready
+  5. The assistant applies the batch and reports back, one line per item.
+     Reload and repeat.
+
+10.4 SCREEN CONTEXT (add this to index.html once the app has more than
+     one screen, mode or panel)
+  A note drawn at the same spot means different things on different
+  screens. Tell the toolbar what is showing, and it records that with every
+  batch, along with the window size:
+    window.__markupContext = () => ({
+      screen: currentScreen,        // e.g. "start", "editing", "export"
+      tool: activeTool,             // anything else that changes what's visible
+      helpOpen: document.getElementById("help").open,
+    });
+  It's only a function that returns a description, so leaving it in the
+  public file is harmless.
+
+10.5 RULES FOR THE ASSISTANT WHEN READING A BATCH
+  1. When the student says "markup ready", read tools/markup-feedback.json
+     right away. Don't search for it elsewhere.
+  2. For each page in the batch, read "context" and "viewport" FIRST and
+     work out which screen was showing. If the app has several screens and
+     context is missing, ask which screen before changing anything.
+  3. Text edits arrive as original/current pairs taken from the RENDERED
+     page. Find where that text comes from in the source (a literal in the
+     HTML, a JS string, a HELP entry, a template) and change it there.
+     Never paste rendered HTML back into the file.
+  4. A word doubled in an edit ("soft and some soft") usually means the
+     student meant to replace a word. Keep the sentence's rhythm, swap in
+     the word they most likely meant, and say how you read it.
+  5. Strokes and arrows arrive as SVG path data in page coordinates, and
+     the numbers alone can't tell you what they mean. Apply the text edits
+     first, take a screenshot of the page at the recorded viewport size,
+     draw the paths over it in their recorded colors, and LOOK. An arrow
+     from a logo to a spot beside the title means "move it there," which no
+     bounding box will tell you.
+  6. Notes say what; strokes say where. Pair each note with the strokes
+     nearest to it.
+  7. Work through the items in the order given. If one is too big for this
+     session, say so BEFORE starting the batch. Don't quietly skip it.
+  8. Report one line per item: done, how you read it, or the one question
+     you need answered.
+  9. When the batch is fully applied, empty markup-feedback.json so an old
+     batch is never applied twice.
+
+10.6 COMPARE MODE (for choosing between wordings)
+  When the student should pick between two versions of some text (a
+  tooltip, the About sentence, a Help entry), the assistant writes
+  tools/markup-compare.json:
+    [ { "id": "about-why",
+        "label": "About > why it exists",
+        "selector": "#about p.why",       // where the panel appears (after this)
+        "sectionIndex": 0,                // which match, 0-based
+        "old": "Current text...",
+        "new": "Proposed text...",
+        "default": "old" } ]
+  The student clicks "compare", picks old or new (and can edit either),
+  and sends. The choices arrive in the batch as "compareDecisions".
+
+10.7 LIMITS
+  - The server listens only on this computer (127.0.0.1), on purpose. To
+    review phone layouts, use the browser's device mode (Chrome DevTools →
+    toggle device toolbar) at phone width. Don't open the server to your
+    network.
+  - The toolbar marks up web pages. To review exported images or sounds,
+    open them in a page or describe them in the chat.
+
+================================================================================
+PART 11. RESEARCH PROMPTS THE STUDENT CAN HAND THE ASSISTANT ANY TIME
+================================================================================
+
+  "Find 10 pieces of prior art for [one-line idea] across tools, artworks,
+   history, and technique. Links and one line each. Mark anything you're
+   unsure exists."
+  "What are three completely different interaction models for [core loop]?
+   Sketch each in five lines."
+  "Who has written well about [technique: reaction-diffusion / granular
+   synthesis / L-systems / flocking / marching squares / ...]? Give the
+   canonical source and a beginner-friendly one."
+  "Critique my BRIEF.md as a skeptical reviewer would. What's vague, what's
+   generic, what's the most interesting thing in it that I'm underselling?"
+  "Watch for scope creep: list what in my 'later' list secretly belongs in
+   version 1, and what in version 1 should move to 'later.'"
+  "Check my app for accessibility basics: contrast, keyboard reachability,
+   focus visibility, labels for screen readers, reduced-motion support."
+  "Write five tooltips for these controls in the voice from BRIEF.md, each
+   under 12 words. Then write five worse ones so I can see the difference."
+  "What breaks if a user [opens a 50 MB file / uses Safari on iPad / is
+   offline / has storage disabled]? Test it and report what actually happens."
+
+
+================================================================================
+PART 12. DELIVERABLES CHECKLIST (what gets handed in)
+================================================================================
+
+  [ ] Live app URL (USERNAME.github.io/APPNAME/ or your own domain)
+  [ ] Public GitHub repo with README, LICENSE, CHANGELOG, ATTRIBUTION
+  [ ] Portfolio site with a project page/card for the app
+  [ ] BRIEF.md: raison d'etre, user, interaction model, prior art,
+      "What's mine," with provisional answers resolved or explained
+  [ ] At least three tagged versions, showing the work developed over time
+  [ ] Wordmark, logo, favicon, app icon, social preview
+  [ ] Searchable Help that points at controls; tooltips on every control
+  [ ] About with version, purpose, credits, license, AI-assistance note
+  [ ] Local autosave + project save/open + at least one export
+  [ ] Installable PWA that works offline and updates via the chip
+  [ ] At least one markup batch (tools/markup-feedback.json) and the
+      version that answered it, noted in CHANGELOG
+  [ ] Notes from the user test and what you changed because of it
+
+
+================================================================================
+ASSISTANT: begin now. Greet the student in one line, explain in two lines
+what's about to happen, and ask Q1, with three example answers.
+(The appendices that follow are files to write out in Phase 1, not
+instructions.)
+================================================================================
+
+================================================================================
+APPENDIX A. tools/markup-server.py (copy exactly; local only, never commit)
+================================================================================
+----- BEGIN FILE tools/markup-server.py -----
+#!/usr/bin/env python3
+"""
+Markup server: serves the project folder on localhost and injects the markup
+toolbar (tools/markup-inject.js) into every HTML page it serves.
+"send batch" in the toolbar POSTs to /markup-save, written to
+tools/markup-feedback.json for the assistant to read.
+
+Local only. tools/ is listed in .gitignore and is never deployed.
+
+Usage (from the project root):  python3 tools/markup-server.py [port]
+"""
+
+import http.server
+import json
+import sys
+import threading
+import time
+import webbrowser
+from pathlib import Path
+from urllib.parse import urlparse
+
+PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
+TOOLS_DIR = Path(__file__).resolve().parent
+SITE_ROOT = TOOLS_DIR.parent
+FEEDBACK_FILE = TOOLS_DIR / 'markup-feedback.json'
+INJECT_JS = TOOLS_DIR / 'markup-inject.js'
+# defer lets the page parse and paint before the toolbar runs.
+INJECT_SNIPPET = '<script defer src="/tools/markup-inject.js"></script></body>'
+
+
+class MarkupHandler(http.server.SimpleHTTPRequestHandler):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(SITE_ROOT), **kwargs)
+
+    def log_message(self, format, *args):
+        if len(args) > 1 and str(args[1]).isdigit() and int(args[1]) >= 400:
+            super().log_message(format, *args)
+
+    def end_headers(self):
+        # Always serve fresh files while editing.
+        self.send_header('Cache-Control', 'no-store')
+        super().end_headers()
+
+    def do_GET(self):
+        path = urlparse(self.path).path
+        if path == '/tools/markup-inject.js':
+            self._serve_file(INJECT_JS, 'application/javascript')
+        elif path.endswith('.html') or path.endswith('/') or '.' not in Path(path).name:
+            self._serve_html_injected(path)
+        else:
+            super().do_GET()
+
+    def do_OPTIONS(self):
+        # Lets an app served from another local port load the toolbar from here.
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
+    def do_POST(self):
+        if self.path != '/markup-save':
+            self._respond(404, {'error': 'not found'})
+            return
+        try:
+            data = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))))
+            # A single-page payload is wrapped so the file on disk is always a batch:
+            #   { batch: true, sentAt, brief, pages: [{page, textEdits, annotations, strokes, ...}] }
+            if not data.get('batch'):
+                data = {'batch': True, 'sentAt': data.get('timestamp') or '',
+                        'brief': data.get('brief', ''), 'pages': [data]}
+            with open(FEEDBACK_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            pages = data.get('pages', [])
+            totals = {k: sum(len(p.get(k, [])) for p in pages)
+                      for k in ('textEdits', 'annotations', 'strokes', 'compareDecisions')}
+            print(f'\n  saved -> tools/{FEEDBACK_FILE.name}: {len(pages)} page(s), '
+                  f'{totals["textEdits"]} text edits, {totals["annotations"]} notes, '
+                  f'{totals["strokes"]} strokes, {totals["compareDecisions"]} compare picks')
+            print('  tell your assistant: "markup ready"\n')
+            self._respond(200, {'status': 'ok', 'file': str(FEEDBACK_FILE), 'pages': len(pages)})
+        except Exception as e:
+            self._respond(500, {'error': str(e)})
+
+    def _respond(self, code, data):
+        body = json.dumps(data).encode()
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_file(self, path, content_type):
+        try:
+            content = path.read_bytes()
+        except FileNotFoundError:
+            self.send_error(404)
+            return
+        self.send_response(200)
+        self.send_header('Content-Type', content_type)
+        self.send_header('Content-Length', str(len(content)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(content)
+
+    def _serve_html_injected(self, path):
+        file_path = SITE_ROOT / path.lstrip('/')
+        if path.endswith('/') or file_path.is_dir():
+            file_path = file_path / 'index.html'
+        if not file_path.exists():
+            self.send_error(404)
+            return
+        html = file_path.read_text(encoding='utf-8', errors='replace')
+        if '/tools/markup-inject.js' not in html:      # never inject twice
+            if '</body>' in html:
+                html = html.replace('</body>', INJECT_SNIPPET, 1)
+            else:
+                html += '\n<script defer src="/tools/markup-inject.js"></script>'
+        body = html.encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def main():
+    url = f'http://localhost:{PORT}/'
+    print(f'\n  markup server\n  project : {SITE_ROOT}\n  url     : {url}')
+    print('  modes   : select, edit text, note, draw, arrow, compare')
+    print('  when done: "send batch to assistant" in the browser, then tell')
+    print('  your assistant "markup ready". Ctrl+C stops the server.\n')
+    server = http.server.ThreadingHTTPServer(('127.0.0.1', PORT), MarkupHandler)
+    threading.Thread(target=lambda: (time.sleep(0.6), webbrowser.open(url)), daemon=True).start()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print('\n  server stopped.')
+
+
+if __name__ == '__main__':
+    main()
+----- END FILE tools/markup-server.py -----
+
+================================================================================
+APPENDIX B. tools/markup-inject.js (copy exactly; local only, never commit)
+================================================================================
+----- BEGIN FILE tools/markup-inject.js -----
+/**
+ * Markup toolbar: review a locally served page by editing, noting and drawing on it.
+ * Local only. Never commit it or deploy it.
+ * Injected into every HTML page by tools/markup-server.py
+ * Annotations saved to tools/markup-feedback.json via POST /markup-save
+ *
+ * MODES:
+ *   select  — normal scrolling/clicking
+ *   edit    — click any text node to edit it in place
+ *   note    — click anywhere to drop an annotation bubble
+ *   draw    — freehand pen over the page
+ *   arrow   — click drag to draw an arrow
+ */
+
+(function () {
+  'use strict';
+
+  // When this script is loaded cross-origin (e.g. from an app's own dev server
+  // on :8732 while the markup server runs on :8731), a bare `fetch('/markup-save')`
+  // hits the APP origin, not the markup server. Resolve the markup server's
+  // origin from the script tag that loaded us, and prefix every fetch with it.
+  const MARKUP_ORIGIN = (() => {
+    try {
+      const here = document.currentScript;
+      if (here && here.src) return new URL(here.src).origin;
+    } catch (e) { /* fall through */ }
+    return location.origin;
+  })();
+
+  // ── STATE ──────────────────────────────────────────────────────────────────
+  const state = {
+    mode: 'select',
+    drawColor: '#e8ff00',
+    drawSize: 3,
+    annotations: [],   // { id, x, y, scrollY, text }
+    textEdits: [],     // { selector, original, current }
+    strokes: [],       // SVG path data strings + color/size
+    compareDecisions: [],
+    annotationCounter: 0,
+    drawing: false,
+    currentPath: null,
+    arrowStart: null,
+  };
+
+  // ── MULTI-PAGE PERSISTENCE ───────────────────────────────────────────────
+  // Notes made on one page persist across navigations via localStorage,
+  // keyed by pathname. Save button collects all keyed pages and sends
+  // them as one batch payload: notes made on a page belong to that page,
+  // and the whole set goes to the reviewer in one send.
+  const LS_PREFIX = 'rd-markup:';
+  const LS_KEY = LS_PREFIX + window.location.pathname;
+
+  function pageHasContent(p) {
+    return (
+      (p.annotations || []).length ||
+      (p.textEdits   || []).length ||
+      (p.strokes     || []).length ||
+      (p.compareDecisions || []).length
+    );
+  }
+
+  function buildPagePayload() {
+    const annData = state.annotations.map(a => {
+      const el = a.el || document.getElementById(`rd-ann-${a.id}`);
+      const text = el ? el.querySelector('.rd-ann-textarea').value : (a.text || '');
+      return { id: a.id, x: a.x, y: a.y, scrollY: a.scrollY, text };
+    });
+    const payload = {
+      page: window.location.pathname,
+      savedAt: new Date().toISOString(),
+      viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 },
+      annotations: annData,
+      textEdits: state.textEdits,
+      strokes: state.strokes,
+      compareDecisions: state.compareDecisions,
+    };
+    return pageHasContent(payload) ? payload : null;
+  }
+
+  function persistState() {
+    try {
+      const payload = buildPagePayload();
+      if (payload) localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      else localStorage.removeItem(LS_KEY);
+      refreshBatchBadge();
+    } catch (e) { /* localStorage may be disabled — fail silent */ }
+  }
+
+  function loadPriorState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      // Hydrate state arrays (NOT the DOM — visual restore deferred).
+      state.annotations = (data.annotations || []).map(a => ({ ...a, el: null }));
+      state.textEdits = data.textEdits || [];
+      state.strokes = data.strokes || [];
+      state.compareDecisions = data.compareDecisions || [];
+      const maxId = state.annotations.reduce((m, a) => Math.max(m, a.id || 0), 0);
+      state.annotationCounter = Math.max(state.annotationCounter, maxId);
+      return data;
+    } catch (e) { return null; }
+  }
+
+  function listBatchPages() {
+    const pages = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(LS_PREFIX)) continue;
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          if (data && pageHasContent(data)) pages.push(data);
+        } catch (e) { /* skip corrupt entry */ }
+      }
+    } catch (e) { /* ignore */ }
+    return pages;
+  }
+
+  function collectBatch() {
+    // Refresh current-page payload from live state before assembling.
+    persistState();
+    return listBatchPages();
+  }
+
+  function clearBatchStorage() {
+    try {
+      const toRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(LS_PREFIX)) toRemove.push(key);
+      }
+      toRemove.forEach(k => localStorage.removeItem(k));
+    } catch (e) { /* ignore */ }
+  }
+
+  // Badge is a live counter near the save button.  Created lazily once
+  // the toolbar is in the DOM.
+  function refreshBatchBadge() {
+    const badge = document.getElementById('rd-batch-badge');
+    if (!badge) return;
+    const pages = listBatchPages();
+    if (pages.length <= 1) {
+      // Only one page queued = the current page = nothing batchy to show.
+      badge.hidden = true;
+      return;
+    }
+    badge.hidden = false;
+    badge.textContent = `batch: ${pages.length} pages`;
+    badge.title = pages.map(p => `${p.page}  —  ${
+      (p.annotations||[]).length + (p.textEdits||[]).length +
+      (p.strokes||[]).length + (p.compareDecisions||[]).length
+    } notes`).join('\n');
+  }
+
+  // ── INJECT STYLES ──────────────────────────────────────────────────────────
+  const style = document.createElement('style');
+  style.textContent = `
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+    #rd-markup-root * { box-sizing: border-box; font-family: 'IBM Plex Mono', monospace; }
+
+    #rd-toolbar {
+      position: fixed;
+      top: 16px; left: 16px;
+      height: 44px;
+      background: rgba(17,17,17,0.94);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 10px;
+      z-index: 999999;
+      user-select: none;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+      transition: opacity 200ms ease;
+    }
+    #rd-toolbar.rd-dragging { opacity: 0.85; transition: none; }
+    /* Collapsed state — double-click the handle to fold everything but
+       the handle. Double-click again to expand. Position persists. */
+    #rd-toolbar.rd-collapsed { gap: 0; padding: 0 6px; }
+    #rd-toolbar.rd-collapsed > *:not(#rd-drag-handle) { display: none !important; }
+    #rd-toolbar #rd-drag-handle {
+      font-size: 9px;
+      color: #888;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0 10px 0 6px;
+      white-space: nowrap;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #rd-toolbar #rd-drag-handle::before {
+      content: '⋮⋮';
+      font-size: 10px;
+      letter-spacing: -0.1em;
+      color: #555;
+    }
+    #rd-toolbar #rd-drag-handle:hover { color: #ccc; }
+    #rd-toolbar #rd-drag-handle:hover::before { color: #888; }
+    #rd-toolbar.rd-dragging #rd-drag-handle { cursor: grabbing; }
+    .rd-label {
+      font-size: 9px;
+      color: #555;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0 8px 0 4px;
+      white-space: nowrap;
+    }
+    .rd-sep { width: 1px; height: 22px; background: #2a2a2a; margin: 0 5px; }
+    .rd-btn {
+      height: 28px;
+      padding: 0 9px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      color: #666;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.1s;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+    }
+    .rd-btn:hover { border-color: #333; color: #ccc; }
+    .rd-btn.rd-active {
+      background: #e8ff00;
+      color: #000 !important;
+      border-color: #e8ff00;
+      font-weight: 500;
+    }
+    .rd-swatch {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid #333;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.1s;
+    }
+    .rd-swatch.rd-active { border-color: #e8ff00 !important; }
+    .rd-size-select {
+      height: 22px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      color: #aaa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      padding: 0 5px;
+      cursor: pointer;
+    }
+    .rd-send-btn {
+      margin-left: auto !important;
+      background: #e8ff00 !important;
+      color: #000 !important;
+      border-color: #e8ff00 !important;
+      font-weight: 500;
+      padding: 0 14px !important;
+    }
+    .rd-send-btn:hover { background: #fff !important; border-color: #fff !important; }
+
+    /* Editable text highlight */
+    body.rd-edit-mode [data-rd-editable]:hover {
+      outline: 1px dashed rgba(232,255,0,0.5) !important;
+      background: rgba(232,255,0,0.03) !important;
+      cursor: text !important;
+    }
+    body.rd-edit-mode [data-rd-editable]:focus {
+      outline: 2px solid #e8ff00 !important;
+      background: rgba(232,255,0,0.05) !important;
+    }
+    body.rd-edit-mode [data-rd-editable][data-rd-dirty] {
+      background: rgba(232,255,0,0.08) !important;
+    }
+
+    /* Note mode cursor */
+    body.rd-note-mode { cursor: cell !important; }
+
+    /* Draw cursor */
+    body.rd-draw-mode { cursor: crosshair !important; }
+    body.rd-arrow-mode { cursor: crosshair !important; }
+
+    /* Annotation bubble */
+    .rd-annotation {
+      position: absolute;
+      z-index: 999990;
+      min-width: 180px;
+      max-width: 260px;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.5));
+    }
+    .rd-ann-header {
+      background: #e8ff00;
+      color: #000;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      border-radius: 4px 4px 0 0;
+      user-select: none;
+    }
+    .rd-ann-close {
+      background: none;
+      border: none;
+      color: #000;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 0;
+      font-weight: bold;
+    }
+    .rd-ann-body {
+      background: #1a1a1a;
+      border: 1px solid #e8ff00;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+    }
+    .rd-ann-textarea {
+      width: 100%;
+      min-height: 56px;
+      background: transparent;
+      border: none;
+      color: #d0d0d0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 7px 9px;
+      resize: vertical;
+      outline: none;
+    }
+    .rd-ann-textarea::placeholder { color: #444; }
+
+    /* SVG draw layer */
+    #rd-svg-layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999980;
+      overflow: visible;
+    }
+    #rd-svg-layer.rd-draw-active,
+    #rd-svg-layer.rd-arrow-active {
+      pointer-events: all;
+    }
+
+    /* Compare mode panels */
+    .rd-compare {
+      border: 1px solid #e8ff00;
+      margin: 12px 0;
+      font-family: 'IBM Plex Mono', monospace;
+      position: relative;
+      z-index: 10;
+    }
+    .rd-compare-header {
+      background: #e8ff00;
+      color: #000;
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rd-compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .rd-compare-col {
+      padding: 10px;
+      position: relative;
+    }
+    .rd-compare-col:first-child { border-right: 1px solid #2a2a2a; }
+    .rd-compare-col-label {
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rd-compare-col-label.rd-old { color: #ff6666; }
+    .rd-compare-col-label.rd-new { color: #66ff88; }
+    .rd-compare-col-label input[type="radio"] { accent-color: #e8ff00; }
+    .rd-compare-ta {
+      width: 100%;
+      min-height: 80px;
+      background: #0e0e0e;
+      color: #d0d0d0;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 8px;
+      resize: vertical;
+    }
+    .rd-compare-ta:focus { outline: none; border-color: #e8ff00; }
+    .rd-compare-ta.rd-chosen {
+      border-color: #e8ff00;
+      background: rgba(232,255,0,0.03);
+    }
+    .rd-compare-ta.rd-dimmed { opacity: 0.3; }
+
+    /* Top padding so site doesn't hide under toolbar */
+    #rd-body-pad { height: 44px; }
+
+    /* Send modal */
+    #rd-send-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9999999;
+      align-items: center;
+      justify-content: center;
+    }
+    #rd-send-modal.open { display: flex; }
+    .rd-modal-box {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 7px;
+      width: 540px;
+      max-width: 90vw;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+    .rd-modal-header {
+      background: #e8ff00;
+      color: #000;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 9px 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rd-modal-close {
+      background: none; border: none; color: #000;
+      font-size: 15px; cursor: pointer; font-weight: bold;
+    }
+    .rd-modal-body { padding: 14px; }
+    .rd-modal-body p {
+      font-size: 10px; color: #666; margin-bottom: 9px;
+      line-height: 1.6;
+    }
+    #rd-brief {
+      width: 100%; height: 240px;
+      background: #0e0e0e;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      color: #d0d0d0;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      line-height: 1.6;
+      padding: 10px;
+      resize: none;
+      outline: none;
+    }
+    .rd-modal-actions {
+      display: flex; gap: 7px; margin-top: 9px; justify-content: flex-end;
+    }
+    .rd-mbtn {
+      height: 28px; padding: 0 13px;
+      border-radius: 3px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      cursor: pointer;
+      border: 1px solid #2a2a2a;
+      background: transparent;
+      color: #aaa;
+    }
+    .rd-mbtn.primary {
+      background: #e8ff00; color: #000;
+      border-color: #e8ff00; font-weight: 500;
+    }
+    .rd-mbtn.primary:hover { background: #fff; border-color: #fff; }
+    .rd-saved-notice {
+      font-size: 10px; color: #e8ff00;
+      display: none; text-align: center; margin-top: 7px;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ── TOP PADDING ────────────────────────────────────────────────────────────
+  const pad = document.createElement('div');
+  pad.id = 'rd-body-pad';
+  document.body.insertBefore(pad, document.body.firstChild);
+
+  // ── SVG DRAW LAYER ─────────────────────────────────────────────────────────
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = 'rd-svg-layer';
+  svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  document.body.appendChild(svg);
+  // Keep SVG sized to the full scrollable document so strokes/arrows stick
+  function resizeSvg() {
+    svg.style.width  = document.documentElement.scrollWidth + 'px';
+    svg.style.height = document.documentElement.scrollHeight + 'px';
+  }
+  resizeSvg();
+  window.addEventListener('resize', resizeSvg);
+  new MutationObserver(resizeSvg).observe(document.body, { childList: true, subtree: true });
+
+  // ── TOOLBAR ────────────────────────────────────────────────────────────────
+  const toolbar = document.createElement('div');
+  toolbar.id = 'rd-toolbar';
+  toolbar.innerHTML = `
+    <span id="rd-drag-handle" title="drag to reposition">markup</span>
+    <div class="rd-sep"></div>
+    <button class="rd-btn rd-active" id="rd-btn-select">↖ select</button>
+    <button class="rd-btn" id="rd-btn-edit">✎ edit text</button>
+    <button class="rd-btn" id="rd-btn-note">⊕ note</button>
+    <button class="rd-btn" id="rd-btn-draw">✏ draw</button>
+    <button class="rd-btn" id="rd-btn-arrow">↗ arrow</button>
+    <div class="rd-sep"></div>
+    <span class="rd-label" style="font-size:8px">color</span>
+    <div class="rd-swatch rd-active" style="background:#e8ff00" data-color="#e8ff00" title="yellow"></div>
+    <div class="rd-swatch" style="background:#ff4d4d" data-color="#ff4d4d" title="red"></div>
+    <div class="rd-swatch" style="background:#4daaff" data-color="#4daaff" title="blue"></div>
+    <div class="rd-swatch" style="background:#ffffff; border-color:#555" data-color="#ffffff" title="white"></div>
+    <select class="rd-size-select" id="rd-size">
+      <option value="2">thin</option>
+      <option value="3" selected>med</option>
+      <option value="5">thick</option>
+      <option value="8">fat</option>
+    </select>
+    <div class="rd-sep"></div>
+    <button class="rd-btn" id="rd-btn-undo" title="Undo last stroke (Cmd+Z)">↩ undo</button>
+    <button class="rd-btn" id="rd-btn-clear" style="color:#ff6666">✕ clear all</button>
+    <div class="rd-sep"></div>
+    <button class="rd-btn" id="rd-btn-compare" title="Load compare proposals from markup-compare.json">⇔ compare</button>
+    <span id="rd-batch-badge" hidden style="font-size:10px; padding:2px 8px; margin-left:6px; background:#e8ff00; color:#111; border-radius:9px; cursor:default;"></span>
+    <button class="rd-btn rd-send-btn" id="rd-btn-send">→ send batch to assistant</button>
+  `;
+  document.body.appendChild(toolbar);
+
+  // ── DRAGGABLE TOOLBAR ──────────────────────────────────────────────────────
+  // The toolbar floats. Standing rule: the markup bar never covers the
+  // host interface. Drag it anywhere; remember where.
+  (() => {
+    const POS_KEY = 'rd-toolbar-pos';
+    try {
+      const saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+      if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+        toolbar.style.left = saved.x + 'px';
+        toolbar.style.top  = saved.y + 'px';
+      }
+    } catch (e) { /* ignore */ }
+
+    function clampToViewport() {
+      const r = toolbar.getBoundingClientRect();
+      const margin = 4;
+      const maxX = window.innerWidth  - r.width  - margin;
+      const maxY = window.innerHeight - r.height - margin;
+      const x = Math.max(margin, Math.min(maxX, r.left));
+      const y = Math.max(margin, Math.min(maxY, r.top));
+      toolbar.style.left = x + 'px';
+      toolbar.style.top  = y + 'px';
+    }
+
+    let dragging = false, offX = 0, offY = 0;
+    const handle = toolbar.querySelector('#rd-drag-handle');
+
+    handle.addEventListener('mousedown', (e) => {
+      dragging = true;
+      const r = toolbar.getBoundingClientRect();
+      offX = e.clientX - r.left;
+      offY = e.clientY - r.top;
+      toolbar.classList.add('rd-dragging');
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const x = e.clientX - offX;
+      const y = e.clientY - offY;
+      toolbar.style.left = x + 'px';
+      toolbar.style.top  = y + 'px';
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      toolbar.classList.remove('rd-dragging');
+      clampToViewport();
+      const r = toolbar.getBoundingClientRect();
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify({ x: r.left, y: r.top }));
+      } catch (e) { /* ignore */ }
+    });
+
+    /* Touch support — same drag behavior on tablets/phones. */
+    handle.addEventListener('touchstart', (e) => {
+      const t = e.touches[0]; if (!t) return;
+      dragging = true;
+      const r = toolbar.getBoundingClientRect();
+      offX = t.clientX - r.left;
+      offY = t.clientY - r.top;
+      toolbar.classList.add('rd-dragging');
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (!dragging) return;
+      const t = e.touches[0]; if (!t) return;
+      toolbar.style.left = (t.clientX - offX) + 'px';
+      toolbar.style.top  = (t.clientY - offY) + 'px';
+    }, { passive: true });
+    window.addEventListener('touchend', () => {
+      if (!dragging) return;
+      dragging = false;
+      toolbar.classList.remove('rd-dragging');
+      clampToViewport();
+      const r = toolbar.getBoundingClientRect();
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify({ x: r.left, y: r.top }));
+      } catch (e) { /* ignore */ }
+    });
+
+    window.addEventListener('resize', clampToViewport);
+
+    /* Double-click the handle to collapse the bar down to just the
+       handle; double-click again to expand. State persists per-host. */
+    const COLLAPSE_KEY = 'rd-toolbar-collapsed';
+    try {
+      if (localStorage.getItem(COLLAPSE_KEY) === '1') {
+        toolbar.classList.add('rd-collapsed');
+      }
+    } catch (e) { /* ignore */ }
+
+    handle.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toolbar.classList.toggle('rd-collapsed');
+      try {
+        localStorage.setItem(
+          COLLAPSE_KEY,
+          toolbar.classList.contains('rd-collapsed') ? '1' : '0'
+        );
+      } catch (e2) { /* ignore */ }
+      clampToViewport();
+    });
+  })();
+
+  // ── SEND MODAL ─────────────────────────────────────────────────────────────
+  const modal = document.createElement('div');
+  modal.id = 'rd-send-modal';
+  modal.innerHTML = `
+    <div class="rd-modal-box">
+      <div class="rd-modal-header">
+        feedback brief
+        <button class="rd-modal-close" id="rd-modal-close-btn">×</button>
+      </div>
+      <div class="rd-modal-body">
+        <p>Review and edit before sending. This will be saved to <strong>tools/markup-feedback.json</strong> — tell your assistant "markup ready" in the terminal.</p>
+        <textarea id="rd-brief" spellcheck="false" readonly></textarea>
+        <div class="rd-modal-actions">
+          <button class="rd-mbtn" id="rd-copy-btn">copy</button>
+          <button class="rd-mbtn primary" id="rd-save-btn">save to file</button>
+        </div>
+        <div class="rd-saved-notice" id="rd-saved-notice">✓ saved — tell your assistant "markup ready" in terminal</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // ── MAKE TEXT EDITABLE ─────────────────────────────────────────────────────
+  function makeEditable() {
+    const targets = document.querySelectorAll(
+      'h1, h2, h3, h4, h5, h6, p, li, span, a, td, th, label, button, figcaption, blockquote, dt, dd'
+    );
+    targets.forEach(el => {
+      // Skip toolbar and modal elements
+      if (el.closest('#rd-toolbar, #rd-send-modal, .rd-annotation')) return;
+      el.setAttribute('data-rd-editable', '1');
+      el.setAttribute('data-rd-original', el.innerText);
+      el.setAttribute('contenteditable', 'false');
+    });
+  }
+  makeEditable();
+
+  // ── MODE SWITCHING ─────────────────────────────────────────────────────────
+  function setMode(mode) {
+    state.mode = mode;
+    // Button highlights
+    ['select','edit','note','draw','arrow'].forEach(m => {
+      document.getElementById(`rd-btn-${m}`)?.classList.toggle('rd-active', m === mode);
+    });
+    // Body classes
+    document.body.classList.remove('rd-edit-mode','rd-note-mode','rd-draw-mode','rd-arrow-mode');
+    if (mode !== 'select') document.body.classList.add(`rd-${mode}-mode`);
+    // SVG layer
+    svg.classList.remove('rd-draw-active','rd-arrow-active');
+    if (mode === 'draw') svg.classList.add('rd-draw-active');
+    if (mode === 'arrow') svg.classList.add('rd-arrow-active');
+    // contenteditable
+    document.querySelectorAll('[data-rd-editable]').forEach(el => {
+      el.contentEditable = (mode === 'edit') ? 'true' : 'false';
+    });
+  }
+
+  document.getElementById('rd-btn-select').addEventListener('click', () => setMode('select'));
+  document.getElementById('rd-btn-edit').addEventListener('click', () => setMode('edit'));
+  document.getElementById('rd-btn-note').addEventListener('click', () => setMode('note'));
+  document.getElementById('rd-btn-draw').addEventListener('click', () => setMode('draw'));
+  document.getElementById('rd-btn-arrow').addEventListener('click', () => setMode('arrow'));
+
+  // Keyboard shortcuts removed — they intercept typing in edit/note modes.
+
+  // ── COLORS ────────────────────────────────────────────────────────────────
+  toolbar.querySelectorAll('.rd-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      toolbar.querySelectorAll('.rd-swatch').forEach(s => s.classList.remove('rd-active'));
+      sw.classList.add('rd-active');
+      state.drawColor = sw.dataset.color;
+    });
+  });
+
+  document.getElementById('rd-size').addEventListener('change', e => {
+    state.drawSize = parseInt(e.target.value);
+  });
+
+  // ── ANNOTATIONS ──────────────────────────────────────────────────────────
+  document.addEventListener('click', e => {
+    if (state.mode !== 'note') return;
+    if (e.target.closest('#rd-toolbar, #rd-send-modal, .rd-annotation')) return;
+
+    const id = ++state.annotationCounter;
+    const scrollY = window.scrollY;
+    const x = e.pageX;
+    const y = e.pageY;
+
+    const ann = {
+      id, x, y, scrollY,
+      text: '',
+      el: null
+    };
+
+    const el = document.createElement('div');
+    el.className = 'rd-annotation';
+    el.id = `rd-ann-${id}`;
+    el.style.cssText = `left:${x}px; top:${y}px;`;
+    el.innerHTML = `
+      <div class="rd-ann-header" data-ann-id="${id}">
+        note #${id}
+        <button class="rd-ann-close" data-ann-id="${id}">×</button>
+      </div>
+      <div class="rd-ann-body">
+        <textarea class="rd-ann-textarea" placeholder="describe what you want here…" data-ann-id="${id}"></textarea>
+      </div>
+    `;
+    document.body.appendChild(el);
+    ann.el = el;
+    state.annotations.push(ann);
+    persistState();
+
+    el.querySelector('.rd-ann-textarea').focus();
+
+    // Close button
+    el.querySelector('.rd-ann-close').addEventListener('click', () => {
+      el.remove();
+      const idx = state.annotations.findIndex(a => a.id === id);
+      if (idx !== -1) state.annotations.splice(idx, 1);
+      persistState();
+    });
+
+    // Drag
+    makeDraggable(el, el.querySelector('.rd-ann-header'));
+
+    // Text sync
+    el.querySelector('.rd-ann-textarea').addEventListener('input', ev => {
+      ann.text = ev.target.value;
+      persistState();
+    });
+
+    setMode('select');
+  });
+
+  function makeDraggable(el, handle) {
+    let ox, oy, sx, sy;
+    handle.addEventListener('mousedown', e => {
+      if (e.target.classList.contains('rd-ann-close')) return;
+      ox = e.clientX; oy = e.clientY;
+      sx = el.offsetLeft; sy = el.offsetTop;
+      const onMove = ev => {
+        el.style.left = (sx + ev.clientX - ox) + 'px';
+        el.style.top  = (sy + ev.clientY - oy) + 'px';
+      };
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+  }
+
+  // ── FREEHAND DRAWING ─────────────────────────────────────────────────────
+  let currentPoints = [];
+
+  svg.addEventListener('mousedown', e => {
+    if (state.mode === 'draw') {
+      state.drawing = true;
+      currentPoints = [{ x: e.clientX, y: e.clientY + window.scrollY }];
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', state.drawColor);
+      path.setAttribute('stroke-width', state.drawSize);
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      path.setAttribute('opacity', '0.9');
+      svg.appendChild(path);
+      state.currentPath = path;
+    } else if (state.mode === 'arrow') {
+      state.arrowStart = { x: e.clientX, y: e.clientY + window.scrollY };
+    }
+  });
+
+  svg.addEventListener('mousemove', e => {
+    if (state.mode === 'draw' && state.drawing && state.currentPath) {
+      currentPoints.push({ x: e.clientX, y: e.clientY + window.scrollY });
+      state.currentPath.setAttribute('d', pointsToPath(currentPoints));
+    } else if (state.mode === 'arrow' && state.arrowStart) {
+      // Preview arrow — remove temp
+      document.getElementById('rd-arrow-preview')?.remove();
+      const ax = state.arrowStart.x, ay = state.arrowStart.y;
+      const bx = e.clientX, by = e.clientY + window.scrollY;
+      const line = makeArrowSVG(ax, ay, bx, by, state.drawColor, state.drawSize, 'rd-arrow-preview');
+      svg.appendChild(line);
+    }
+  });
+
+  svg.addEventListener('mouseup', e => {
+    if (state.mode === 'draw' && state.drawing) {
+      state.drawing = false;
+      if (currentPoints.length > 1) {
+        state.strokes.push({
+          type: 'freehand',
+          d: pointsToPath(currentPoints),
+          color: state.drawColor,
+          size: state.drawSize
+        });
+        persistState();
+      } else {
+        state.currentPath?.remove();
+      }
+      state.currentPath = null;
+      currentPoints = [];
+    } else if (state.mode === 'arrow' && state.arrowStart) {
+      document.getElementById('rd-arrow-preview')?.remove();
+      const ax = state.arrowStart.x, ay = state.arrowStart.y;
+      const bx = e.clientX, by = e.clientY + window.scrollY;
+      const dx = bx - ax, dy = by - ay;
+      if (Math.sqrt(dx*dx + dy*dy) > 10) {
+        const arrow = makeArrowSVG(ax, ay, bx, by, state.drawColor, state.drawSize);
+        svg.appendChild(arrow);
+        state.strokes.push({
+          type: 'arrow',
+          x1: ax, y1: ay, x2: bx, y2: by,
+          color: state.drawColor,
+          size: state.drawSize
+        });
+        persistState();
+      }
+      state.arrowStart = null;
+    }
+  });
+
+  function pointsToPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+      d += ` L ${pts[i].x} ${pts[i].y}`;
+    }
+    return d;
+  }
+
+  function makeArrowSVG(x1, y1, x2, y2, color, size, id) {
+    const markerId = 'rd-arrow-head-' + Math.random().toString(36).slice(2,7);
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    if (id) g.id = id;
+
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', markerId);
+    marker.setAttribute('markerWidth', '8');
+    marker.setAttribute('markerHeight', '8');
+    marker.setAttribute('refX', '6');
+    marker.setAttribute('refY', '3');
+    marker.setAttribute('orient', 'auto');
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', '0 0, 8 3, 0 6');
+    poly.setAttribute('fill', color);
+    marker.appendChild(poly);
+    defs.appendChild(marker);
+    g.appendChild(defs);
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', size);
+    line.setAttribute('marker-end', `url(#${markerId})`);
+    line.setAttribute('stroke-linecap', 'round');
+    g.appendChild(line);
+    return g;
+  }
+
+  // ── UNDO ──────────────────────────────────────────────────────────────────
+  function undoStroke() {
+    if (!state.strokes.length) return;
+    state.strokes.pop();
+    // Remove last child of svg that's a path or g
+    const children = Array.from(svg.children);
+    for (let i = children.length - 1; i >= 0; i--) {
+      const tag = children[i].tagName.toLowerCase();
+      if (tag === 'path' || tag === 'g') {
+        children[i].remove();
+        break;
+      }
+    }
+  }
+
+  document.getElementById('rd-btn-undo').addEventListener('click', undoStroke);
+
+  // ── CLEAR ─────────────────────────────────────────────────────────────────
+  document.getElementById('rd-btn-clear').addEventListener('click', () => {
+    if (!confirm('Clear all annotations, edits, and drawings?')) return;
+    // Strokes
+    Array.from(svg.children).forEach(c => {
+      if (c.tagName === 'path' || c.tagName === 'g') c.remove();
+    });
+    state.strokes = [];
+    // Annotations
+    state.annotations.forEach(a => a.el?.remove());
+    state.annotations = [];
+    state.annotationCounter = 0;
+    // Text edits — restore originals
+    document.querySelectorAll('[data-rd-editable][data-rd-dirty]').forEach(el => {
+      el.innerText = el.getAttribute('data-rd-original');
+      el.removeAttribute('data-rd-dirty');
+    });
+    state.textEdits = [];
+    state.compareDecisions = [];
+    persistState();
+  });
+
+  // Track text edits
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!el.hasAttribute('data-rd-editable')) return;
+    el.setAttribute('data-rd-dirty', '1');
+    const selector = getCssSelector(el);
+    const current = el.innerText;
+    const original = el.getAttribute('data-rd-original');
+    const existing = state.textEdits.find(t => t.selector === selector);
+    if (existing) {
+      existing.current = current;
+    } else {
+      state.textEdits.push({ selector, original, current });
+    }
+    persistState();
+  });
+
+  function getCssSelector(el) {
+    const tag = el.tagName.toLowerCase();
+    const id = el.id ? `#${el.id}` : '';
+    const cls = el.className && typeof el.className === 'string'
+      ? '.' + el.className.trim().split(/\s+/).slice(0,2).join('.') : '';
+    const text = el.getAttribute('data-rd-original')?.slice(0,30).replace(/\s+/g,' ') || '';
+    return `${tag}${id}${cls} [original: "${text}"]`;
+  }
+
+  // ── SEND ──────────────────────────────────────────────────────────────────
+  document.getElementById('rd-btn-send').addEventListener('click', () => {
+    // Make sure the current page is captured fresh, then build the
+    // batch brief covering every queued page.
+    persistState();
+    const pages = listBatchPages();
+    document.getElementById('rd-brief').value = buildBatchBrief(pages);
+    modal.classList.add('open');
+    document.getElementById('rd-saved-notice').style.display = 'none';
+    document.getElementById('rd-save-btn').textContent = pages.length > 1
+      ? `save batch (${pages.length} pages)`
+      : 'save to file';
+  });
+
+  document.getElementById('rd-modal-close-btn').addEventListener('click', () => {
+    modal.classList.remove('open');
+  });
+
+  document.getElementById('rd-copy-btn').addEventListener('click', () => {
+    const text = document.getElementById('rd-brief').value;
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById('rd-copy-btn').textContent = 'copied ✓';
+      setTimeout(() => document.getElementById('rd-copy-btn').textContent = 'copy', 1500);
+    });
+  });
+
+  document.getElementById('rd-save-btn').addEventListener('click', async () => {
+    persistState();
+    const pages = listBatchPages();
+    const brief = document.getElementById('rd-brief').value;
+    const batchPayload = {
+      batch: true,
+      sentAt: new Date().toISOString(),
+      brief,
+      pages,
+    };
+
+    try {
+      const res = await fetch(MARKUP_ORIGIN + '/markup-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(batchPayload)
+      });
+      if (res.ok) {
+        document.getElementById('rd-saved-notice').style.display = 'block';
+        document.getElementById('rd-saved-notice').textContent = pages.length > 1
+          ? `✓ batch of ${pages.length} pages saved — tell your assistant "markup ready"`
+          : '✓ saved — tell your assistant "markup ready"';
+        document.getElementById('rd-save-btn').textContent = 'saved ✓';
+        // Clear all queued pages from localStorage now that they're committed.
+        clearBatchStorage();
+        // Reset live state for the current page; visual elements stay on
+        // screen until the next nav (the page can be re-marked).
+        state.annotations.forEach(a => a.el?.remove());
+        state.annotations = [];
+        state.textEdits = [];
+        state.strokes = [];
+        state.compareDecisions = [];
+        Array.from(svg.children).forEach(c => {
+          if (c.tagName === 'path' || c.tagName === 'g') c.remove();
+        });
+        refreshBatchBadge();
+      } else {
+        throw new Error('server error');
+      }
+    } catch {
+      // Fallback: download as file
+      const blob = new Blob([JSON.stringify(batchPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'markup-feedback.json'; a.click();
+      document.getElementById('rd-saved-notice').style.display = 'block';
+      document.getElementById('rd-saved-notice').textContent = '↓ downloaded — drag to your project folder, then tell your assistant "markup ready"';
+    }
+  });
+
+  function buildBatchBrief(pages) {
+    if (!pages.length) {
+      const live = buildPagePayload();
+      pages = live ? [live] : [];
+    }
+    const lines = [];
+    lines.push(`MARKUP — BATCH (${pages.length} page${pages.length===1?'':'s'})`);
+    lines.push(`timestamp: ${new Date().toISOString()}`);
+    if (!pages.length) {
+      lines.push('');
+      lines.push('(no notes anywhere — nothing to send)');
+      return lines.join('\n');
+    }
+    pages.forEach((p, i) => {
+      lines.push('');
+      lines.push('━'.repeat(60));
+      lines.push(`PAGE ${i+1} / ${pages.length} — ${p.page}`);
+      lines.push(`saved: ${p.savedAt}`);
+      if (p.viewport) lines.push(`viewport: ${p.viewport.w}x${p.viewport.h} @ ${p.viewport.dpr}x`);
+      lines.push('━'.repeat(60));
+
+      if ((p.textEdits || []).length) {
+        lines.push('');
+        lines.push(`TEXT EDITS (${p.textEdits.length})`);
+        lines.push('─'.repeat(40));
+        p.textEdits.forEach((t, j) => {
+          lines.push(`${j+1}. ${t.selector}`);
+          lines.push(`   FROM: ${t.original}`);
+          lines.push(`   TO:   ${t.current}`);
+          lines.push('');
+        });
+      }
+      if ((p.annotations || []).length) {
+        lines.push('');
+        lines.push(`ANNOTATIONS (${p.annotations.length})`);
+        lines.push('─'.repeat(40));
+        p.annotations.forEach((a, j) => {
+          lines.push(`${j+1}. at (${Math.round(a.x)}, ${Math.round(a.y)}) — scroll offset ${Math.round(a.scrollY||0)}px`);
+          lines.push(`   "${a.text || '(no text)'}"`);
+          lines.push('');
+        });
+      }
+      if ((p.strokes || []).length) {
+        lines.push('');
+        lines.push(`STROKES: ${p.strokes.length} (arrows + freehand marks)`);
+      }
+      if ((p.compareDecisions || []).length) {
+        lines.push('');
+        lines.push(`COMPARE DECISIONS (${p.compareDecisions.length})`);
+        lines.push('─'.repeat(40));
+        p.compareDecisions.forEach((d, j) => {
+          lines.push(`${j+1}. ${d.id} → ${d.choice.toUpperCase()}`);
+          lines.push(`   TEXT: ${d.text.slice(0, 120)}${d.text.length > 120 ? '…' : ''}`);
+          lines.push('');
+        });
+      }
+    });
+    return lines.join('\n');
+  }
+
+  function buildBrief() {
+    const lines = [];
+    lines.push(`MARKUP FEEDBACK`);
+    lines.push(`page: ${window.location.pathname}`);
+    lines.push(`timestamp: ${new Date().toISOString()}`);
+    lines.push(`viewport: ${window.innerWidth}x${window.innerHeight} @ ${window.devicePixelRatio || 1}x`);
+    const ctx = readContext();
+    if (ctx) {
+      const entries = Object.entries(ctx).filter(([, v]) => v !== null && v !== undefined);
+      if (entries.length) lines.push(`context: ${entries.map(([k, v]) => `${k}=${v}`).join(', ')}`);
+    }
+    lines.push('');
+
+    if (state.textEdits.length) {
+      lines.push(`TEXT EDITS (${state.textEdits.length})`);
+      lines.push('─'.repeat(40));
+      state.textEdits.forEach((t, i) => {
+        lines.push(`${i+1}. ${t.selector}`);
+        lines.push(`   FROM: ${t.original}`);
+        lines.push(`   TO:   ${t.current}`);
+        lines.push('');
+      });
+    }
+
+    if (state.annotations.length) {
+      lines.push(`ANNOTATIONS (${state.annotations.length})`);
+      lines.push('─'.repeat(40));
+      state.annotations.forEach((a, i) => {
+        const ann = a.el || document.getElementById(`rd-ann-${a.id}`);
+        const text = ann ? ann.querySelector('.rd-ann-textarea').value : a.text;
+        lines.push(`${i+1}. at position (${Math.round(a.x)}, ${Math.round(a.y)}) — scroll offset ${Math.round(a.scrollY)}px`);
+        lines.push(`   "${text || '(no text)'}"`);
+        lines.push('');
+      });
+    }
+
+    if (state.strokes.length) {
+      lines.push(`DRAWINGS`);
+      lines.push('─'.repeat(40));
+      lines.push(`${state.strokes.length} stroke(s) drawn on the page.`);
+      lines.push('(see strokes array in JSON for coordinates)');
+      lines.push('');
+    }
+
+    if (state.compareDecisions.length) {
+      lines.push(`COMPARE DECISIONS (${state.compareDecisions.length})`);
+      lines.push('─'.repeat(40));
+      state.compareDecisions.forEach((d, i) => {
+        lines.push(`${i+1}. ${d.id} → ${d.choice.toUpperCase()}`);
+        lines.push(`   TEXT: ${d.text.slice(0, 120)}${d.text.length > 120 ? '…' : ''}`);
+        lines.push('');
+      });
+    }
+
+    if (!state.textEdits.length && !state.annotations.length && !state.strokes.length && !state.compareDecisions.length) {
+      lines.push('(no changes marked)');
+    }
+
+    return lines.join('\n');
+  }
+
+  // Apps with multiple screens/modes can expose a context hook:
+  //   window.__markupContext = () => ({ screen: 'start', mode: 'draw', ... })
+  // Whatever object is returned is embedded in the payload and printed at
+  // the top of the brief, so the assistant always knows which surface was marked
+  // — annotations divorced from their screen are noise.
+  function readContext() {
+    try {
+      if (typeof window.__markupContext === 'function') {
+        const ctx = window.__markupContext();
+        return (ctx && typeof ctx === 'object') ? ctx : null;
+      }
+    } catch (e) { /* app bug — don't block the save */ }
+    return null;
+  }
+
+  function buildPayload() {
+    const annData = state.annotations.map(a => {
+      const el = a.el || document.getElementById(`rd-ann-${a.id}`);
+      const text = el ? el.querySelector('.rd-ann-textarea').value : a.text;
+      return { id: a.id, x: a.x, y: a.y, scrollY: a.scrollY, text };
+    });
+
+    return {
+      page: window.location.pathname,
+      timestamp: new Date().toISOString(),
+      context: readContext(),
+      viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 },
+      textEdits: state.textEdits,
+      annotations: annData,
+      strokes: state.strokes,
+      compareDecisions: state.compareDecisions,
+      brief: buildBrief()
+    };
+  }
+
+  // ── COMPARE MODE ─────────────────────────────────────────────────────────
+  //
+  // The assistant writes tools/markup-compare.json with an array of proposals:
+  //   [{ "id": "dilate-what-it-is",
+  //      "label": "Dilate > What It Is",
+  //      "selector": ".writing-block",          // CSS selector to inject after
+  //      "sectionIndex": 0,                      // which match (0-based)
+  //      "old": "Original text...",
+  //      "new": "Revised text...",
+  //      "default": "old" }]                     // which is pre-selected
+  //
+  // The reviewer picks old/new, and can edit either textarea.
+  // Decisions land in markup-feedback.json under "compareDecisions".
+
+  state.compareDecisions = [];  // { id, choice, text }
+
+  document.getElementById('rd-btn-compare').addEventListener('click', async () => {
+    // Remove any existing compare panels
+    document.querySelectorAll('.rd-compare').forEach(el => el.remove());
+    state.compareDecisions = [];
+
+    try {
+      const res = await fetch(MARKUP_ORIGIN + '/tools/markup-compare.json?t=' + Date.now());
+      if (!res.ok) throw new Error('no compare file');
+      const proposals = await res.json();
+
+      if (!proposals.length) {
+        alert('No compare proposals found in markup-compare.json');
+        return;
+      }
+
+      proposals.forEach((p, pi) => {
+        const targets = document.querySelectorAll(p.selector);
+        const target = targets[p.sectionIndex || 0];
+        if (!target) {
+          console.warn(`[compare] no match for "${p.selector}" index ${p.sectionIndex || 0}`);
+          return;
+        }
+
+        const chosen = p.default || 'new';
+        const uid = p.id || `compare-${pi}`;
+        const radioName = `rd-cmp-${uid}`;
+
+        const panel = document.createElement('div');
+        panel.className = 'rd-compare';
+        panel.dataset.compareId = uid;
+        panel.innerHTML = `
+          <div class="rd-compare-header">
+            <span>${p.label || uid}</span>
+            <span style="font-size:7px;color:#666;">${uid}</span>
+          </div>
+          <div class="rd-compare-grid">
+            <div class="rd-compare-col">
+              <label class="rd-compare-col-label rd-old">
+                <input type="radio" name="${radioName}" value="old" ${chosen==='old'?'checked':''}>
+                original
+              </label>
+              <textarea class="rd-compare-ta ${chosen==='old'?'rd-chosen':'rd-dimmed'}" data-side="old">${escHtml(p.old || '')}</textarea>
+            </div>
+            <div class="rd-compare-col">
+              <label class="rd-compare-col-label rd-new">
+                <input type="radio" name="${radioName}" value="new" ${chosen==='new'?'checked':''}>
+                revised
+              </label>
+              <textarea class="rd-compare-ta ${chosen==='new'?'rd-chosen':'rd-dimmed'}" data-side="new">${escHtml(p.new || '')}</textarea>
+            </div>
+          </div>
+        `;
+
+        // Insert after the target element
+        target.parentNode.insertBefore(panel, target.nextSibling);
+
+        // Wire radio buttons
+        panel.querySelectorAll(`input[name="${radioName}"]`).forEach(radio => {
+          radio.addEventListener('change', () => {
+            const val = radio.value;
+            panel.querySelectorAll('.rd-compare-ta').forEach(ta => {
+              if (ta.dataset.side === val) {
+                ta.classList.add('rd-chosen');
+                ta.classList.remove('rd-dimmed');
+              } else {
+                ta.classList.remove('rd-chosen');
+                ta.classList.add('rd-dimmed');
+              }
+            });
+            syncCompareDecision(uid, panel);
+          });
+        });
+
+        // Wire textarea input
+        panel.querySelectorAll('.rd-compare-ta').forEach(ta => {
+          ta.addEventListener('input', () => syncCompareDecision(uid, panel));
+        });
+
+        // Initial decision
+        syncCompareDecision(uid, panel);
+      });
+
+      console.log(`[compare] loaded ${proposals.length} proposal(s)`);
+      const btn = document.getElementById('rd-btn-compare');
+      btn.textContent = `\u21D4 ${proposals.length} loaded`;
+      btn.style.color = '#e8ff00';
+
+    } catch (err) {
+      console.warn('[compare]', err.message);
+      alert('Could not load markup-compare.json. Ask your assistant to write it first.');
+    }
+  });
+
+  function syncCompareDecision(uid, panel) {
+    const radio = panel.querySelector('input[type="radio"]:checked');
+    if (!radio) return;
+    const choice = radio.value;
+    const ta = panel.querySelector(`.rd-compare-ta[data-side="${choice}"]`);
+    const text = ta ? ta.value : '';
+
+    const idx = state.compareDecisions.findIndex(d => d.id === uid);
+    const decision = { id: uid, choice, text };
+    if (idx >= 0) {
+      state.compareDecisions[idx] = decision;
+    } else {
+      state.compareDecisions.push(decision);
+    }
+    persistState();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  setMode('select');
+  // Rehydrate prior state for THIS page (notes made before leaving it).
+  // Visual elements are NOT re-rendered; the state arrays come back so
+  // the next batch send includes them. The badge shows whether other
+  // pages also have queued notes.
+  const prior = loadPriorState();
+  refreshBatchBadge();
+  if (prior) {
+    const n = (prior.annotations||[]).length + (prior.textEdits||[]).length +
+              (prior.strokes||[]).length + (prior.compareDecisions||[]).length;
+    if (n) {
+      const banner = document.createElement('div');
+      banner.id = 'rd-restored-banner';
+      banner.style.cssText =
+        'position:fixed; top:70px; left:16px; z-index:10005;' +
+        'background:#1a1a1a; color:#e8ff00; border:1px solid #e8ff00;' +
+        'padding:8px 14px; font:11px "IBM Plex Mono", monospace;' +
+        'border-radius:4px; cursor:pointer; max-width:340px;' +
+        'box-shadow:0 4px 18px rgba(0,0,0,0.3);';
+      banner.textContent = `↺ ${n} prior note${n===1?'':'s'} on this page (queued for batch). click to dismiss`;
+      banner.addEventListener('click', () => banner.remove());
+      document.body.appendChild(banner);
+      setTimeout(() => { banner.style.opacity = '0.55'; banner.style.transition = 'opacity 480ms'; }, 6000);
+    }
+  }
+  console.log('[markup] loaded. multi-page batch mode active.');
+
+})();
+----- END FILE tools/markup-inject.js -----
