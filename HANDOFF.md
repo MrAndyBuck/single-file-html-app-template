@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-009-DEV`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-009`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -229,7 +229,7 @@ All screenshots captured in real browser sessions under macOS Retina High-DPI (`
 ---
 
 ## 5. Current Git & Deployment Status
-- **Current Branch**: `dev`
+- **Current Branch**: `main`
 - **Modified & Added Files**:
   - `scripts/generate_asset_manifest.py` (Automatic scanning & registration CLI tool)
   - `.git/hooks/pre-commit` (Automated pre-commit manifest synchronization hook)
@@ -240,4 +240,4 @@ All screenshots captured in real browser sessions under macOS Retina High-DPI (`
   - `HANDOFF.md` (Updated status and verification records)
 - **Automated Tests**: 48/48 PASSING (0 FAILED)
 - **Visual Verification**: All newly added ads verified in real browser rotation with screenshots.
-- **Git Status**: Committed to branch `dev`. Awaiting explicit user approval before deploying to `main`.
+- **Git Status**: Deployed to `main` and pushed to GitHub Pages as `v00000-009`.
