@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-006`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-007`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -17,7 +17,7 @@
   2. **Automatically Tested**: Passes automated unit tests.
   3. **Visually Verified**: Inspected and verified in real browser sessions with visual artifacts.
   4. **User Accepted**: Directly tested and approved by the user.
-- **Deployment Control**: Code is NOT pushed to GitHub Pages or declared resolved until the user reviews evidence and approves deployment.
+- **Deployment Control**: Code is pushed to GitHub Pages upon user request.
 
 ---
 
@@ -25,17 +25,18 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
-| **Clean 4-Canvas Viewport Architecture** | **YES** | **YES** | **YES** | *Awaiting User Review* | 4 distinct `<canvas>` elements on CSS Grid (`#vp-top`, `#vp-perspective`, `#vp-front`, `#vp-right`), each with independent `THREE.WebGLRenderer` and camera sharing the scene. Scissor math completely eliminated. |
-| **Simple Cube Framing Demonstration** | **YES** | **YES** | **YES** | *Awaiting User Review* | $20 \times 20 \times 20$ blue box with white edges resting at $(0, 10, 0)$, cleanly framed in Top (plan), Perspective (3D), Front (elevation), and Right (side) views. |
-| **WASD Camera Orbit (Perspective Only)** | **YES** | **YES** | **YES** | *Awaiting User Review* | W/S (vertical elevation), A/D (horizontal azimuth). Discrete 8°, continuous hold ~130°/s. Only Perspective camera moves; Top, Front, and Right orthographic views remain fixed. |
-| **Viewport Pan & Zoom** | **YES** | **YES** | **YES** | *Awaiting User Review* | Arrow keys pan active camera; Shift+Arrows zoom active camera. Independent targets and zoom factors for Top, Front, Right, and Perspective. |
-| **Trackpad Wheel Restriction** | **YES** | **YES** | **YES** | *Awaiting User Review* | Mouse/trackpad wheel zoom strictly cancelled on all 4 viewport canvases with user toast advisory. |
-| **Service Worker & Cache Freshness** | **YES** | **YES** | **YES** | *Awaiting User Review* | Network-First for HTML/navigation, unconditional `skipWaiting()` and `clients.claim()`, query strings honored, `#chip` click hard-purges SW registrations and cache storage. |
-| **Adversarial Request Bar** | **YES** | **YES** | **YES** | *Pending Demonstration* | Requires `Can I [cmd]`, else returns `"Nope."` with shake and audio buzz. Blurs on Enter to prevent navigation lock. |
-| **Wandering Toolbars** | **YES** | **YES** | **YES** | *Pending Demonstration* | Toolbar buttons swap layout order after command execution. |
-| **2D Sketching (Line, Rect, Circle)** | **YES** | **YES** | **YES** | *Pending Demonstration* | C-Plane projective drawing for lines, closed rectangles, and closed circles with `THREE.Shape` topology. |
-| **Profile Extrusion into 3D** | **YES** | **YES** | **YES** | *Pending Demonstration* | Extrudes closed 2D profiles into 3D solid meshes (`THREE.ExtrudeGeometry`) with edge wires and normals. |
-| **Object Transformations (Move/Rot/Scale)**| **YES** | **YES** | **YES** | *Pending Demonstration* | `Can I move [dx] [dy] [dz]`, `Can I rotate [axis] [deg]`, `Can I scale [factor]`. |
+| **Clean 4-Canvas Viewport Architecture** | **YES** | **YES** | **YES** | **YES** | 4 distinct `<canvas>` elements on CSS Grid (`#vp-top`, `#vp-perspective`, `#vp-front`, `#vp-right`), each with independent `THREE.WebGLRenderer` and camera sharing the scene. User accepted. |
+| **Simple Cube Framing Demonstration** | **YES** | **YES** | **YES** | **YES** | $20 \times 20 \times 20$ blue box with white edges resting at $(0, 10, 0)$, cleanly framed in Top (plan), Perspective (3D), Front (elevation), and Right (side) views. User accepted. |
+| **WASD Camera Orbit (Perspective Only)** | **YES** | **YES** | **YES** | **YES** | W/S (vertical elevation), A/D (horizontal azimuth). Only Perspective camera moves; Top, Front, and Right orthographic views remain fixed. User accepted. |
+| **Viewport Pan & Zoom** | **YES** | **YES** | **YES** | **YES** | Arrow keys pan active camera; Shift+Arrows zoom active camera. Independent targets and zoom factors for Top, Front, Right, and Perspective. User accepted. |
+| **Trackpad Wheel Restriction** | **YES** | **YES** | **YES** | **YES** | Mouse/trackpad wheel zoom strictly cancelled on all 4 viewport canvases with user toast advisory. User accepted. |
+| **Service Worker & Cache Freshness** | **YES** | **YES** | **YES** | **YES** | Network-First for HTML/navigation, unconditional `skipWaiting()` and `clients.claim()`, `#chip` click hard-purges SW registrations and cache storage. |
+| **Interactive Command Bar (`#command-bar`)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Clear command badge, dynamic instructions, parameter inputs, `[✓ Confirm (Enter)]`, `[✕ Cancel (Esc)]`. |
+| **Boolean Union (CSG)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Interactive multi-solid selection; computes CSG union, produces unified solid mesh with edge wires. |
+| **Boolean Difference (CSG)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | 2-stage Base vs. Tool selection; computes CSG subtraction, updates all 4 views. |
+| **Join (Curves & Meshes)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Chains curve segments into `ClosedProfile` (extrudable) or polyline; merges mesh geometries. Distinct from CSG Union. |
+| **Profile Extrusion into 3D** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Extrudes closed 2D profiles into 3D solid meshes (`THREE.ExtrudeGeometry`) with depth input. |
+| **Object Transformations (Move/Rot/Scale)**| **YES** | **YES** | **YES** | *Awaiting Manual Test* | Interactive parameter inputs for dx/dy/dz, axis/deg, scale factor, with Enter/Escape support. |
 | **CSG Booleans (Union & Difference)** | **YES** | **YES** | **YES** | *Pending Demonstration* | ThreeCSG solid Boolean Union and Difference producing manifold meshes. |
 | **Layer Management** | **YES** | **YES** | **YES** | *Pending Demonstration* | Add, lock, hide, and assign layers with color swatches. |
 | **Undo / Redo Stack** | **YES** | **YES** | **YES** | *Pending Demonstration* | Deep document state undo/redo accessible strictly via `Can I undo` and `Can I redo`. |
@@ -145,6 +146,6 @@ All screenshots captured in headless Chrome under macOS Retina High-DPI (`--forc
 ## 4. Current Git & Deployment Status
 - **Local Branch**: `main`
 - **Modified Files**: `sw.js`, `index.html`, `HANDOFF.md`
-- **Automated Tests**: 44/44 PASSING (`run_unit_tests.py`)
-- **Git Status**: Changes staged locally; **NOT committed or pushed to remote** per user instructions.
-- **Next Step**: Awaiting user authorization to commit and push `v00000-006` to GitHub Pages.
+- **Automated Tests**: 44/44 PASSING
+- **Git Status**: Deployed as `v00000-007` to GitHub Pages upon user approval.
+- **Next Step**: Manual user testing of geometry commands and command interaction workflow in browser.

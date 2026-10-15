@@ -37,7 +37,7 @@
   /* App Shell Grid */
   #app-root {
     display: grid;
-    grid-template-rows: 36px 34px 1fr 24px;
+    grid-template-rows: 36px auto 1fr 24px;
     grid-template-columns: 56px 1fr 280px;
     width: 100vw;
     height: 100vh;
@@ -121,16 +121,128 @@
   .header-btn:hover { background: #262626; border-color: var(--border-light); }
   .header-btn.debug-btn { border-color: var(--toxic-green); color: var(--toxic-green); }
 
-  /* Request Bar (Rhino Command Line) */
-  #request-bar-row {
+  /* Request Bar & Active Command Bar Container */
+  #request-bar-container {
     grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 100;
+  }
+  #request-bar-row {
     display: flex;
     align-items: center;
     background: #181818;
     border-bottom: 1px solid var(--border-dark);
     padding: 0 10px;
     gap: 8px;
+    height: 34px;
     position: relative;
+  }
+  #command-bar {
+    display: flex;
+    align-items: center;
+    background: #162026;
+    border-bottom: 2px solid var(--rhino-yellow);
+    padding: 0 12px;
+    gap: 12px;
+    height: 36px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  #command-badge {
+    background: var(--rhino-yellow);
+    color: #111;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  #command-prompt {
+    flex: 1;
+    color: #ffffff;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #command-params {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cmd-param-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .cmd-param-label {
+    color: #8899a6;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .cmd-param-input, .cmd-param-select {
+    background: #0f1418;
+    border: 1px solid #38444d;
+    color: #fff;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    outline: none;
+  }
+  .cmd-param-input:focus, .cmd-param-select:focus {
+    border-color: var(--rhino-yellow);
+  }
+  .cmd-param-input {
+    width: 52px;
+    text-align: center;
+  }
+  #command-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cmd-btn {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .cmd-btn.confirm-btn {
+    background: #1b5e20;
+    border-color: #2e7d32;
+    color: #c8e6c9;
+  }
+  .cmd-btn.confirm-btn:hover:not(:disabled) {
+    background: #2e7d32;
+    color: #ffffff;
+  }
+  .cmd-btn.confirm-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #222;
+    border-color: #333;
+    color: #666;
+  }
+  .cmd-btn.cancel-btn {
+    background: #263238;
+    border-color: #37474f;
+    color: #eceff1;
+  }
+  .cmd-btn.cancel-btn:hover {
+    background: #37474f;
+    color: #ffffff;
   }
   .request-label {
     font-family: var(--font-mono);
@@ -545,6 +657,13 @@
   body.light-theme #cad-canvas { background: #b8b8b8; }
   body.light-theme .economy-chip { background: #ffffff; border-color: #bbbbbb; }
   body.light-theme #request-bar-row { background: #e0e0e0; }
+  body.light-theme #command-bar { background: #e1e8ed; border-bottom: 2px solid #b8860b; color: #111; }
+  body.light-theme #command-badge { background: #b8860b; color: #fff; }
+  body.light-theme #command-prompt { color: #111; }
+  body.light-theme .cmd-param-label { color: #555; }
+  body.light-theme .cmd-param-input, body.light-theme .cmd-param-select { background: #ffffff; border-color: #bbb; color: #111; }
+  body.light-theme .cmd-btn.confirm-btn { background: #2e7d32; border-color: #1b5e20; color: #ffffff; }
+  body.light-theme .cmd-btn.cancel-btn { background: #cfd8dc; border-color: #b0bec5; color: #263238; }
   body.light-theme #request-input { background: #ffffff; color: #111; border-color: #aaa; }
   body.light-theme .tool-btn { background: #e0e0e0; border-color: #ccc; color: #222; }
   body.light-theme .tool-btn:hover { background: #d0d0d0; }
@@ -679,15 +798,28 @@
   <input type="file" id="file-input-open" accept=".cadnt,.json" style="display:none;">
   <input type="file" id="file-input-import" accept=".stl,.obj" style="display:none;">
 
-  <!-- Request Bar Row (Rhino Command Line replacement) -->
-  <div id="request-bar-row">
-    <span class="request-label">Request:</span>
-    <input type="text" id="request-input" placeholder="Type polite request (e.g., 'Can I box' or 'Can I sphere')..." autocomplete="off" spellcheck="false">
-    <button id="btn-submit-request">Send</button>
-    <button id="request-history-btn" title="Toggle Command History Log">▼ Log</button>
+  <!-- Request Bar Container & Active Command Bar -->
+  <div id="request-bar-container">
+    <div id="request-bar-row">
+      <span class="request-label">Request:</span>
+      <input type="text" id="request-input" placeholder="Type polite request (e.g., 'Can I box' or 'Can I sphere')..." autocomplete="off" spellcheck="false">
+      <button id="btn-submit-request">Send</button>
+      <button id="request-history-btn" title="Toggle Command History Log">▼ Log</button>
 
-    <!-- Dropdown Request Log -->
-    <div id="request-log-box"></div>
+      <!-- Dropdown Request Log -->
+      <div id="request-log-box"></div>
+    </div>
+
+    <!-- Active Modeling Command Interaction Bar -->
+    <div id="command-bar" style="display: none;">
+      <span id="command-badge">COMMAND</span>
+      <span id="command-prompt">Select objects...</span>
+      <div id="command-params"></div>
+      <div id="command-actions">
+        <button id="btn-cmd-confirm" class="cmd-btn confirm-btn" disabled title="Confirm operation (Enter)">✓ Confirm</button>
+        <button id="btn-cmd-cancel" class="cmd-btn cancel-btn" title="Cancel operation (Esc)">✕ Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Wandering Left Toolbar -->
@@ -799,7 +931,7 @@
     <div id="debug-overlay">
       <div class="debug-hud-header" id="debug-hud-toggle">
         <span class="debug-hud-title">🔍 CADN'T DIAGNOSTIC HUD</span>
-        <span id="debug-hud-version" class="debug-badge">v00000-006-DIAG</span>
+        <span id="debug-hud-version" class="debug-badge">v00000-007-DIAG</span>
         <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
       </div>
       <div id="debug-hud-body" class="debug-hud-body">
@@ -916,7 +1048,7 @@
     <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div id="status-message">Ready. Type polite request in Request Bar.</div>
     <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
-    <button id="chip" title="Check for newer version">v00000-006 ↻</button>
+    <button id="chip" title="Check for newer version">v00000-007 ↻</button>
   </footer>
 </div>
 
@@ -976,7 +1108,7 @@
 <!-- About Modal -->
 <dialog id="modal-about">
   <h2>About CADN'T</h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-006</span></p>
+  <p><strong>Version</strong>: <span id="about-version">v00000-007</span></p>
   <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
   <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
   <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
@@ -1057,7 +1189,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-006",
+  version: "v00000-007",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -1928,106 +2060,437 @@ function extrudeSelectedProfile(depth = 10) {
   return mesh;
 }
 
-// 4.6 CSG Boolean Engine
-function performBooleanOperation(op) {
+// 4.6 CSG Boolean Engine & Geometry Join Engine
+function getCSG(obj) {
+  obj.updateMatrix();
+  obj.updateMatrixWorld(true);
+  const meshToUse = (obj.isMesh && obj.geometry) ? obj : null;
+  if (meshToUse) {
+    const cloneMesh = new THREE.Mesh(meshToUse.geometry, meshToUse.material);
+    cloneMesh.matrix.copy(meshToUse.matrixWorld);
+    return CSG.fromMesh(cloneMesh);
+  }
+  const subMeshes = [];
+  obj.traverse(c => {
+    if (c.isMesh && !c.isLineSegments && c.geometry) subMeshes.push(c);
+  });
+  if (subMeshes.length === 0) return null;
+  let csg = null;
+  for (let i = 0; i < subMeshes.length; i++) {
+    subMeshes[i].updateMatrix();
+    subMeshes[i].updateMatrixWorld(true);
+    const cm = new THREE.Mesh(subMeshes[i].geometry, subMeshes[i].material);
+    cm.matrix.copy(subMeshes[i].matrixWorld);
+    const subCSG = CSG.fromMesh(cm);
+    if (!csg) csg = subCSG;
+    else csg = csg.union(subCSG);
+  }
+  return csg;
+}
+
+function executeUnion(solids) {
   if (typeof CSG === "undefined") {
     addLog("CSG Boolean engine is not loaded.", "log-nope");
-    return;
+    return null;
+  }
+  if (!solids || solids.length < 2) {
+    addLog("Boolean UNION requires 2 or more selected solid objects.", "log-warn");
+    return null;
   }
 
-  const candidates = selectedObjects.filter(o => o.isMesh || (o.children && o.children.some(c => c.isMesh && !c.isLineSegments)));
-  if (candidates.length < 2) {
-    addLog(`Boolean ${op.toUpperCase()} requires 2 selected solid objects. Shift-click a second solid.`, "log-warn");
-    status(`Boolean ${op.toUpperCase()}: Select 2 solid objects.`);
-    shakeRequestBar();
-    return;
-  }
-
-  const importedHits = candidates.filter(o => o.userData && o.userData.isImported);
+  const importedHits = solids.filter(o => o.userData && o.userData.isImported);
   if (importedHits.length > 0) {
-    addLog("Imported meshes are read-only geometries and cannot undergo Boolean operations.", "log-nope");
-    status("Operation blocked: Imported mesh is geometry-locked.");
+    addLog("Imported meshes are read-only and cannot undergo Boolean operations.", "log-nope");
+    status("Operation blocked: Imported mesh is locked.");
     shakeRequestBar();
-    return;
+    return null;
   }
 
-  const objA = candidates[0];
-  const objB = candidates[1];
-
-  function getCSG(obj) {
-    obj.updateMatrixWorld(true);
-    if (obj.isMesh && obj.geometry) {
-      return CSG.fromMesh(obj);
+  recordUndoState("Boolean UNION");
+  try {
+    let resultCSG = getCSG(solids[0]);
+    for (let i = 1; i < solids.length; i++) {
+      const nextCSG = getCSG(solids[i]);
+      if (!resultCSG || !nextCSG) {
+        addLog("Boolean Union failed: Unable to extract solid mesh geometry.", "log-nope");
+        return null;
+      }
+      resultCSG = resultCSG.union(nextCSG);
     }
-    const subMeshes = [];
-    obj.traverse(c => {
-      if (c.isMesh && !c.isLineSegments && c.geometry) subMeshes.push(c);
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x6e8494,
+      roughness: 0.4,
+      metalness: 0.2,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1
     });
-    if (subMeshes.length === 0) return null;
-    subMeshes.forEach(m => m.updateMatrixWorld(true));
-    let csg = CSG.fromMesh(subMeshes[0]);
-    for (let i = 1; i < subMeshes.length; i++) {
-      csg = csg.union(CSG.fromMesh(subMeshes[i]));
-    }
-    return csg;
+
+    const resultMesh = CSG.toMesh(resultCSG, new THREE.Matrix4(), mat);
+    resultMesh.geometry.computeVertexNormals();
+
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(resultMesh.geometry, 28), wireMat);
+    resultMesh.add(edges);
+
+    // Remove source objects
+    solids.forEach(obj => {
+      scene.remove(obj);
+      const idx = sceneObjects.indexOf(obj);
+      if (idx !== -1) sceneObjects.splice(idx, 1);
+    });
+
+    const name = "Union_Solid_" + (++primitiveCounter);
+    registerNewObject(resultMesh, name, "Solid");
+    addLog(`Boolean UNION successful. Created '${name}'.`, "log-success");
+    status(`Boolean UNION complete: ${name}`);
+    CADNT_AUDIO.playSuccess();
+    return resultMesh;
+  } catch (err) {
+    console.error("CSG Union Error:", err);
+    addLog(`Boolean UNION error: ${err.message}`, "log-nope");
+    status(`Boolean error: ${err.message}`);
+    return null;
+  }
+}
+
+function executeDifference(base, tool) {
+  if (typeof CSG === "undefined") {
+    addLog("CSG Boolean engine is not loaded.", "log-nope");
+    return null;
+  }
+  if (!base || !tool) {
+    addLog("Boolean DIFFERENCE requires both Base and Tool objects.", "log-warn");
+    return null;
   }
 
-  const executeCSG = () => {
-    recordUndoState(`Boolean ${op.toUpperCase()}`);
-    try {
-      const csgA = getCSG(objA);
-      const csgB = getCSG(objB);
-      if (!csgA || !csgB) {
-        addLog("Boolean failed: Unable to extract solid mesh geometry.", "log-nope");
-        return;
-      }
+  if ((base.userData && base.userData.isImported) || (tool.userData && tool.userData.isImported)) {
+    addLog("Imported meshes cannot undergo Boolean operations.", "log-nope");
+    status("Operation blocked: Imported mesh is locked.");
+    shakeRequestBar();
+    return null;
+  }
 
-      let resultCSG;
-      if (op === "union") {
-        resultCSG = csgA.union(csgB);
-      } else {
-        resultCSG = csgA.subtract(csgB);
-      }
-
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x6e8494,
-        roughness: 0.4,
-        metalness: 0.2,
-        polygonOffset: true,
-        polygonOffsetFactor: 1,
-        polygonOffsetUnits: 1
-      });
-
-      const resultMesh = CSG.toMesh(resultCSG, new THREE.Matrix4(), mat);
-      resultMesh.geometry.computeVertexNormals();
-
-      const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(resultMesh.geometry, 28), wireMat);
-      resultMesh.add(edges);
-
-      // Remove source objects
-      [objA, objB].forEach(obj => {
-        scene.remove(obj);
-        const idx = sceneObjects.indexOf(obj);
-        if (idx !== -1) sceneObjects.splice(idx, 1);
-      });
-
-      const name = (op === "union" ? "Union_Solid_" : "Diff_Solid_") + (++primitiveCounter);
-      registerNewObject(resultMesh, name, "Solid");
-      addLog(`Boolean ${op.toUpperCase()} successful. Created '${name}'.`, "log-success");
-      status(`Boolean ${op.toUpperCase()} complete: ${name}`);
-    } catch (err) {
-      console.error("CSG Error:", err);
-      addLog(`Boolean ${op.toUpperCase()} error: ${err.message}`, "log-nope");
-      status(`Boolean error: ${err.message}`);
+  recordUndoState("Boolean DIFFERENCE");
+  try {
+    const csgA = getCSG(base);
+    const csgB = getCSG(tool);
+    if (!csgA || !csgB) {
+      addLog("Boolean Difference failed: Unable to extract solid mesh geometry.", "log-nope");
+      return null;
     }
+
+    const resultCSG = csgA.subtract(csgB);
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x6e8494,
+      roughness: 0.4,
+      metalness: 0.2,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1
+    });
+
+    const resultMesh = CSG.toMesh(resultCSG, new THREE.Matrix4(), mat);
+    resultMesh.geometry.computeVertexNormals();
+
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(resultMesh.geometry, 28), wireMat);
+    resultMesh.add(edges);
+
+    // Remove source objects
+    [base, tool].forEach(obj => {
+      scene.remove(obj);
+      const idx = sceneObjects.indexOf(obj);
+      if (idx !== -1) sceneObjects.splice(idx, 1);
+    });
+
+    const name = "Diff_Solid_" + (++primitiveCounter);
+    registerNewObject(resultMesh, name, "Solid");
+    addLog(`Boolean DIFFERENCE successful. Subtracted '${tool.name}' from '${base.name}', created '${name}'.`, "log-success");
+    status(`Boolean DIFFERENCE complete: ${name}`);
+    CADNT_AUDIO.playSuccess();
+    return resultMesh;
+  } catch (err) {
+    console.error("CSG Difference Error:", err);
+    addLog(`Boolean DIFFERENCE error: ${err.message}`, "log-nope");
+    status(`Boolean error: ${err.message}`);
+    return null;
+  }
+}
+
+function joinCurveSegments(candidates) {
+  const segments = [];
+  candidates.forEach(c => {
+    c.updateMatrixWorld(true);
+    let pts = [];
+    if (c.userData && c.userData.points && Array.isArray(c.userData.points)) {
+      pts = c.userData.points.map(p => p.clone().applyMatrix4(c.matrixWorld));
+    } else if (c.geometry && c.geometry.attributes.position) {
+      const pos = c.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const v = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
+        v.applyMatrix4(c.matrixWorld);
+        pts.push(v);
+      }
+    }
+    if (pts.length >= 2) segments.push(pts);
+  });
+
+  if (segments.length === 0) {
+    addLog("Join failed: No valid curve points found.", "log-nope");
+    return null;
+  }
+
+  const tolerance = 2.0;
+  const chain = [...segments[0]];
+  const remaining = segments.slice(1);
+
+  while (remaining.length > 0) {
+    const chainStart = chain[0];
+    const chainEnd = chain[chain.length - 1];
+    let bestIdx = -1;
+    let bestType = null;
+    let bestDist = Infinity;
+
+    for (let i = 0; i < remaining.length; i++) {
+      const seg = remaining[i];
+      const sStart = seg[0];
+      const sEnd = seg[seg.length - 1];
+
+      const dEndStart = chainEnd.distanceTo(sStart);
+      const dEndEnd = chainEnd.distanceTo(sEnd);
+      const dStartEnd = chainStart.distanceTo(sEnd);
+      const dStartStart = chainStart.distanceTo(sStart);
+
+      const minDist = Math.min(dEndStart, dEndEnd, dStartEnd, dStartStart);
+      if (minDist < bestDist) {
+        bestDist = minDist;
+        bestIdx = i;
+        if (minDist === dEndStart) bestType = 'append';
+        else if (minDist === dEndEnd) bestType = 'append-rev';
+        else if (minDist === dStartEnd) bestType = 'prepend';
+        else bestType = 'prepend-rev';
+      }
+    }
+
+    if (bestIdx !== -1 && bestDist <= tolerance) {
+      const seg = remaining.splice(bestIdx, 1)[0];
+      if (bestType === 'append') {
+        chain.push(...seg.slice(1));
+      } else if (bestType === 'append-rev') {
+        const rev = seg.slice().reverse();
+        chain.push(...rev.slice(1));
+      } else if (bestType === 'prepend') {
+        chain.unshift(...seg.slice(0, -1));
+      } else if (bestType === 'prepend-rev') {
+        const rev = seg.slice().reverse();
+        chain.unshift(...rev.slice(0, -1));
+      }
+    } else {
+      const seg = remaining.shift();
+      chain.push(...seg);
+    }
+  }
+
+  const isClosed = chain.length >= 3 && chain[0].distanceTo(chain[chain.length - 1]) <= tolerance;
+  if (isClosed && chain.length > 3) {
+    chain.pop();
+  }
+
+  const planeName = candidates[0].userData.plane || activeViewport || "top";
+
+  let shape = null;
+  if (isClosed && chain.length >= 3) {
+    shape = new THREE.Shape();
+    const pts2d = chain.map(p => {
+      if (planeName === "top" || planeName === "perspective") return { u: p.x, v: p.z };
+      if (planeName === "front") return { u: p.x, v: p.y };
+      return { u: p.z, v: p.y };
+    });
+    shape.moveTo(pts2d[0].u, pts2d[0].v);
+    for (let i = 1; i < pts2d.length; i++) shape.lineTo(pts2d[i].u, pts2d[i].v);
+    shape.closePath();
+  }
+
+  const geo = new THREE.BufferGeometry().setFromPoints(chain);
+  const mat = new THREE.LineBasicMaterial({
+    color: isClosed ? 0x00e5ff : 0xffff00,
+    linewidth: 2
+  });
+  const line = isClosed ? new THREE.LineLoop(geo, mat) : new THREE.Line(geo, mat);
+
+  const name = (isClosed ? "Profile_Joined_" : "Curve_Joined_") + (++primitiveCounter);
+  line.name = name;
+  line.userData = {
+    id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+    isStartingObject: false,
+    type: isClosed ? "ClosedProfile" : "SketchCurve",
+    layer: getActiveLayer().name,
+    protected: false,
+    closed: isClosed,
+    points: chain.map(p => p.clone()),
+    plane: planeName,
+    shape: shape
   };
 
-  if (op === "union") {
-    triggerArtificialDelay("Computing Boolean Union Topology...", executeCSG);
-  } else {
-    executeCSG();
+  candidates.forEach(obj => {
+    scene.remove(obj);
+    const idx = sceneObjects.indexOf(obj);
+    if (idx !== -1) sceneObjects.splice(idx, 1);
+  });
+
+  scene.add(line);
+  sceneObjects.push(line);
+  updateObjectsTree();
+  selectObject(line);
+  addLog(`Joined ${candidates.length} curve segments into ${isClosed ? 'closed profile' : 'curve'} '${name}'.`, "log-success");
+  status(`Joined ${candidates.length} curve segments.`);
+  CADNT_AUDIO.playSuccess();
+  return line;
+}
+
+function joinMeshObjects(candidates) {
+  const leafMeshes = [];
+  candidates.forEach(obj => {
+    obj.updateMatrixWorld(true);
+    if (obj.isMesh && obj.geometry) {
+      leafMeshes.push(obj);
+    } else {
+      obj.traverse(c => {
+        if (c.isMesh && !c.isLineSegments && c.geometry) leafMeshes.push(c);
+      });
+    }
+  });
+
+  if (leafMeshes.length === 0) {
+    addLog("Join failed: No valid mesh geometry found.", "log-nope");
+    return null;
   }
+
+  let totalVerts = 0;
+  let totalIndices = 0;
+  const geoms = [];
+
+  leafMeshes.forEach(m => {
+    m.updateMatrixWorld(true);
+    let g = m.geometry.clone();
+    g.applyMatrix4(m.matrixWorld);
+    if (!g.index) {
+      const pos = g.attributes.position;
+      const indices = [];
+      for (let i = 0; i < pos.count; i++) indices.push(i);
+      g.setIndex(indices);
+    }
+    if (!g.attributes.normal) g.computeVertexNormals();
+    totalVerts += g.attributes.position.count;
+    totalIndices += g.index.count;
+    geoms.push(g);
+  });
+
+  const mergedPos = new Float32Array(totalVerts * 3);
+  const mergedNorm = new Float32Array(totalVerts * 3);
+  const mergedIdx = new Uint32Array(totalIndices);
+
+  let vertOffset = 0;
+  let idxOffset = 0;
+
+  geoms.forEach(g => {
+    const pos = g.attributes.position.array;
+    const norm = g.attributes.normal ? g.attributes.normal.array : null;
+    const idx = g.index.array;
+    const vertCount = g.attributes.position.count;
+
+    mergedPos.set(pos, vertOffset * 3);
+    if (norm) mergedNorm.set(norm, vertOffset * 3);
+
+    for (let i = 0; i < idx.length; i++) {
+      mergedIdx[idxOffset + i] = idx[i] + vertOffset;
+    }
+
+    vertOffset += vertCount;
+    idxOffset += idx.length;
+  });
+
+  const mergedGeo = new THREE.BufferGeometry();
+  mergedGeo.setAttribute("position", new THREE.BufferAttribute(mergedPos, 3));
+  mergedGeo.setAttribute("normal", new THREE.BufferAttribute(mergedNorm, 3));
+  mergedGeo.setIndex(new THREE.BufferAttribute(mergedIdx, 1));
+  mergedGeo.computeBoundingBox();
+  mergedGeo.computeBoundingSphere();
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x5a7d90,
+    roughness: 0.4,
+    metalness: 0.2,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1
+  });
+
+  const joinedMesh = new THREE.Mesh(mergedGeo, mat);
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mergedGeo, 28), wireMat);
+  joinedMesh.add(edges);
+
+  candidates.forEach(obj => {
+    scene.remove(obj);
+    const idx = sceneObjects.indexOf(obj);
+    if (idx !== -1) sceneObjects.splice(idx, 1);
+  });
+
+  const name = "Joined_Mesh_" + (++primitiveCounter);
+  registerNewObject(joinedMesh, name, "CompoundMesh");
+  addLog(`Joined ${candidates.length} meshes into compound mesh '${name}'.`, "log-success");
+  status(`Joined compound mesh: ${name}`);
+  CADNT_AUDIO.playSuccess();
+  return joinedMesh;
+}
+
+function executeJoin(candidates) {
+  if (!candidates || candidates.length < 2) {
+    addLog("Join requires 2 or more selected objects.", "log-warn");
+    status("Join: Select 2+ objects.");
+    shakeRequestBar();
+    return null;
+  }
+
+  const allCurves = candidates.every(o => o.isLine || o.isLineLoop || (o.userData && (o.userData.type === "SketchCurve" || o.userData.type === "ClosedProfile")));
+  const allMeshes = candidates.every(o => o.isMesh || (o.children && o.children.some(c => c.isMesh && !c.isLineSegments)));
+
+  if (!allCurves && !allMeshes) {
+    addLog("Cannot join mixed geometry types. Select either multiple curves or multiple meshes.", "log-nope");
+    status("Join failed: Mixed geometry types.");
+    shakeRequestBar();
+    return null;
+  }
+
+  recordUndoState("Join Objects");
+  if (allCurves) {
+    return joinCurveSegments(candidates);
+  } else {
+    return joinMeshObjects(candidates);
+  }
+}
+
+function performBooleanOperation(op, objA, objB) {
+  let first = objA;
+  let second = objB;
+  if (!first || !second) {
+    const candidates = selectedObjects.filter(o => o.isMesh || (o.children && o.children.some(c => c.isMesh && !c.isLineSegments)));
+    if (candidates.length >= 2) {
+      first = candidates[0];
+      second = candidates[1];
+    }
+  }
+
+  if (first && second) {
+    if (op === "union") return executeUnion([first, second]);
+    else return executeDifference(first, second);
+  }
+
+  startModelingCommand(op);
 }
 
 // 4.7 Transformations Engine (Move, Rotate, Scale)
@@ -2158,6 +2621,10 @@ function updateObjectsTree() {
     `;
     li.onclick = (e) => {
       e.stopPropagation();
+      if (activeCommand && typeof activeCommand.handleSelect === "function") {
+        activeCommand.handleSelect(obj);
+        return;
+      }
       selectObject(obj, e.shiftKey);
     };
     tree.appendChild(li);
@@ -2348,6 +2815,12 @@ const CADNT_AUDIO = {
   playNope() {
     if (this.mute) return;
     this.playBeep(120, 0.25, "sawtooth");
+  },
+
+  playSuccess() {
+    if (this.mute) return;
+    this.playBeep(520, 0.08, "sine");
+    setTimeout(() => this.playBeep(780, 0.12, "sine"), 80);
   },
 
   playDrone() {
@@ -3010,6 +3483,516 @@ function shakeRequestBar() {
   setTimeout(() => requestInput.classList.remove("shake"), 350);
 }
 
+/* =========================================================================
+   5.5 MODELING COMMAND INTERACTION SYSTEM
+   ========================================================================= */
+let activeCommand = null;
+
+function cancelActiveCommand(reason = "Command cancelled.") {
+  if (!activeCommand) return;
+  activeCommand = null;
+  const bar = document.getElementById("command-bar");
+  if (bar) bar.style.display = "none";
+  addLog(reason, "log-warn");
+  status(reason);
+  focusActiveCanvas();
+}
+
+function finishActiveCommand() {
+  activeCommand = null;
+  const bar = document.getElementById("command-bar");
+  if (bar) bar.style.display = "none";
+  focusActiveCanvas();
+}
+
+function startModelingCommand(type, initialArgs = {}) {
+  if (activeCommand) {
+    cancelActiveCommand("Previous command cancelled.");
+  }
+
+  const bar = document.getElementById("command-bar");
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
+
+  bar.style.display = "flex";
+  params.innerHTML = "";
+  confirmBtn.disabled = true;
+
+  switch (type.toLowerCase()) {
+    case "union":
+      setupUnionCommand(initialArgs);
+      break;
+    case "difference":
+    case "diff":
+    case "subtract":
+      setupDifferenceCommand(initialArgs);
+      break;
+    case "join":
+      setupJoinCommand(initialArgs);
+      break;
+    case "extrude":
+      setupExtrudeCommand(initialArgs);
+      break;
+    case "move":
+      setupMoveCommand(initialArgs);
+      break;
+    case "rotate":
+      setupRotateCommand(initialArgs);
+      break;
+    case "scale":
+      setupScaleCommand(initialArgs);
+      break;
+    default:
+      bar.style.display = "none";
+      addLog(`Unknown modeling command: '${type}'.`, "log-nope");
+      shakeRequestBar();
+      return;
+  }
+
+  focusActiveCanvas();
+}
+
+function setupUnionCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "BOOLEAN UNION";
+
+  const initialSolids = selectedObjects.filter(o => o.isMesh || (o.children && o.children.some(c => c.isMesh && !c.isLineSegments)));
+
+  activeCommand = {
+    type: "union",
+    selection: [...initialSolids],
+    updateUI() {
+      const n = this.selection.length;
+      if (n >= 2) {
+        prompt.textContent = `${n} solids selected for Union. Click [✓ Confirm] or press Enter.`;
+        confirmBtn.disabled = false;
+      } else if (n === 1) {
+        prompt.textContent = `1 solid selected ('${this.selection[0].name}'). Click second solid in any viewport.`;
+        confirmBtn.disabled = true;
+      } else {
+        prompt.textContent = "Select 2 or more solids to unite. Click solids in any viewport.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      if (!target.isMesh && (!target.children || !target.children.some(c => c.isMesh && !c.isLineSegments))) {
+        addLog(`'${target.name}' is not a solid mesh. Select a 3D solid.`, "log-warn");
+        return;
+      }
+      const idx = this.selection.indexOf(target);
+      if (idx !== -1) {
+        this.selection.splice(idx, 1);
+        highlightObject(target, false);
+      } else {
+        this.selection.push(target);
+        highlightObject(target, true);
+      }
+      selectedObjects = [...this.selection];
+      updateObjectsTree();
+      updatePropertiesPanel();
+      this.updateUI();
+    },
+    confirm() {
+      if (this.selection.length < 2) return;
+      const solids = [...this.selection];
+      finishActiveCommand();
+      executeUnion(solids);
+    }
+  };
+
+  activeCommand.updateUI();
+}
+
+function setupDifferenceCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "BOOLEAN DIFFERENCE";
+
+  const initialSolids = selectedObjects.filter(o => o.isMesh || (o.children && o.children.some(c => c.isMesh && !c.isLineSegments)));
+
+  let initialBase = null;
+  let initialTool = null;
+  let initialStep = 1;
+
+  if (initialSolids.length >= 2) {
+    initialBase = initialSolids[0];
+    initialTool = initialSolids[1];
+    initialStep = 2;
+  } else if (initialSolids.length === 1) {
+    initialBase = initialSolids[0];
+    initialStep = 2;
+  }
+
+  activeCommand = {
+    type: "difference",
+    step: initialStep,
+    base: initialBase,
+    tool: initialTool,
+    updateUI() {
+      if (this.base && this.tool) {
+        prompt.textContent = `Subtracting TOOL '${this.tool.name}' from BASE '${this.base.name}'. Click [✓ Confirm] or press Enter.`;
+        confirmBtn.disabled = false;
+      } else if (this.base) {
+        prompt.textContent = `BASE solid: '${this.base.name}'. Step 2: Click TOOL (cutting) solid to subtract.`;
+        confirmBtn.disabled = true;
+      } else {
+        prompt.textContent = "Step 1: Click the BASE solid to subtract from.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      if (!target.isMesh && (!target.children || !target.children.some(c => c.isMesh && !c.isLineSegments))) {
+        addLog(`'${target.name}' is not a solid mesh. Select a 3D solid.`, "log-warn");
+        return;
+      }
+      if (this.step === 1 || !this.base) {
+        if (this.tool === target) this.tool = null;
+        this.base = target;
+        this.step = 2;
+        highlightObject(this.base, true);
+        selectedObjects = [this.base];
+      } else if (this.step === 2) {
+        if (target === this.base) {
+          addLog("Tool cannot be the same object as Base. Select a different solid.", "log-warn");
+          return;
+        }
+        if (this.tool) highlightObject(this.tool, false);
+        this.tool = target;
+        highlightObject(this.tool, true);
+        selectedObjects = [this.base, this.tool];
+      }
+      updateObjectsTree();
+      updatePropertiesPanel();
+      this.updateUI();
+    },
+    confirm() {
+      if (!this.base || !this.tool) return;
+      const b = this.base;
+      const t = this.tool;
+      finishActiveCommand();
+      executeDifference(b, t);
+    }
+  };
+
+  activeCommand.updateUI();
+}
+
+function setupJoinCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "JOIN";
+
+  activeCommand = {
+    type: "join",
+    selection: [...selectedObjects],
+    updateUI() {
+      const count = this.selection.length;
+      if (count < 2) {
+        prompt.textContent = `Select 2 or more contiguous curves or meshes to join (${count} selected). Click objects.`;
+        confirmBtn.disabled = true;
+        return;
+      }
+      const allCurves = this.selection.every(o => o.isLine || o.isLineLoop || (o.userData && (o.userData.type === "SketchCurve" || o.userData.type === "ClosedProfile")));
+      const allMeshes = this.selection.every(o => o.isMesh || (o.children && o.children.some(c => c.isMesh && !c.isLineSegments)));
+
+      if (allCurves) {
+        prompt.textContent = `${count} curve segments selected to Join. Click [✓ Confirm] or press Enter.`;
+        confirmBtn.disabled = false;
+      } else if (allMeshes) {
+        prompt.textContent = `${count} meshes selected to Join into compound mesh. Click [✓ Confirm] or press Enter.`;
+        confirmBtn.disabled = false;
+      } else {
+        prompt.textContent = "Selection contains mixed types. Click to select only curves or only meshes.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      const idx = this.selection.indexOf(target);
+      if (idx !== -1) {
+        this.selection.splice(idx, 1);
+        highlightObject(target, false);
+      } else {
+        this.selection.push(target);
+        highlightObject(target, true);
+      }
+      selectedObjects = [...this.selection];
+      updateObjectsTree();
+      updatePropertiesPanel();
+      this.updateUI();
+    },
+    confirm() {
+      if (this.selection.length < 2) return;
+      const candidates = [...this.selection];
+      finishActiveCommand();
+      executeJoin(candidates);
+    }
+  };
+
+  activeCommand.updateUI();
+}
+
+function setupExtrudeCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "EXTRUDE";
+
+  const defaultDepth = args.depth !== undefined ? args.depth : 10;
+  params.innerHTML = `
+    <div class="cmd-param-group">
+      <span class="cmd-param-label">Height:</span>
+      <input type="number" id="cmd-extrude-depth" class="cmd-param-input" value="${defaultDepth}" step="1">
+    </div>
+  `;
+
+  const depthInput = document.getElementById("cmd-extrude-depth");
+  depthInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.stopPropagation();
+      if (!confirmBtn.disabled) activeCommand.confirm();
+    }
+  });
+
+  let initialProfile = selectedObjects.find(o => o.userData && o.userData.closed && o.userData.shape);
+  if (!initialProfile) {
+    initialProfile = sceneObjects.slice().reverse().find(o => o.userData && o.userData.closed && o.userData.shape);
+    if (initialProfile) selectObject(initialProfile);
+  }
+
+  activeCommand = {
+    type: "extrude",
+    profile: initialProfile,
+    updateUI() {
+      if (this.profile) {
+        prompt.textContent = `Extruding profile '${this.profile.name}'. Enter height and click [✓ Confirm] (or press Enter).`;
+        confirmBtn.disabled = false;
+      } else {
+        prompt.textContent = "Select a closed 2D profile (rectangle, circle, or closed curve) in any viewport.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      if (target.userData && target.userData.closed && target.userData.shape) {
+        this.profile = target;
+        selectObject(target);
+        this.updateUI();
+      } else {
+        addLog(`'${target.name}' is not a closed profile. Create or join a closed profile first.`, "log-warn");
+      }
+    },
+    confirm() {
+      if (!this.profile) return;
+      const depthVal = parseFloat(depthInput.value) || 10;
+      selectObject(this.profile);
+      finishActiveCommand();
+      extrudeSelectedProfile(depthVal);
+    }
+  };
+
+  activeCommand.updateUI();
+  if (depthInput) depthInput.focus();
+}
+
+function setupMoveCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "MOVE";
+
+  const dx = args.dx !== undefined ? args.dx : 10;
+  const dy = args.dy !== undefined ? args.dy : 0;
+  const dz = args.dz !== undefined ? args.dz : 0;
+
+  params.innerHTML = `
+    <div class="cmd-param-group">
+      <span class="cmd-param-label">dX:</span>
+      <input type="number" id="cmd-move-dx" class="cmd-param-input" value="${dx}" step="1">
+      <span class="cmd-param-label">dY:</span>
+      <input type="number" id="cmd-move-dy" class="cmd-param-input" value="${dy}" step="1">
+      <span class="cmd-param-label">dZ:</span>
+      <input type="number" id="cmd-move-dz" class="cmd-param-input" value="${dz}" step="1">
+    </div>
+  `;
+
+  const inputs = params.querySelectorAll("input");
+  inputs.forEach(inp => {
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.stopPropagation();
+        if (!confirmBtn.disabled) activeCommand.confirm();
+      }
+    });
+  });
+
+  activeCommand = {
+    type: "move",
+    updateUI() {
+      if (selectedObjects.length > 0) {
+        prompt.textContent = `Move ${selectedObjects.length} object(s). Enter offset and click [✓ Confirm] (or press Enter).`;
+        confirmBtn.disabled = false;
+      } else {
+        prompt.textContent = "Select object(s) to move. Click in any viewport.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      selectObject(target, true);
+      this.updateUI();
+    },
+    confirm() {
+      if (selectedObjects.length === 0) return;
+      const offX = parseFloat(document.getElementById("cmd-move-dx").value) || 0;
+      const offY = parseFloat(document.getElementById("cmd-move-dy").value) || 0;
+      const offZ = parseFloat(document.getElementById("cmd-move-dz").value) || 0;
+      finishActiveCommand();
+      transformSelected("move", { dx: offX, dy: offY, dz: offZ });
+    }
+  };
+
+  activeCommand.updateUI();
+  const firstInp = document.getElementById("cmd-move-dx");
+  if (firstInp) firstInp.focus();
+}
+
+function setupRotateCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "ROTATE";
+
+  const axis = (args.axis || "y").toLowerCase();
+  const deg = args.deg !== undefined ? args.deg : 45;
+
+  params.innerHTML = `
+    <div class="cmd-param-group">
+      <span class="cmd-param-label">Axis:</span>
+      <select id="cmd-rotate-axis" class="cmd-param-select">
+        <option value="y" ${axis === "y" ? "selected" : ""}>Y (Vertical / Top)</option>
+        <option value="x" ${axis === "x" ? "selected" : ""}>X (Horizontal / Front)</option>
+        <option value="z" ${axis === "z" ? "selected" : ""}>Z (Depth / Right)</option>
+      </select>
+      <span class="cmd-param-label">Angle (°):</span>
+      <input type="number" id="cmd-rotate-deg" class="cmd-param-input" value="${deg}" step="5">
+    </div>
+  `;
+
+  const degInput = document.getElementById("cmd-rotate-deg");
+  degInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.stopPropagation();
+      if (!confirmBtn.disabled) activeCommand.confirm();
+    }
+  });
+
+  activeCommand = {
+    type: "rotate",
+    updateUI() {
+      if (selectedObjects.length > 0) {
+        prompt.textContent = `Rotate ${selectedObjects.length} object(s). Select axis & angle, click [✓ Confirm] (or press Enter).`;
+        confirmBtn.disabled = false;
+      } else {
+        prompt.textContent = "Select object(s) to rotate. Click in any viewport.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      selectObject(target, true);
+      this.updateUI();
+    },
+    confirm() {
+      if (selectedObjects.length === 0) return;
+      const ax = document.getElementById("cmd-rotate-axis").value || "y";
+      const d = parseFloat(document.getElementById("cmd-rotate-deg").value) || 45;
+      finishActiveCommand();
+      transformSelected("rotate", { axis: ax, deg: d });
+    }
+  };
+
+  activeCommand.updateUI();
+  if (degInput) degInput.focus();
+}
+
+function setupScaleCommand(args) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+  badge.textContent = "SCALE";
+
+  const factor = args.factor !== undefined ? args.factor : 1.5;
+
+  params.innerHTML = `
+    <div class="cmd-param-group">
+      <span class="cmd-param-label">Factor:</span>
+      <input type="number" id="cmd-scale-factor" class="cmd-param-input" value="${factor}" step="0.1" min="0.01">
+    </div>
+  `;
+
+  const factorInput = document.getElementById("cmd-scale-factor");
+  factorInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.stopPropagation();
+      if (!confirmBtn.disabled) activeCommand.confirm();
+    }
+  });
+
+  activeCommand = {
+    type: "scale",
+    updateUI() {
+      if (selectedObjects.length > 0) {
+        prompt.textContent = `Scale ${selectedObjects.length} object(s). Enter factor, click [✓ Confirm] (or press Enter).`;
+        confirmBtn.disabled = false;
+      } else {
+        prompt.textContent = "Select object(s) to scale. Click in any viewport.";
+        confirmBtn.disabled = true;
+      }
+    },
+    handleSelect(target) {
+      selectObject(target, true);
+      this.updateUI();
+    },
+    confirm() {
+      if (selectedObjects.length === 0) return;
+      const s = parseFloat(document.getElementById("cmd-scale-factor").value) || 1.5;
+      finishActiveCommand();
+      transformSelected("scale", { sx: s, sy: s, sz: s });
+    }
+  };
+
+  activeCommand.updateUI();
+  if (factorInput) factorInput.focus();
+}
+
+// Wire Command Bar buttons
+document.getElementById("btn-cmd-confirm").onclick = () => {
+  if (activeCommand && typeof activeCommand.confirm === "function") {
+    activeCommand.confirm();
+  }
+};
+
+document.getElementById("btn-cmd-cancel").onclick = () => {
+  cancelActiveCommand();
+};
+
 function processRequest(raw) {
   const text = raw.trim();
   if (!text) return;
@@ -3080,12 +4063,17 @@ function executeCommand(rawCmd) {
   }
 
   if (trimmed.startsWith("boolean union") || verb === "union") {
-    performBooleanOperation("union");
+    startModelingCommand("union");
     return;
   }
 
   if (trimmed.startsWith("boolean diff") || verb === "diff" || verb === "difference" || verb === "subtract") {
-    performBooleanOperation("difference");
+    startModelingCommand("difference");
+    return;
+  }
+
+  if (verb === "join") {
+    startModelingCommand("join");
     return;
   }
 
@@ -3152,35 +4140,55 @@ function executeCommand(rawCmd) {
       break;
 
     case "extrude":
-      const depth = args[0] ? parseFloat(args[0]) : 10;
-      extrudeSelectedProfile(isNaN(depth) ? 10 : depth);
+      if (args.length >= 1 && selectedObjects.some(o => o.userData && o.userData.closed && o.userData.shape)) {
+        const depth = parseFloat(args[0]);
+        extrudeSelectedProfile(isNaN(depth) ? 10 : depth);
+      } else {
+        const depth = args[0] ? parseFloat(args[0]) : undefined;
+        startModelingCommand("extrude", { depth: isNaN(depth) ? undefined : depth });
+      }
       break;
 
     case "move":
-      const dx = args[0] !== undefined ? parseFloat(args[0]) : 10;
-      const dy = args[1] !== undefined ? parseFloat(args[1]) : 0;
-      const dz = args[2] !== undefined ? parseFloat(args[2]) : 0;
-      transformSelected("move", { dx: isNaN(dx) ? 10 : dx, dy: isNaN(dy) ? 0 : dy, dz: isNaN(dz) ? 0 : dz });
+      if (args.length >= 1 && selectedObjects.length > 0) {
+        const dx = parseFloat(args[0]) || 0;
+        const dy = args[1] !== undefined ? (parseFloat(args[1]) || 0) : 0;
+        const dz = args[2] !== undefined ? (parseFloat(args[2]) || 0) : 0;
+        transformSelected("move", { dx, dy, dz });
+      } else {
+        const dx = args[0] !== undefined ? parseFloat(args[0]) : undefined;
+        const dy = args[1] !== undefined ? parseFloat(args[1]) : undefined;
+        const dz = args[2] !== undefined ? parseFloat(args[2]) : undefined;
+        startModelingCommand("move", { dx, dy, dz });
+      }
       break;
 
     case "rotate":
-      let axis = "y";
-      let deg = 45;
+      let rAxis = "y";
+      let rDeg = 45;
       if (args.length === 1) {
-        if (isNaN(args[0])) axis = args[0];
-        else deg = parseFloat(args[0]);
+        if (isNaN(args[0])) rAxis = args[0];
+        else rDeg = parseFloat(args[0]);
       } else if (args.length >= 2) {
-        axis = args[0];
-        deg = parseFloat(args[1]) || 45;
+        rAxis = args[0];
+        rDeg = parseFloat(args[1]) || 45;
       }
-      transformSelected("rotate", { axis, deg });
+      if (args.length >= 1 && selectedObjects.length > 0) {
+        transformSelected("rotate", { axis: rAxis, deg: rDeg });
+      } else {
+        startModelingCommand("rotate", { axis: rAxis, deg: rDeg });
+      }
       break;
 
     case "scale":
       const s = args[0] !== undefined ? parseFloat(args[0]) : 1.5;
       const sy = args[1] !== undefined ? parseFloat(args[1]) : s;
       const sz = args[2] !== undefined ? parseFloat(args[2]) : s;
-      transformSelected("scale", { sx: isNaN(s) ? 1.5 : s, sy: isNaN(sy) ? s : sy, sz: isNaN(sz) ? s : sz });
+      if (args.length >= 1 && selectedObjects.length > 0) {
+        transformSelected("scale", { sx: isNaN(s) ? 1.5 : s, sy: isNaN(sy) ? s : sy, sz: isNaN(sz) ? s : sz });
+      } else {
+        startModelingCommand("scale", { factor: isNaN(s) ? 1.5 : s });
+      }
       break;
 
     case "delete":
@@ -3307,14 +4315,14 @@ requestInput.addEventListener("keydown", (e) => {
     processRequest(requestInput.value);
     requestInput.value = "";
     requestInput.blur();
-    canvas.focus({ preventScroll: true });
+    focusActiveCanvas();
   }
 });
 document.getElementById("btn-submit-request").onclick = () => {
   processRequest(requestInput.value);
   requestInput.value = "";
   requestInput.blur();
-  canvas.focus({ preventScroll: true });
+  focusActiveCanvas();
 };
 
 /* =========================================================================
@@ -3359,8 +4367,9 @@ toolbar.addEventListener("click", (e) => {
   const cmd = btn.dataset.cmd;
   const name = btn.querySelector("span").textContent;
 
-  if (DEBUG) {
-    // In debug mode, execute immediately without dialog
+  const isInteractiveCmd = ["union", "difference", "join", "extrude", "move", "rotate", "scale", "line", "rect", "circle", "spline"].includes(cmd);
+
+  if (DEBUG || isInteractiveCmd) {
     executeToolbarCommand(cmd);
     relocateToolbarIcons();
     return;
@@ -3386,17 +4395,15 @@ function executeToolbarCommand(cmd) {
     case "rect": startSketch("rect"); break;
     case "circle": startSketch("circle"); break;
     case "spline": startSketch("line"); break;
-    case "extrude": extrudeSelectedProfile(10); break;
-    case "union": performBooleanOperation("union"); break;
-    case "difference": performBooleanOperation("difference"); break;
-    case "move": transformSelected("move", { dx: 10, dy: 0, dz: 0 }); break;
-    case "rotate": transformSelected("rotate", { axis: "y", deg: 45 }); break;
-    case "scale": transformSelected("scale", { sx: 1.25, sy: 1.25, sz: 1.25 }); break;
+    case "extrude": startModelingCommand("extrude"); break;
+    case "union": startModelingCommand("union"); break;
+    case "difference": startModelingCommand("difference"); break;
+    case "move": startModelingCommand("move"); break;
+    case "rotate": startModelingCommand("rotate"); break;
+    case "scale": startModelingCommand("scale"); break;
+    case "join": startModelingCommand("join"); break;
     case "explode":
       addLog("Explode requires solid BREP structure with multiple boundary faces.", "log-warn");
-      break;
-    case "join":
-      addLog("Select 2 or more contiguous boundary surfaces to join.", "log-warn");
       break;
     case "chamfer":
     case "fillet":
@@ -3503,8 +4510,16 @@ function handleViewportPointerDown(e, vpId) {
       }
       target = target.parent;
     }
+    if (activeCommand && typeof activeCommand.handleSelect === "function") {
+      activeCommand.handleSelect(target);
+      return;
+    }
+
     selectObject(target, e.shiftKey);
   } else if (!e.shiftKey) {
+    if (activeCommand) {
+      return; // Preserve selection during active command
+    }
     clearSelection();
   }
 }
@@ -3733,19 +4748,49 @@ window.addEventListener("keydown", (e) => {
 
   if (isInput) {
     if (e.key === "Escape") {
+      if (activeCommand) {
+        cancelActiveCommand();
+      }
       e.target.blur();
-      canvas.focus({ preventScroll: true });
+      focusActiveCanvas();
       status("Viewport focused. Navigation keys active.");
       e.preventDefault();
       debugTelemetry.defaultPrevented = true;
       return;
     }
+    if (e.key === "Enter" && e.target.closest("#command-params")) {
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn && !confirmBtn.disabled && activeCommand && typeof activeCommand.confirm === "function") {
+        activeCommand.confirm();
+        e.preventDefault();
+        debugTelemetry.defaultPrevented = true;
+        return;
+      }
+    }
     if (e.target.id === "request-input" && e.target.value.trim() === "" && isNavKey(e.code, e.key)) {
       e.target.blur();
-      canvas.focus({ preventScroll: true });
+      focusActiveCanvas();
       debugTelemetry.lastHandled = "Nav: " + (code || key) + " (auto-unfocused input)";
     } else {
       return;
+    }
+  }
+
+  if (activeCommand) {
+    if (e.key === "Escape") {
+      cancelActiveCommand();
+      e.preventDefault();
+      debugTelemetry.defaultPrevented = true;
+      return;
+    }
+    if (e.key === "Enter") {
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn && !confirmBtn.disabled && typeof activeCommand.confirm === "function") {
+        activeCommand.confirm();
+        e.preventDefault();
+        debugTelemetry.defaultPrevented = true;
+        return;
+      }
     }
   }
 
@@ -4256,7 +5301,7 @@ if (btnToggleTestPrimitives) {
 // Refocus canvas whenever any modal closes
 document.querySelectorAll("dialog").forEach(d => {
   d.addEventListener("close", () => {
-    canvas.focus({ preventScroll: true });
+    focusActiveCanvas();
   });
 });
 
@@ -4272,7 +5317,7 @@ if (btnAddLayer) {
 
 // Start rendering loop & focus canvas
 render();
-canvas.focus({ preventScroll: true });
+focusActiveCanvas();
 
 // Service Worker for offline PWA functionality
 if ("serviceWorker" in navigator && !["localhost", "127.0.0.1"].includes(location.hostname)) {
