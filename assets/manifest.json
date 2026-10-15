@@ -1,0 +1,13 @@
+{
+  "ads": [
+    "assets/ads/AppAds.jpeg",
+    "assets/ads/CnBAppAd.png",
+    "assets/ads/EnronAppAd.jpg",
+    "assets/ads/PalantirAppAd.jpeg",
+    "assets/ads/TheranosAppAd.jpeg",
+    "assets/ads/TourismAppAd.jpeg"
+  ],
+  "audio": [
+    "assets/audio/New Recording 12.m4a"
+  ]
+}

@@ -707,48 +707,77 @@
 
   /* Satirical Ad Modal */
   #modal-ad {
-    max-width: 400px;
     position: relative;
     border: 2px solid var(--alert-pink);
-    background: #181818;
-    padding: 22px 18px 18px;
-    box-shadow: 0 12px 32px rgba(255, 51, 102, 0.25);
+    background: #141414;
+    padding: 20px 14px 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 51, 102, 0.3);
+    max-width: min(90vw, 720px);
+    max-height: min(85vh, 600px);
+    border-radius: 4px;
+    text-align: center;
+  }
+  .ad-header-label {
+    font-size: 9px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-family: var(--font-mono);
+    margin-bottom: 8px;
+    user-select: none;
   }
   .btn-ad-close {
     position: absolute;
     top: 4px;
     right: 4px;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     font-size: 8px;
-    line-height: 8px;
+    line-height: 10px;
     text-align: center;
     padding: 0;
-    background: #333;
+    background: #2a2a2a;
     color: #888;
-    border: none;
+    border: 1px solid #444;
     cursor: pointer;
-    border-radius: 1px;
+    border-radius: 2px;
+    z-index: 10;
   }
   .btn-ad-close:hover {
     color: #fff;
     background: var(--alert-pink);
+    border-color: var(--alert-pink);
   }
-  .ad-banner-box {
-    border: 1px dashed var(--border-light);
-    background: #101010;
-    padding: 14px;
-    text-align: center;
-    margin-bottom: 10px;
-    border-radius: 4px;
-  }
-  .ad-placeholder {
-    height: 80px;
-    border: 1px dashed #333;
+  .ad-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #555;
+    max-width: 100%;
+    max-height: min(65vh, 480px);
+    overflow: hidden;
+    cursor: pointer;
+    background: #080808;
+    border: 1px solid #282828;
+    border-radius: 3px;
+    margin: 0 auto;
+  }
+  .ad-image {
+    max-width: 100%;
+    max-height: min(65vh, 480px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    user-select: none;
+  }
+  .ad-placeholder {
+    height: 120px;
+    width: 300px;
+    border: 1px dashed #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
     font-style: italic;
     font-size: 11px;
     background: #0a0a0a;
@@ -1158,19 +1187,20 @@
     <div class="loading-bar-fill" id="loading-progress-fill"></div>
   </div>
   <div class="loading-status-text" id="loading-gaslight-text">Negotiating with floating-point registers...</div>
+  <div class="dialog-actions" style="margin-top:12px; justify-content:flex-end;">
+    <button class="btn-dialog btn-secondary" id="btn-cancel-loading" style="font-size:11px; padding:3px 10px;">Cancel Operation</button>
+  </div>
 </dialog>
 
-<!-- Satirical Ad Modal with 10px Close Button & Blank Placement -->
+<!-- Satirical Ad Modal with Tiny Close Button & Real Ad Images -->
 <dialog id="modal-ad">
   <button class="btn-ad-close" id="btn-close-ad" title="Close Advertisement">×</button>
-  <div style="font-size:10px; color:#777; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">SPONSORED DISTRACTION</div>
-  <div class="ad-banner-box">
-    <h3 style="color:var(--rhino-yellow); font-size:14px; margin-bottom:4px;">CADN'T CLOUD ENTERPRISE</h3>
-    <p style="font-size:11px; color:#aaa; margin-bottom:8px;">Only $8,999/seat/year. Includes 0.05% fewer crashes and 2 extra decimal places.</p>
-    <button class="btn-dialog btn-primary" id="btn-ad-cta" style="font-size:11px; padding:3px 8px;">Upgrade Seat</button>
-  </div>
-  <div class="ad-placeholder">
-    [Blank Advertisement Placement #4029]
+  <div class="ad-header-label">SPONSORED INTERRUPTION (CLICK AD TO ROTATE)</div>
+  <div class="ad-container" id="ad-container" title="Click ad image to view another advertisement">
+    <img id="ad-image" class="ad-image" src="" alt="Advertisement" />
+    <div id="ad-placeholder" class="ad-placeholder" style="display:none;">
+      [Blank Advertisement Placement #4029]
+    </div>
   </div>
 </dialog>
 
@@ -1648,6 +1678,7 @@ function registerNewObject(mesh, name, type) {
   selectObject(mesh);
   addLog(`Created ${name}.`, "log-success");
   status(`Created ${name}`);
+  recordModelingCommand();
 }
 
 // 4.3 3D Primitives
@@ -1914,6 +1945,7 @@ function createLineSketch(points, planeName, isClosed = false) {
   selectObject(line);
   addLog(`Created ${isClosed ? 'closed profile' : 'curve'} ${name}.`, "log-success");
   status(`Created ${name}`);
+  recordModelingCommand();
   return line;
 }
 
@@ -1992,6 +2024,7 @@ function createCircleSketch(center, radius, planeName) {
   selectObject(line);
   addLog(`Created closed circle profile ${name} (r=${radius.toFixed(1)}).`, "log-success");
   status(`Created ${name}`);
+  recordModelingCommand();
   return line;
 }
 
@@ -2348,6 +2381,7 @@ function joinCurveSegments(candidates) {
   addLog(`Joined ${candidates.length} curve segments into ${isClosed ? 'closed profile' : 'curve'} '${name}'.`, "log-success");
   status(`Joined ${candidates.length} curve segments.`);
   CADNT_AUDIO.playSuccess();
+  recordModelingCommand();
   return line;
 }
 
@@ -2539,6 +2573,7 @@ function transformSelected(type, args = {}) {
   updatePropertiesPanel();
   addLog(`Applied ${type.toUpperCase()} to ${selectedObjects.length} object(s).`, "log-success");
   status(`Transform ${type} applied.`);
+  recordModelingCommand();
 }
 
 /* =========================================================================
@@ -2763,14 +2798,28 @@ function updatePropertiesPanel() {
 }
 
 /* =========================================================================
-   6. AUDIO SYSTEM & SYNTHESIZER
+   6. ASSET MANIFEST & AUDIO SYSTEM
    ========================================================================= */
+const ASSET_MANIFEST = {
+  ads: [
+    "assets/ads/AppAds.jpeg",
+    "assets/ads/CnBAppAd.png",
+    "assets/ads/EnronAppAd.jpg",
+    "assets/ads/PalantirAppAd.jpeg",
+    "assets/ads/TheranosAppAd.jpeg",
+    "assets/ads/TourismAppAd.jpeg"
+  ],
+  audio: [
+    "assets/audio/New%20Recording%2012.m4a"
+  ]
+};
+
 const CADNT_AUDIO = {
   ctx: null,
   mute: localStorage.getItem("cadnt_audio_mute") === "true",
   droneOsc: null,
   droneGain: null,
-  currentAudioEl: null,
+  holdMusicAudio: null,
 
   init() {
     if (!this.ctx && typeof AudioContext !== "undefined") {
@@ -2784,13 +2833,11 @@ const CADNT_AUDIO = {
     localStorage.setItem("cadnt_audio_mute", String(val));
     const btn = document.getElementById("btn-audio-mute");
     if (btn) btn.textContent = this.mute ? "🔇 Muted" : "🔊 Sound";
-    if (this.mute && this.droneOsc) {
+    if (this.mute) {
       this.stopDrone();
+      this.stopHoldMusic();
     }
-    if (this.mute && this.currentAudioEl) {
-      this.currentAudioEl.pause();
-    }
-    status(this.mute ? "Audio synthesizer muted." : "Audio synthesizer unmuted.");
+    status(this.mute ? "Audio muted." : "Audio unmuted.");
   },
 
   playBeep(freq = 600, duration = 0.08, type = "sine") {
@@ -2851,14 +2898,36 @@ const CADNT_AUDIO = {
     }
   },
 
-  playTrack(srcUrl, loop = false) {
+  playHoldMusic() {
     if (this.mute) return;
-    if (this.currentAudioEl) {
-      this.currentAudioEl.pause();
+    this.stopHoldMusic();
+    const tracks = ASSET_MANIFEST.audio;
+    if (!tracks || tracks.length === 0) return;
+    const trackSrc = tracks[Math.floor(Math.random() * tracks.length)];
+    try {
+      const audio = new Audio(trackSrc);
+      audio.loop = false;
+      audio.volume = 0.5;
+      this.holdMusicAudio = audio;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn("Hold music autoplay handled:", err);
+        });
+      }
+    } catch (e) {
+      console.warn("Hold music playback creation failed:", e);
     }
-    this.currentAudioEl = new Audio(srcUrl);
-    this.currentAudioEl.loop = loop;
-    this.currentAudioEl.play().catch(() => {});
+  },
+
+  stopHoldMusic() {
+    if (this.holdMusicAudio) {
+      try {
+        this.holdMusicAudio.pause();
+        this.holdMusicAudio.currentTime = 0;
+      } catch (e) {}
+      this.holdMusicAudio = null;
+    }
   }
 };
 
@@ -2918,6 +2987,7 @@ function attemptPaidOperation(opName, fee = 49.00) {
         updateEconomyDisplay();
         addLog(`Paid operation ${opName.toUpperCase()} completed. $${fee.toFixed(2)} deducted. Topology edge softened to perfection.`, "log-success");
         status(`${opName.toUpperCase()} applied ($${fee.toFixed(2)} deducted).`);
+        recordModelingCommand();
       });
     }
   );
@@ -2937,25 +3007,87 @@ const GASLIGHT_MESSAGES = [
   "Cloud synchronization delayed by atmospheric turbulence."
 ];
 
-let commandCounter = 0;
-let lastAdTime = Date.now();
+let currentDelayInterval = null;
 
-function checkAdTrigger() {
-  if (DEBUG) return;
-  commandCounter++;
-  const now = Date.now();
-  if (commandCounter >= 5 && (now - lastAdTime) > 45000) {
-    showAdPopup();
-    commandCounter = 0;
-    lastAdTime = now;
+function stopDelayLoading() {
+  if (currentDelayInterval) {
+    clearInterval(currentDelayInterval);
+    currentDelayInterval = null;
   }
+  CADNT_AUDIO.stopHoldMusic();
+  CADNT_AUDIO.stopDrone();
+  const modal = document.getElementById("modal-loading");
+  if (modal && modal.open) {
+    modal.close();
+  }
+}
+
+function cancelDelayOperation() {
+  stopDelayLoading();
+  addLog("Heavy operation canceled by user.", "log-warn");
+  status("Operation canceled.");
+}
+
+let currentAdIndex = -1;
+let modelingCommandCount = 0;
+
+function getRandomAdIndex() {
+  const ads = ASSET_MANIFEST.ads;
+  if (!ads || ads.length === 0) return -1;
+  if (ads.length === 1) return 0;
+  let next = Math.floor(Math.random() * ads.length);
+  if (next === currentAdIndex) {
+    next = (next + 1) % ads.length;
+  }
+  return next;
+}
+
+function displayAd(idx) {
+  const ads = ASSET_MANIFEST.ads;
+  const img = document.getElementById("ad-image");
+  const placeholder = document.getElementById("ad-placeholder");
+  if (!img || !placeholder) return;
+
+  if (idx < 0 || !ads || !ads[idx]) {
+    img.style.display = "none";
+    placeholder.style.display = "flex";
+    return;
+  }
+
+  currentAdIndex = idx;
+  const targetSrc = ads[idx];
+
+  img.onerror = () => {
+    img.style.display = "none";
+    placeholder.style.display = "flex";
+  };
+  img.onload = () => {
+    img.style.display = "block";
+    placeholder.style.display = "none";
+  };
+  img.src = targetSrc;
+}
+
+function rotateAd() {
+  const nextIdx = getRandomAdIndex();
+  displayAd(nextIdx);
 }
 
 function showAdPopup() {
   const adModal = document.getElementById("modal-ad");
-  if (adModal && !adModal.open) {
+  if (!adModal) return;
+  rotateAd();
+  if (!adModal.open) {
     adModal.showModal();
     addLog("Unsolicited commercial break presented.", "log-warn");
+  }
+}
+
+function recordModelingCommand() {
+  modelingCommandCount++;
+  if (modelingCommandCount >= 10) {
+    showAdPopup();
+    modelingCommandCount = 0;
   }
 }
 
@@ -2964,6 +3096,8 @@ function triggerArtificialDelay(title, taskFn) {
     taskFn();
     return;
   }
+
+  stopDelayLoading();
 
   const modal = document.getElementById("modal-loading");
   const titleEl = document.getElementById("loading-op-title");
@@ -2974,7 +3108,7 @@ function triggerArtificialDelay(title, taskFn) {
   fillEl.style.width = "0%";
   modal.showModal();
 
-  CADNT_AUDIO.playDrone();
+  CADNT_AUDIO.playHoldMusic();
 
   const messages = [
     "Negotiating with IEEE-754 floating point treaties...",
@@ -2992,7 +3126,7 @@ function triggerArtificialDelay(title, taskFn) {
   let msgIdx = 0;
   gaslightEl.textContent = messages[0];
 
-  const interval = setInterval(() => {
+  currentDelayInterval = setInterval(() => {
     elapsed += step;
     const pct = Math.min(100, Math.round((elapsed / duration) * 100));
     fillEl.style.width = pct + "%";
@@ -3003,9 +3137,7 @@ function triggerArtificialDelay(title, taskFn) {
     }
 
     if (elapsed >= duration) {
-      clearInterval(interval);
-      CADNT_AUDIO.stopDrone();
-      modal.close();
+      stopDelayLoading();
       taskFn();
     }
   }, step);
@@ -3604,7 +3736,9 @@ function setupUnionCommand(args) {
       if (this.selection.length < 2) return;
       const solids = [...this.selection];
       finishActiveCommand();
-      executeUnion(solids);
+      triggerArtificialDelay("Computing Boolean Union CSG Topology...", () => {
+        executeUnion(solids);
+      });
     }
   };
 
@@ -4011,7 +4145,6 @@ function processRequest(raw) {
 
   const query = match[1].trim().toLowerCase();
   executeCommand(query);
-  checkAdTrigger();
 }
 
 function executeCommand(rawCmd) {
@@ -4042,6 +4175,7 @@ function executeCommand(rawCmd) {
         updatePropertiesPanel();
         addLog("Starting object permanently removed. Hope you're happy.", "log-success");
         status("Starting object removed.");
+        recordModelingCommand();
       }
     );
     return;
@@ -4242,6 +4376,10 @@ function executeCommand(rawCmd) {
       attemptPaidOperation("chamfer", 49.00);
       break;
 
+    case "sweep":
+      attemptPaidOperation("sweep", 49.00);
+      break;
+
     case "theme":
       toggleTheme();
       break;
@@ -4307,6 +4445,7 @@ function handleDelete() {
   updatePropertiesPanel();
   addLog(`Deleted ${toRemove.length} object(s).`, "log-success");
   status(`Deleted ${toRemove.length} object(s).`);
+  recordModelingCommand();
 }
 
 // Request Bar Events
@@ -4407,6 +4546,7 @@ function executeToolbarCommand(cmd) {
       break;
     case "chamfer":
     case "fillet":
+    case "sweep":
       attemptPaidOperation(cmd, 49.00);
       break;
   }
@@ -4996,11 +5136,27 @@ document.getElementById("btn-export-cancel").onclick = () => {
 // Satirical Ad Modal Handlers
 document.getElementById("btn-close-ad").onclick = () => {
   document.getElementById("modal-ad").close();
+  const c = document.getElementById("canvas-perspective") || document.getElementById("cad-canvas");
+  if (c) c.focus();
 };
-document.getElementById("btn-ad-cta").onclick = () => {
-  document.getElementById("modal-ad").close();
-  modalConstruction.showModal();
-};
+
+const adContainerEl = document.getElementById("ad-container");
+if (adContainerEl) {
+  adContainerEl.onclick = (e) => {
+    e.stopPropagation();
+    rotateAd();
+  };
+}
+
+// Heavy Operation Delay Modal Handlers
+const btnCancelLoadingEl = document.getElementById("btn-cancel-loading");
+if (btnCancelLoadingEl) {
+  btnCancelLoadingEl.onclick = () => cancelDelayOperation();
+}
+const modalLoadingEl = document.getElementById("modal-loading");
+if (modalLoadingEl) {
+  modalLoadingEl.addEventListener("cancel", () => cancelDelayOperation());
+}
 
 // File Picker: Open Native .cadnt Project Archive
 document.getElementById("file-input-open").addEventListener("change", (e) => {
@@ -5590,6 +5746,38 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     const adCloseBtn = document.getElementById("btn-close-ad");
     const adPlaceholder = document.querySelector(".ad-placeholder");
     assertTest("Ad modal contains tiny close button and blank ad placement placeholder", !!adCloseBtn && adCloseBtn.clientWidth <= 14 && !!adPlaceholder);
+
+    // Test 33: Asset manifest contains ads and hold music
+    assertTest("Asset manifest loaded with 6 ads and hold music track", ASSET_MANIFEST.ads.length === 6 && ASSET_MANIFEST.audio.length >= 1);
+
+    // Test 34: 10-command ad cadence
+    modelingCommandCount = 0;
+    const adModalEl = document.getElementById("modal-ad");
+    if (adModalEl && adModalEl.open) adModalEl.close();
+    for (let i = 0; i < 9; i++) {
+      recordModelingCommand();
+    }
+    const notTriggeredAt9 = modelingCommandCount === 9 && (!adModalEl || !adModalEl.open);
+    recordModelingCommand(); // 10th command
+    const triggeredAt10 = modelingCommandCount === 0 && (adModalEl && adModalEl.open);
+    if (adModalEl && adModalEl.open) adModalEl.close();
+    assertTest("Ad appears exactly on 10th modeling command and resets counter", notTriggeredAt9 && triggeredAt10);
+
+    // Test 35: Ad rotation switches image source
+    displayAd(0);
+    rotateAd();
+    assertTest("Ad rotation selects valid advertisement index", currentAdIndex >= 0 && currentAdIndex < ASSET_MANIFEST.ads.length);
+
+    // Test 36: Hold music audio integration respects mute
+    CADNT_AUDIO.setMute(true);
+    CADNT_AUDIO.playHoldMusic();
+    const mutedNoPlay = CADNT_AUDIO.holdMusicAudio === null;
+    CADNT_AUDIO.setMute(false);
+    CADNT_AUDIO.playHoldMusic();
+    const unmutedPlays = !!CADNT_AUDIO.holdMusicAudio && CADNT_AUDIO.holdMusicAudio.loop === false && Math.abs(CADNT_AUDIO.holdMusicAudio.volume - 0.5) < 0.01;
+    CADNT_AUDIO.stopHoldMusic();
+    const stoppedClean = CADNT_AUDIO.holdMusicAudio === null;
+    assertTest("Hold music respects mute toggle, does not loop, and stops cleanly", mutedNoPlay && unmutedPlays && stoppedClean);
 
     logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
     window.__TESTS_DONE__ = true;

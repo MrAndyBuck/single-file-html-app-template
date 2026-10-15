@@ -9,7 +9,15 @@ const FILES = [
   "./vendor/three.min.js",
   "./vendor/three-csg.js",
   "./vendor/three-exporters.js",
-  "./vendor/three-loaders.js"
+  "./vendor/three-loaders.js",
+  "./assets/manifest.json",
+  "./assets/ads/AppAds.jpeg",
+  "./assets/ads/CnBAppAd.png",
+  "./assets/ads/EnronAppAd.jpg",
+  "./assets/ads/PalantirAppAd.jpeg",
+  "./assets/ads/TheranosAppAd.jpeg",
+  "./assets/ads/TourismAppAd.jpeg",
+  "./assets/audio/New%20Recording%2012.m4a"
 ];
 
 self.addEventListener("install", (e) => {
