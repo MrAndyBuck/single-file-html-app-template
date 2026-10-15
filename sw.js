@@ -1,5 +1,5 @@
 const APP_ID = "cadnt";
-const VERSION = "v00000-008";
+const VERSION = "v00000-009";
 const CACHE = APP_ID + "-" + VERSION;
 const FILES = [
   "./",
@@ -11,12 +11,15 @@ const FILES = [
   "./vendor/three-exporters.js",
   "./vendor/three-loaders.js",
   "./assets/manifest.json",
+  "./assets/ads/AmwayAppAd.jpeg",
   "./assets/ads/AppAds.jpeg",
   "./assets/ads/CnBAppAd.png",
   "./assets/ads/EnronAppAd.jpg",
+  "./assets/ads/MomsAppAd.jpg",
   "./assets/ads/PalantirAppAd.jpeg",
   "./assets/ads/TheranosAppAd.jpeg",
   "./assets/ads/TourismAppAd.jpeg",
+  "./assets/ads/ViagraAppAd.webp",
   "./assets/audio/New%20Recording%2012.m4a"
 ];
 

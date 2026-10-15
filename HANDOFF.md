@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-008`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-009-DEV`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -37,7 +37,8 @@
 | **Join (Curves & Meshes)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Chains curve segments into `ClosedProfile` (extrudable) or polyline; merges mesh geometries. Distinct from CSG Union. |
 | **Profile Extrusion into 3D** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Extrudes closed 2D profiles into 3D solid meshes (`THREE.ExtrudeGeometry`) with depth input. |
 | **Object Transformations (Move/Rot/Scale)**| **YES** | **YES** | **YES** | *Awaiting Manual Test* | Interactive parameter inputs for dx/dy/dz, axis/deg, scale factor, with Enter/Escape support. |
-| **Real Advertisement Assets & Cadence** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | 6 local ad images loaded from `assets/ads/`. Centered modal triggers after every 10 modeling commands; counter resets only on trigger. Clicking ad rotates image; tiny 10px close button dismisses ad and restores workspace. |
+| **Real Advertisement Assets & Cadence** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | 9 local ad images loaded from `assets/ads/`. Centered modal triggers after every 10 modeling commands; counter resets only on trigger. Clicking ad rotates image; tiny 10px close button dismisses ad and restores workspace. |
+| **Automatic Ad Asset Registration** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `scripts/generate_asset_manifest.py` scans `assets/ads/` (PNG, JPG, JPEG, WebP) during build/commit via `.git/hooks/pre-commit`, updates `assets/manifest.json`, `sw.js` cache, and `index.html`. |
 | **Hold Music Integration** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Real local audio asset `assets/audio/New Recording 12.m4a` played on long operations (Save, Import, Sweep, Union, Fillet). No loop (`loop = false`), stops on completion/cancel, respects mute toggle, default ~50% volume. |
 | **Asset Manifest & SW Offline Caching** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `assets/manifest.json` maps all real assets; cached in Service Worker (`sw.js`) for offline functionality. |
 | **CSG Booleans (Union & Difference)** | **YES** | **YES** | **YES** | *Pending Demonstration* | ThreeCSG solid Boolean Union and Difference producing manifold meshes. |
@@ -146,27 +147,38 @@ All screenshots captured in headless Chrome under macOS Retina High-DPI (`--forc
 
 ---
 
-## 4. Advertisement Assets & Hold Music Integration (Build `v00000-008`)
+## 4. Advertisement Assets & Hold Music Integration (Build `v00000-009-DEV`)
 
 ### A. Asset Locations & Preservation
-- **Ad Images**: Located in `/Users/andybuck/Documents/Antigravity/assets/Ads` and copied to `assets/ads/` with exact filenames preserved:
+- **Ad Images**: Located in `assets/ads/` (synced from `/Users/andybuck/Documents/Antigravity/assets/Ads`) with exact filenames, extensions, and cases preserved:
+  - `AmwayAppAd.jpeg` *(New)*
   - `AppAds.jpeg`
   - `CnBAppAd.png`
   - `EnronAppAd.jpg`
+  - `MomsAppAd.jpg` *(New)*
   - `PalantirAppAd.jpeg`
   - `TheranosAppAd.jpeg`
   - `TourismAppAd.jpeg`
-- **Hold Music**: Located in `/Users/andybuck/Documents/Antigravity/assets/Audio` and copied to `assets/audio/` with exact filename preserved:
+  - `ViagraAppAd.webp` *(New)*
+- **Hold Music**: Located in `assets/audio/` with exact filename preserved:
   - `New Recording 12.m4a`
-- **Asset Manifest**: Created `assets/manifest.json` mapping all real ad images and audio tracks.
-- **Service Worker Offline Cache**: Added manifest, all 6 ad images, and the audio file to `FILES` in `sw.js`.
+- **Asset Manifest**: Automatically generated `assets/manifest.json` mapping all 9 real ad images and audio tracks.
+- **Service Worker Offline Cache**: Automatically updated `FILES` in `sw.js` with all 9 ad images and audio file.
 
-### B. Advertisement Modal & Cadence
+### B. Automatic Advertisement Asset Registration (`scripts/generate_asset_manifest.py`)
+1. **Design & Automation**:
+   - Python CLI script [`scripts/generate_asset_manifest.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/generate_asset_manifest.py) scans `assets/ads/` for supported image types (`.png`, `.jpg`, `.jpeg`, `.webp`) and `assets/audio/` for supported audio formats.
+   - Automatically writes `assets/manifest.json`.
+   - Automatically synchronizes `const FILES` in `sw.js` for offline PWA caching.
+   - Automatically synchronizes `const ASSET_MANIFEST` in `index.html`.
+   - Inlined dynamic loader `loadAssetManifest()` in `index.html` fetches `./assets/manifest.json` on startup as a runtime fallback.
+   - **Git Pre-Commit Hook**: Installed `.git/hooks/pre-commit` to automatically run `scripts/generate_asset_manifest.py` and stage manifest files whenever images are added and committed.
+
+### C. Advertisement Modal & Cadence
 1. **Cadence Rules**:
-   - `recordModelingCommand()` increments `modelingCommandCount` solely on actual geometry modifications (box, sphere, cylinder, cone, sketch shapes, extrude, move, rotate, scale, join, boolean union, boolean difference, delete).
-   - Non-modeling commands (`Can I help`, ad interactions) do NOT advance the counter.
-   - Triggers exactly on the 10th modeling command (`count % 10 === 0`), resets `modelingCommandCount` to 0.
-   - Startup never triggers an ad (`modelingCommandCount = 0`).
+   - `recordModelingCommand()` increments `modelingCommandCount` solely on actual geometry modifications.
+   - Non-modeling commands and ad interactions do NOT advance the counter.
+   - Triggers exactly on every 10th modeling command (`count % 10 === 0`), resets `modelingCommandCount` to 0. Startup never triggers an ad.
 2. **Modal Interaction & Visual Design**:
    - Centered `<dialog id="modal-ad">` with red satire neon border.
    - Image proportions preserved without stretching or cropping (`object-fit: contain`, `max-width: 90vw`, `max-height: 80vh`).
@@ -174,61 +186,58 @@ All screenshots captured in headless Chrome under macOS Retina High-DPI (`--forc
    - Clicking directly on the advertisement image rotates to another randomly selected advertisement from the manifest (`rotateAd()`).
    - Ad image clicks do not open external links and do not count as modeling commands.
    - Dismissing the ad restores the previous CAD workspace operation immediately.
-   - Fallback `.ad-placeholder` is provided if an image fails to load.
 
-### C. Hold Music Playback Rules
+### D. Hold Music Playback Rules
 1. **Long Loading Operations**:
-   - Hooked into `triggerArtificialDelay()` for: Save (`saveProject`), STL/OBJ Import (`importFile`), Sweep (`runSweep`), Boolean Union (`runBooleanUnion`), and Fillet (`runFillet`).
+   - Hooked into `triggerArtificialDelay()` for: Save, STL/OBJ Import, Sweep, Boolean Union, and Fillet.
 2. **Playback Engine (`CADNT_AUDIO`)**:
    - Plays `assets/audio/New Recording 12.m4a` at loading start.
    - Does NOT loop (`audio.loop = false`).
-   - If audio finishes before loading delay completes, audio ends silently.
    - Stopping or canceling loading (`#btn-cancel-loading` or completion) immediately pauses, rewinds, and clears audio.
-   - Overlapping tracks strictly prevented (existing track stopped before new track instantiated).
-   - Respects Sound / Mute toggle (`CADNT_AUDIO.setMute()`).
-   - Default volume set to reasonable 50% (`volume = 0.5`).
-   - Autoplay promise rejections handled gracefully with fallback logging.
+   - Overlapping tracks strictly prevented; respects Sound / Mute toggle; default volume ~50%.
 
-### D. Visual Verification Artifacts
+### E. Visual Verification Artifacts
 
 All screenshots captured in real browser sessions under macOS Retina High-DPI (`DPR: 2.0`, $1280 \times 820$ window) and saved to `/Users/andybuck/Desktop/CADNT_Screenshots/`:
 
 1. **Step 1 — 9 Commands Executed (No Ad Popup)**:
    [ad_cadence_9_commands.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_cadence_9_commands.png)
-   - Confirms commands 1-9 execute normally; `#modal-ad` remains closed.
 2. **Step 2 — 10th Command Executed (Ad Modal Triggered)**:
    [ad_tenth_command_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_tenth_command_modal.png)
-   - Displays real advertisement (`PalantirAppAd.jpeg`), centered, uncropped, with tiny 10px close button. Counter reset to 0.
 3. **Step 3 — Ad Image Click Rotation**:
    [ad_rotated_image.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_rotated_image.png)
-   - Clicking ad image switches directly to another ad (`TheranosAppAd.jpeg`) without opening external websites or counting as a command.
 4. **Step 4 — Tiny Close Button Click**:
    [ad_closed_restored.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_closed_restored.png)
-   - Clicking `#btn-close-ad` closes modal and restores CAD workspace immediately.
 5. **Step 5 — Second 10 Commands (20th Command Overall)**:
    [ad_twentieth_command_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_twentieth_command_modal.png)
-   - Confirms next 10 modeling commands trigger the next scheduled ad (`TourismAppAd.jpeg`).
 6. **Step 6 — Hold Music Playback During Loading**:
    [hold_music_loading_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/hold_music_loading_modal.png)
-   - Loading modal displayed with animated progress bar and "Cancel Operation" button; non-looping audio actively playing at 50% volume.
 7. **Step 7 — Sound / Mute Toggle Silencing**:
    [hold_music_muted.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/hold_music_muted.png)
-   - Toggling mute terminates active hold music instantly.
 8. **Step 8 — Exiting / Canceling Loading Operation**:
    [hold_music_canceled_stopped.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/hold_music_canceled_stopped.png)
-   - Clicking "Cancel Operation" dismisses loading modal and cleanly terminates audio playback.
+9. **Step 9 — Newly Registered Ad Display (Amway)**:
+   [ad_rotation_amwayappad.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_rotation_amwayappad.png)
+   - Confirms `AmwayAppAd.jpeg` displays with native aspect ratio, centered modal, and tiny 10px close button.
+10. **Step 10 — Newly Registered Ad Display (Moms)**:
+    [ad_rotation_momsappad.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_rotation_momsappad.png)
+    - Confirms `MomsAppAd.jpg` displays cleanly in rotation without distortion.
+11. **Step 11 — Newly Registered Ad Display (Viagra WebP)**:
+    [ad_rotation_viagraappad.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/ad_rotation_viagraappad.png)
+    - Confirms WebP format `ViagraAppAd.webp` displays in full fidelity.
 
 ---
 
 ## 5. Current Git & Deployment Status
-- **Current Branch**: `main`
+- **Current Branch**: `dev`
 - **Modified & Added Files**:
-  - `index.html` (Ad modal styling, click rotation, 10-command cadence, hold music engine, cancel loading button, unit tests 33-36, version v00000-008)
-  - `sw.js` (Offline cache version v00000-008, manifest, ad images, audio track)
-  - `assets/manifest.json` (Asset mapping manifest)
-  - `assets/ads/*` (6 real ad image assets copied from Documents)
-  - `assets/audio/*` (Real audio track `New Recording 12.m4a` copied from Documents)
+  - `scripts/generate_asset_manifest.py` (Automatic scanning & registration CLI tool)
+  - `.git/hooks/pre-commit` (Automated pre-commit manifest synchronization hook)
+  - `assets/ads/*` (All 9 advertisement images, including 3 new additions)
+  - `assets/manifest.json` (Automatically regenerated 9-ad manifest)
+  - `sw.js` (Offline cache updated with all 9 ads and audio track, version `v00000-009`)
+  - `index.html` (Manifest synced with 9 ads, `loadAssetManifest()` added, version `v00000-009`)
   - `HANDOFF.md` (Updated status and verification records)
 - **Automated Tests**: 48/48 PASSING (0 FAILED)
-- **Visual Verification**: All 9 ad cadence, rotation, dismiss, and hold music tests verified in headless Chrome Retina DPR=2.0.
-- **Git Status**: Deployed to `main` and pushed to GitHub Pages as `v00000-008`.
+- **Visual Verification**: All newly added ads verified in real browser rotation with screenshots.
+- **Git Status**: Committed to branch `dev`. Awaiting explicit user approval before deploying to `main`.

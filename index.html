@@ -1077,7 +1077,7 @@
     <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div id="status-message">Ready. Type polite request in Request Bar.</div>
     <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
-    <button id="chip" title="Check for newer version">v00000-008 ↻</button>
+    <button id="chip" title="Check for newer version">v00000-009 ↻</button>
   </footer>
 </div>
 
@@ -1219,7 +1219,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-008",
+  version: "v00000-009",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -2802,17 +2802,38 @@ function updatePropertiesPanel() {
    ========================================================================= */
 const ASSET_MANIFEST = {
   ads: [
+    "assets/ads/AmwayAppAd.jpeg",
     "assets/ads/AppAds.jpeg",
     "assets/ads/CnBAppAd.png",
     "assets/ads/EnronAppAd.jpg",
+    "assets/ads/MomsAppAd.jpg",
     "assets/ads/PalantirAppAd.jpeg",
     "assets/ads/TheranosAppAd.jpeg",
-    "assets/ads/TourismAppAd.jpeg"
+    "assets/ads/TourismAppAd.jpeg",
+    "assets/ads/ViagraAppAd.webp"
   ],
   audio: [
     "assets/audio/New%20Recording%2012.m4a"
   ]
 };
+
+function loadAssetManifest() {
+  if (typeof fetch !== "undefined") {
+    fetch("./assets/manifest.json?t=" + Date.now())
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data.ads) && data.ads.length > 0) {
+          ASSET_MANIFEST.ads = data.ads;
+        }
+        if (data && Array.isArray(data.audio) && data.audio.length > 0) {
+          ASSET_MANIFEST.audio = data.audio;
+        }
+      })
+      .catch(() => {});
+  }
+}
+loadAssetManifest();
+
 
 const CADNT_AUDIO = {
   ctx: null,
@@ -5748,7 +5769,7 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     assertTest("Ad modal contains tiny close button and blank ad placement placeholder", !!adCloseBtn && adCloseBtn.clientWidth <= 14 && !!adPlaceholder);
 
     // Test 33: Asset manifest contains ads and hold music
-    assertTest("Asset manifest loaded with 6 ads and hold music track", ASSET_MANIFEST.ads.length === 6 && ASSET_MANIFEST.audio.length >= 1);
+    assertTest("Asset manifest loaded with 9 ads and hold music track", ASSET_MANIFEST.ads.length === 9 && ASSET_MANIFEST.audio.length >= 1);
 
     // Test 34: 10-command ad cadence
     modelingCommandCount = 0;

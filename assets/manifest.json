@@ -1,11 +1,14 @@
 {
   "ads": [
+    "assets/ads/AmwayAppAd.jpeg",
     "assets/ads/AppAds.jpeg",
     "assets/ads/CnBAppAd.png",
     "assets/ads/EnronAppAd.jpg",
+    "assets/ads/MomsAppAd.jpg",
     "assets/ads/PalantirAppAd.jpeg",
     "assets/ads/TheranosAppAd.jpeg",
-    "assets/ads/TourismAppAd.jpeg"
+    "assets/ads/TourismAppAd.jpeg",
+    "assets/ads/ViagraAppAd.webp"
   ],
   "audio": [
     "assets/audio/New Recording 12.m4a"
