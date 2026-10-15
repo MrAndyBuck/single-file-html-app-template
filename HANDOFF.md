@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-008-DEV`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-008`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -146,7 +146,7 @@ All screenshots captured in headless Chrome under macOS Retina High-DPI (`--forc
 
 ---
 
-## 4. Advertisement Assets & Hold Music Integration (Build `v00000-008-DEV`)
+## 4. Advertisement Assets & Hold Music Integration (Build `v00000-008`)
 
 ### A. Asset Locations & Preservation
 - **Ad Images**: Located in `/Users/andybuck/Documents/Antigravity/assets/Ads` and copied to `assets/ads/` with exact filenames preserved:
@@ -221,14 +221,14 @@ All screenshots captured in real browser sessions under macOS Retina High-DPI (`
 ---
 
 ## 5. Current Git & Deployment Status
-- **Current Branch**: `dev`
+- **Current Branch**: `main`
 - **Modified & Added Files**:
-  - `index.html` (Ad modal styling, click rotation, 10-command cadence, hold music engine, cancel loading button, unit tests 33-36)
-  - `sw.js` (Offline cache list updated for manifest, ad images, audio track)
+  - `index.html` (Ad modal styling, click rotation, 10-command cadence, hold music engine, cancel loading button, unit tests 33-36, version v00000-008)
+  - `sw.js` (Offline cache version v00000-008, manifest, ad images, audio track)
   - `assets/manifest.json` (Asset mapping manifest)
   - `assets/ads/*` (6 real ad image assets copied from Documents)
   - `assets/audio/*` (Real audio track `New Recording 12.m4a` copied from Documents)
   - `HANDOFF.md` (Updated status and verification records)
 - **Automated Tests**: 48/48 PASSING (0 FAILED)
 - **Visual Verification**: All 9 ad cadence, rotation, dismiss, and hold music tests verified in headless Chrome Retina DPR=2.0.
-- **Git Status**: Committed to development branch `dev`. Awaiting explicit user approval before merging or deploying to `main` / GitHub Pages.
+- **Git Status**: Deployed to `main` and pushed to GitHub Pages as `v00000-008`.
