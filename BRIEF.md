@@ -157,3 +157,46 @@
   - Audio system hooks (loading soundscapes, mute toggle).
   - Cross-browser testing (Chrome, Safari).
   - Verified GitHub Pages live deployment.
+
+---
+
+## 2.10 Planned Future Commands — Pipe and Sweep (Roadmap)
+
+> **Important**: In accordance with user specifications, Pipe and Sweep are planned for future implementation and must produce genuine geometric solids (not decorative previews).
+
+### 1. Pipe Command Specification
+- **Request Bar Invocations**:
+  - `Can I pipe`
+  - `Can I pipe [radius]`
+- **Intended Functionality**:
+  - Generates a tubular 3D solid mesh along a selected 3D curve (Line, Polyline, or Spline Curve entity).
+  - User specifies radius or diameter via parameter prompt in the Interactive Command Bar (`#command-bar`) or Request Bar.
+  - Generates real manifold solid geometry with watertight planar or spherical end caps.
+  - Integrates with the ThreeCSG Boolean engine, allowing the resulting pipe to be used in Boolean Union and Difference operations.
+- **Technical Dependencies**:
+  - `THREE.CurvePath` / `THREE.CatmullRomCurve3` or polyline segment evaluation.
+  - Tubular mesh generator (`THREE.TubeGeometry` or custom variable-radius sweep buffer).
+  - Cap geometry synthesis (`THREE.CircleGeometry` or disc triangulation oriented along curve endpoint tangents).
+  - Manifold mesh validation before adding to `sceneObjects`.
+  - Integration with Command Bar two-step workflow: Step 1 (Select curve), Step 2 (Specify radius/diameter).
+  - Audio hook: Play hold music during computation (registered under `CADNT_AUDIO.playHoldMusic()`).
+
+### 2. Sweep Command Specification
+- **Request Bar Invocations**:
+  - `Can I sweep`
+- **Intended Functionality**:
+  - Generates a 3D solid or surface by sweeping a selected 2D profile curve (circle, rectangle, or arbitrary closed profile) along a selected 3D rail curve.
+  - Must produce authentic manifold geometry, not decorative previews or hollow unclosed shells.
+  - Aligns profile normal with the rail tangent at the start point, maintaining parallel transport (Bishop framing or Frenet-Serret frame) along the rail curve to avoid pinching or self-intersection.
+  - Produces closed solid if the profile is closed and end caps are enabled.
+- **Technical Dependencies**:
+  - Curve frame computation (Bishop frame / parallel transport algorithm to prevent topological twisting).
+  - Cross-section vertex extrusion and skinning along Frenet coordinate frames into `THREE.BufferGeometry`.
+  - CSG boolean compatibility for downstream operations.
+  - Interactive Command Bar multi-stage selector:
+    - Stage 1: Select Rail Curve.
+    - Stage 2: Select Cross-Section Profile.
+    - Stage 3: Parameter confirmation (twist angle, scale factor, end capping).
+  - Audio hook: Trigger hold music during execution (already configured in `triggerArtificialDelay`).
+  - Fictional economy integration ($49.00 premium charge or delay).
+

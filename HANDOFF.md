@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-009`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-010`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -37,17 +37,22 @@
 | **Join (Curves & Meshes)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Chains curve segments into `ClosedProfile` (extrudable) or polyline; merges mesh geometries. Distinct from CSG Union. |
 | **Profile Extrusion into 3D** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Extrudes closed 2D profiles into 3D solid meshes (`THREE.ExtrudeGeometry`) with depth input. |
 | **Object Transformations (Move/Rot/Scale)**| **YES** | **YES** | **YES** | *Awaiting Manual Test* | Interactive parameter inputs for dx/dy/dz, axis/deg, scale factor, with Enter/Escape support. |
-| **Real Advertisement Assets & Cadence** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | 9 local ad images loaded from `assets/ads/`. Centered modal triggers after every 10 modeling commands; counter resets only on trigger. Clicking ad rotates image; tiny 10px close button dismisses ad and restores workspace. |
-| **Automatic Ad Asset Registration** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `scripts/generate_asset_manifest.py` scans `assets/ads/` (PNG, JPG, JPEG, WebP) during build/commit via `.git/hooks/pre-commit`, updates `assets/manifest.json`, `sw.js` cache, and `index.html`. |
-| **Hold Music Integration** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Real local audio asset `assets/audio/New Recording 12.m4a` played on long operations (Save, Import, Sweep, Union, Fillet). No loop (`loop = false`), stops on completion/cancel, respects mute toggle, default ~50% volume. |
-| **Asset Manifest & SW Offline Caching** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `assets/manifest.json` maps all real assets; cached in Service Worker (`sw.js`) for offline functionality. |
+| **Rhino-Style Gumball & Free Movement** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | 3D axis arrows, rotation arcs, and scale boxes on active selection. `Shift + M + Drag` enables unconstrained free movement; normal dragging without modifiers does not move objects. |
+| **Advertisement Cadence & Layered Stacking** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Modal triggers every 7 modeling command attempts; clicking an ad stacks another layered ad above it with cascading offset; independent tiny close buttons dismiss cards; centered modal. |
+| **Automatic Ad Asset Registration** | **YES** | **YES** | **YES** | **YES** | `scripts/generate_asset_manifest.py` scans `assets/ads/` (PNG, JPG, JPEG, WebP) during build/commit via `.git/hooks/pre-commit`, updates `assets/manifest.json`, `sw.js` cache, and `index.html`. |
+| **Hold Music Integration** | **YES** | **YES** | **YES** | **YES** | Real local audio asset `assets/audio/New Recording 12.m4a` played on long operations (Save, Import, Sweep, Union, Fillet). No loop (`loop = false`), stops on completion/cancel, respects mute toggle, default ~50% volume. |
+| **Asset Manifest & SW Offline Caching** | **YES** | **YES** | **YES** | **YES** | `assets/manifest.json` maps all real assets; cached in Service Worker (`sw.js`) for offline functionality. |
+| **Crash Report Command** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `Can I send a crash report?` (with/without `?`, case-insensitive) opens dialog targeting `andrewrobertbuck@gmail.com` with system diagnostics, editable fields, and mailto launcher. No silent background uploads. |
+| **Starting Object Removal & Undo** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Hidden command `Can I remove starting object` shows "Are you sure you want to remove this?", deletes protected Michigan geometry upon confirmation, updates all 4 viewports, and is fully undoable via `Can I undo`. |
+| **Mandatory Export Distortion** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Nonuniform scaling `(0.72, 1.48, 0.88)` applied unconditionally to all STL and OBJ exports. User checkbox removed. Scene geometry remains undistorted. |
+| **Branding & Terms Clean Up** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Header updated to clean "CADN'T" branding ("Satirical" badge removed). Terms & Conditions dialog text updated to "Accept Terms & Conditions" without "suffer" wording. |
+| **Pipe & Sweep Roadmap** | **YES** | **N/A** | **N/A** | *Awaiting Acceptance* | Technical specifications, input requirements, and algorithmic dependencies documented in `BRIEF.md` (§2.10) and `HANDOFF.md` (§6) for future implementation. |
 | **CSG Booleans (Union & Difference)** | **YES** | **YES** | **YES** | *Pending Demonstration* | ThreeCSG solid Boolean Union and Difference producing manifold meshes. |
 | **Layer Management** | **YES** | **YES** | **YES** | *Pending Demonstration* | Add, lock, hide, and assign layers with color swatches. |
 | **Undo / Redo Stack** | **YES** | **YES** | **YES** | *Pending Demonstration* | Deep document state undo/redo accessible strictly via `Can I undo` and `Can I redo`. |
 | **Project Save / Reopen (.cadnt)** | **YES** | **YES** | **YES** | *Pending Demonstration* | Full scene serialization, 2-stage confirmed save, file picker reopen. |
-| **OBJ & STL Export (with Satirical Distortion)**| **YES** | **YES** | **YES** | *Pending Demonstration* | Standard binary STL and Wavefront OBJ; optional nonuniform scaling applied to isolated export clone only. |
 | **Mesh Import & Geometry Lock** | **YES** | **YES** | **YES** | *Pending Demonstration* | STL/OBJ import, $10 fee deduction, read-only geometry lock, Remesh/Simplify sphere replacement. |
-| **Fictional Economy & Satirical Friction** | **YES** | **YES** | **YES** | *Pending Demonstration* | $249 balance, Under Construction refill modal, 10s heavy operation delay, ads with 10px close buttons, Web Audio synthesizer. |
+| **Fictional Economy & Satirical Friction** | **YES** | **YES** | **YES** | *Pending Demonstration* | $249 balance, Under Construction refill modal, 10s heavy operation delay, Web Audio synthesizer. |
 
 ---
 
@@ -228,16 +233,113 @@ All screenshots captured in real browser sessions under macOS Retina High-DPI (`
 
 ---
 
-## 5. Current Git & Deployment Status
-- **Current Branch**: `main`
+## 5. Milestone v00000-010 — Specification Revisions & Command Updates
+
+### A. Branding & Terms & Conditions Updates
+1. **Header Branding**:
+   - Removed satirical badge and version label (`SATIRICAL v0.1`) from `#brand`.
+   - Clean, professional header branding: `CADN'T`.
+2. **Terms & Conditions**:
+   - Button text updated to `Accept Terms & Conditions` (removed "suffer" wording).
+   - Core satirical legal clauses retained.
+
+### B. Crash Report Command (`Can I send a crash report?`)
+1. **Invocation**:
+   - Request Bar command: `Can I send a crash report?` (works with or without `?`, case-insensitive).
+2. **Crash Report Interface (`#modal-crash-report`)**:
+   - Destination email locked to `andrewrobertbuck@gmail.com`.
+   - Pre-populates editable fields with real-time diagnostic information (User Agent, Viewport dimensions, Object count, Active layer, Scene memory estimate).
+   - "Open in Email Client" button generates a `mailto:` link with properly encoded subject and body.
+   - Respects user privacy: No silent background uploads or telemetry transmissions.
+
+### C. Starting Object Removal & Undo System
+1. **Hidden Command**:
+   - `Can I remove starting object` (case-insensitive).
+2. **Safety Confirmation**:
+   - Triggers modal dialog `#modal-remove-confirm` with prompt: *"Are you sure you want to remove this?"*.
+3. **Execution & State Management**:
+   - Upon confirmation, Michigan starting geometry is cleanly removed from the scene and layer panel.
+   - All 4 viewports update immediately.
+   - Deletion is fully reversible via `Can I undo` (and redoable via `Can I redo`), with protected status preserved upon restoration. Ordinary delete commands remain restricted.
+
+### D. Rhino-Inspired Gumball with Free Movement (`Shift + M + Drag`)
+1. **3D Gumball Widget**:
+   - Renders 3-axis translation arrows (Red: X, Green: Y, Blue: Z), rotation arcs, and scale boxes on selected objects across all 4 viewports (Top, Perspective, Front, Right).
+   - Dynamically repositions to selection centroid and updates during transformations.
+2. **Free Movement Shortcut**:
+   - **`Shift + M + Click and Drag`**: Holding both `Shift` and `M` while clicking and dragging across any viewport moves the selected object freely without handle constraints.
+   - Normal dragging without these modifier keys does NOT trigger movement.
+
+### E. 7-Command Ad Cadence & Layered Stacking
+1. **Trigger Cadence**:
+   - Advertisements appear exactly every 7 executed modeling command attempts (`count % 7 === 0`).
+2. **Layered Stacking**:
+   - Clicking an active advertisement does not replace it; instead, it dynamically stacks a new randomly selected advertisement card layered above it with cascading positional offsets (`+24px` X/Y).
+   - Each individual card contains its own independent tiny 10px close button (`.btn-ad-close`).
+   - Closing a card removes only that card; closing the last remaining card dismisses the modal and restores the CAD workspace.
+   - Fixed modal centering bug: Container uses `transform: none` and `inset: 0` to prevent quadrant offset.
+
+### F. Mandatory Export Distortion
+1. **Nonuniform Distortion Enforced**:
+   - Applied unconditionally to all STL and OBJ exports (`exportScale = (0.72, 1.48, 0.88)`).
+   - Removed user-facing checkbox `#export-distort` from `#modal-export`.
+   - Internal in-memory CAD scene geometry remains completely undistorted.
+
+### G. Future Commands Roadmap (Pipe and Sweep)
+1. **Technical Specifications**:
+   - Documented in `BRIEF.md` (§2.10) and `HANDOFF.md` capability matrix.
+   - **Pipe**: Circular tubular cross-section swept along open or closed 3D curves with user-specified radius/diameter and wall thickness options.
+   - **Sweep**: 2D profile swept along 3D guide rail curve using Frenet-Serret frames, with twist and scale controls.
+   - Geometry generation deferred until explicit user milestone approval.
+
+### H. Visual Verification Artifacts (Build v00000-010)
+
+All screenshots captured in real browser sessions under macOS Retina High-DPI (`DPR: 2.0`, $1280 \times 820$ window) and saved to `/Users/andybuck/Desktop/CADNT_Screenshots/`:
+
+1. **Step 1 — Branding & Terms & Conditions**:
+   [v010_01_branding_and_terms.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_01_branding_and_terms.png)
+   - Confirms clean "CADN'T" header without satirical badge and updated "Accept Terms & Conditions" button.
+2. **Step 2 — Crash Report Modal**:
+   [v010_02_crash_report_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_02_crash_report_modal.png)
+   - Confirms prefilled diagnostics, recipient `andrewrobertbuck@gmail.com`, and mailto launcher.
+3. **Step 3 — Starting Object Removal Confirmation**:
+   [v010_03_remove_confirm_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_03_remove_confirm_modal.png)
+   - Confirms modal: *"Are you sure you want to remove this?"*.
+4. **Step 4 — Starting Object Removed**:
+   [v010_04_starting_object_removed.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_04_starting_object_removed.png)
+   - Confirms starting geometry removed from all 4 viewports and layer panel.
+5. **Step 5 — Starting Object Restored via Undo**:
+   [v010_05_starting_object_restored_undo.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_05_starting_object_restored_undo.png)
+   - Confirms complete restoration with protected state intact via `Can I undo`.
+6. **Step 6 — Rhino-Style Gumball in 4 Viewports**:
+   [v010_06_gumball_4_viewports.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_06_gumball_4_viewports.png)
+   - Confirms 3D axis arrows, rotation arcs, and scale handles rendered across Top, Front, Right, and Perspective.
+7. **Step 7 — Free Movement with Shift + M + Drag**:
+   [v010_07_free_movement_shift_m.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_07_free_movement_shift_m.png)
+   - Confirms free translation of selected object across active viewport plane.
+8. **Step 8 — 7-Command Ad Cadence**:
+   [v010_08_ad_seventh_command_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_08_ad_seventh_command_modal.png)
+   - Confirms ad popup triggers on exactly the 7th modeling command, centered on screen.
+9. **Step 9 — Layered Ad Stacking**:
+   [v010_09_ad_stacked_layers.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_09_ad_stacked_layers.png)
+   - Confirms clicking ad stacks new ad card above existing card with offset and independent close button.
+10. **Step 10 — Ad Stack Dismissal**:
+    [v010_10_ad_stack_closed_restored.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_10_ad_stack_closed_restored.png)
+    - Confirms dismissing stack restores previous CAD workspace operation.
+11. **Step 11 — Mandatory Export Distortion**:
+    [v010_11_mandatory_export_modal.png](file:///Users/andybuck/Desktop/CADNT_Screenshots/v010_11_mandatory_export_modal.png)
+    - Confirms removal of distortion disable checkbox and presence of mandatory distortion disclaimer.
+
+---
+
+## 6. Current Git & Deployment Status
+- **Current Branch**: `dev` (ready to merge to `main`)
 - **Modified & Added Files**:
-  - `scripts/generate_asset_manifest.py` (Automatic scanning & registration CLI tool)
-  - `.git/hooks/pre-commit` (Automated pre-commit manifest synchronization hook)
-  - `assets/ads/*` (All 9 advertisement images, including 3 new additions)
-  - `assets/manifest.json` (Automatically regenerated 9-ad manifest)
-  - `sw.js` (Offline cache updated with all 9 ads and audio track, version `v00000-009`)
-  - `index.html` (Manifest synced with 9 ads, `loadAssetManifest()` added, version `v00000-009`)
-  - `HANDOFF.md` (Updated status and verification records)
-- **Automated Tests**: 48/48 PASSING (0 FAILED)
-- **Visual Verification**: All newly added ads verified in real browser rotation with screenshots.
-- **Git Status**: Deployed to `main` and pushed to GitHub Pages as `v00000-009`.
+  - `BRIEF.md` (Roadmap specifications for Pipe & Sweep added in §2.10)
+  - `index.html` (Branding, Terms, Crash Report modal & command, Starting object remove & undo, Gumball free movement `Shift+M+Drag`, 7-command ad stacking cadence, mandatory export distortion, Build `v00000-010`)
+  - `sw.js` (Cache version updated to `cadnt-v00000-010`)
+  - `HANDOFF.md` (Updated capability matrix, milestone documentation, and verification artifacts)
+- **Automated Tests**: 57/57 PASSING (0 FAILED)
+- **Visual Verification**: All 11 interaction flows verified in real browser sessions with Retina screenshots.
+- **Git Status**: Changes committed to `dev`, ready for merge and push to `origin/main`.
+

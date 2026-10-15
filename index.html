@@ -705,17 +705,57 @@
     line-height: 1.4;
   }
 
-  /* Satirical Ad Modal */
+  /* Satirical Ad Modal & Stackable Layers */
   #modal-ad {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    transform: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    display: block;
+    overflow: visible;
+    z-index: 10000;
+  }
+  #modal-ad::backdrop {
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(3px);
+  }
+  #modal-ad:not([open]) {
+    display: none;
+  }
+  .ad-stack-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .ad-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     border: 2px solid var(--alert-pink);
     background: #141414;
     padding: 20px 14px 12px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 51, 102, 0.3);
-    max-width: min(90vw, 720px);
-    max-height: min(85vh, 600px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 51, 102, 0.35);
+    max-width: min(85vw, 680px);
+    max-height: min(80vh, 540px);
     border-radius: 4px;
     text-align: center;
+    pointer-events: auto;
+    transition: transform 0.15s ease-out;
   }
   .ad-header-label {
     font-size: 9px;
@@ -800,7 +840,6 @@
       </svg>
       CADN'T
     </div>
-    <span class="badge-tag">SATIRICAL v0.1</span>
 
     <!-- Fictional Economy Display -->
     <div class="economy-chip" id="economy-display">
@@ -1077,7 +1116,7 @@
     <div id="coords-readout">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div id="status-message">Ready. Type polite request in Request Bar.</div>
     <div class="nav-hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
-    <button id="chip" title="Check for newer version">v00000-009 ↻</button>
+    <button id="chip" title="Check for newer version">v00000-010 ↻</button>
   </footer>
 </div>
 
@@ -1096,7 +1135,7 @@
     <li><strong>Economy</strong>: You have received a starting grant of $249.00 in fictional CAD credits.</li>
   </ul>
   <div class="dialog-actions">
-    <button class="btn-dialog btn-primary" id="btn-close-onboarding">Accept Terms & Suffer</button>
+    <button class="btn-dialog btn-primary" id="btn-close-onboarding">Accept Terms & Conditions</button>
   </div>
 </dialog>
 
@@ -1168,10 +1207,9 @@
         <option value="selected">Selected Objects Only</option>
       </select>
     </div>
-    <label style="display:flex; align-items:flex-start; gap:8px; font-size:12px; cursor:pointer; color:var(--rhino-yellow); margin-top:4px; background:#181818; padding:8px; border:1px solid var(--border-light); border-radius:4px;">
-      <input type="checkbox" id="export-distort" style="margin-top:2px;">
-      <span><strong>Intentional Nonuniform Scaling</strong> (Applies satirical anisotropic deformation to exported clone without corrupting internal project geometry)</span>
-    </label>
+    <div style="font-size:11px; color:var(--fg-muted); margin-top:6px; background:#181818; padding:8px; border:1px solid var(--border-light); border-radius:4px;">
+      <span><strong>Mandatory Nonuniform Scaling</strong>: CADN'T automatically applies anisotropic deformation to exported geometry. Internal CAD workspace geometry remains uncorrupted.</span>
+    </div>
   </div>
   <div class="dialog-actions">
     <button class="btn-dialog btn-secondary" id="btn-export-cancel">Cancel</button>
@@ -1192,15 +1230,41 @@
   </div>
 </dialog>
 
-<!-- Satirical Ad Modal with Tiny Close Button & Real Ad Images -->
+<!-- Satirical Ad Modal with Stacking Layers & Tiny Close Buttons -->
 <dialog id="modal-ad">
-  <button class="btn-ad-close" id="btn-close-ad" title="Close Advertisement">×</button>
-  <div class="ad-header-label">SPONSORED INTERRUPTION (CLICK AD TO ROTATE)</div>
-  <div class="ad-container" id="ad-container" title="Click ad image to view another advertisement">
-    <img id="ad-image" class="ad-image" src="" alt="Advertisement" />
-    <div id="ad-placeholder" class="ad-placeholder" style="display:none;">
-      [Blank Advertisement Placement #4029]
+  <div id="ad-stack-container" class="ad-stack-container"></div>
+</dialog>
+
+<!-- Crash Report Modal -->
+<dialog id="modal-crash-report" style="max-width: 560px; width: 90vw;">
+  <h2>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Submit Crash Report
+  </h2>
+  <p style="font-size:12px; color:var(--fg-muted); margin-bottom:12px;">
+    Prepare a diagnostic report for CADN'T Engineering. This interface compiles your report and opens your local email application addressed to <code>andrewrobertbuck@gmail.com</code>. No files or diagnostic logs are uploaded automatically.
+  </p>
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <div>
+      <label style="font-size:11px; font-weight:600; color:var(--fg-muted); display:block; margin-bottom:4px;">RECIPIENT:</label>
+      <input type="text" id="crash-recipient" class="prop-input" value="andrewrobertbuck@gmail.com" readonly style="width:100%; color:var(--rhino-yellow);" />
     </div>
+    <div>
+      <label style="font-size:11px; font-weight:600; color:var(--fg-muted); display:block; margin-bottom:4px;">SUBJECT:</label>
+      <input type="text" id="crash-subject" class="prop-input" value="[CADN'T Crash Report] Unexpected Behavior / Error" style="width:100%;" />
+    </div>
+    <div>
+      <label style="font-size:11px; font-weight:600; color:var(--fg-muted); display:block; margin-bottom:4px;">DESCRIPTION OF ISSUE:</label>
+      <textarea id="crash-desc" class="prop-input" rows="4" style="width:100%; resize:vertical; font-family:var(--font-sans);" placeholder="Describe what actions led up to the crash or unexpected behavior..."></textarea>
+    </div>
+    <div>
+      <label style="font-size:11px; font-weight:600; color:var(--fg-muted); display:block; margin-bottom:4px;">OPTIONAL DIAGNOSTIC INFORMATION (LOCAL MACHINE):</label>
+      <textarea id="crash-diagnostics" class="prop-input" rows="5" style="width:100%; resize:vertical; font-family:var(--font-mono); font-size:11px;"></textarea>
+    </div>
+  </div>
+  <div class="dialog-actions" style="margin-top:14px;">
+    <button class="btn-dialog btn-secondary" id="btn-crash-cancel">Cancel</button>
+    <button class="btn-dialog btn-primary" id="btn-crash-send">Open in Email App</button>
   </div>
 </dialog>
 
@@ -1219,7 +1283,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-009",
+  version: "v00000-010",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -2602,6 +2666,7 @@ function selectObject(obj, multi = false) {
 
   updatePropertiesPanel();
   updateObjectsTree();
+  updateGumball();
   if (selectedObjects.length > 0) {
     status(`Selected: ${selectedObjects.map(o => o.name).join(", ")}`);
   } else {
@@ -2614,7 +2679,215 @@ function clearSelection() {
   selectedObjects = [];
   updatePropertiesPanel();
   updateObjectsTree();
+  updateGumball();
 }
+
+/* =========================================================================
+   5.1 RHINO-INSPIRED GUMBALL & FREE MOVEMENT (SHIFT + M + DRAG)
+   ========================================================================= */
+let gumballGroup = null;
+let gumballDragState = null;
+
+function initGumball() {
+  if (gumballGroup) return;
+  gumballGroup = new THREE.Group();
+  gumballGroup.name = "CADNT_Gumball";
+  gumballGroup.renderOrder = 9999;
+  gumballGroup.visible = false;
+
+  const arrowLength = 16;
+  const coneRadius = 1.6;
+  const coneHeight = 4.5;
+  const scaleCubeOffset = 21;
+  const scaleCubeSize = 2.4;
+  const arcRadius = 11;
+  const arcTube = 0.35;
+
+  // Materials with depthTest: false so handles render crisply over scene geometry
+  const matX = new THREE.MeshBasicMaterial({ color: 0xff3344, depthTest: false });
+  const matY = new THREE.MeshBasicMaterial({ color: 0x33dd44, depthTest: false });
+  const matZ = new THREE.MeshBasicMaterial({ color: 0x3388ff, depthTest: false });
+
+  const lineMatX = new THREE.LineBasicMaterial({ color: 0xff3344, linewidth: 2, depthTest: false });
+  const lineMatY = new THREE.LineBasicMaterial({ color: 0x33dd44, linewidth: 2, depthTest: false });
+  const lineMatZ = new THREE.LineBasicMaterial({ color: 0x3388ff, linewidth: 2, depthTest: false });
+
+  // 1. Translation Arrow X (Red)
+  const xLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(arrowLength, 0, 0)]);
+  const xLine = new THREE.Line(xLineGeo, lineMatX);
+  const xCone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 16), matX);
+  xCone.position.set(arrowLength + coneHeight / 2, 0, 0);
+  xCone.rotation.z = -Math.PI / 2;
+  xCone.userData = { isGumball: true, action: "translate", axis: "x" };
+  xLine.userData = { isGumball: true, action: "translate", axis: "x" };
+  gumballGroup.add(xLine);
+  gumballGroup.add(xCone);
+
+  // 2. Translation Arrow Y (Green)
+  const yLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, arrowLength, 0)]);
+  const yLine = new THREE.Line(yLineGeo, lineMatY);
+  const yCone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 16), matY);
+  yCone.position.set(0, arrowLength + coneHeight / 2, 0);
+  yCone.userData = { isGumball: true, action: "translate", axis: "y" };
+  yLine.userData = { isGumball: true, action: "translate", axis: "y" };
+  gumballGroup.add(yLine);
+  gumballGroup.add(yCone);
+
+  // 3. Translation Arrow Z (Blue)
+  const zLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, arrowLength)]);
+  const zLine = new THREE.Line(zLineGeo, lineMatZ);
+  const zCone = new THREE.Mesh(new THREE.ConeGeometry(coneRadius, coneHeight, 16), matZ);
+  zCone.position.set(0, 0, arrowLength + coneHeight / 2);
+  zCone.rotation.x = Math.PI / 2;
+  zCone.userData = { isGumball: true, action: "translate", axis: "z" };
+  zLine.userData = { isGumball: true, action: "translate", axis: "z" };
+  gumballGroup.add(zLine);
+  gumballGroup.add(zCone);
+
+  // 4. Scale Handles (Small cubes at ends of axes)
+  const boxGeo = new THREE.BoxGeometry(scaleCubeSize, scaleCubeSize, scaleCubeSize);
+  const xScaleBox = new THREE.Mesh(boxGeo, matX);
+  xScaleBox.position.set(scaleCubeOffset, 0, 0);
+  xScaleBox.userData = { isGumball: true, action: "scale", axis: "x" };
+  gumballGroup.add(xScaleBox);
+
+  const yScaleBox = new THREE.Mesh(boxGeo, matY);
+  yScaleBox.position.set(0, scaleCubeOffset, 0);
+  yScaleBox.userData = { isGumball: true, action: "scale", axis: "y" };
+  gumballGroup.add(yScaleBox);
+
+  const zScaleBox = new THREE.Mesh(boxGeo, matZ);
+  zScaleBox.position.set(0, 0, scaleCubeOffset);
+  zScaleBox.userData = { isGumball: true, action: "scale", axis: "z" };
+  gumballGroup.add(zScaleBox);
+
+  // 5. Rotation Arcs (Rhino style 90-degree arcs in each primary plane)
+  const arcGeo = new THREE.TorusGeometry(arcRadius, arcTube, 8, 32, Math.PI / 2);
+
+  // X Rotation Arc (YZ plane, Red)
+  const arcX = new THREE.Mesh(arcGeo, matX);
+  arcX.rotation.y = Math.PI / 2;
+  arcX.userData = { isGumball: true, action: "rotate", axis: "x" };
+  gumballGroup.add(arcX);
+
+  // Y Rotation Arc (XZ plane, Green)
+  const arcY = new THREE.Mesh(arcGeo, matY);
+  arcY.rotation.x = Math.PI / 2;
+  arcY.userData = { isGumball: true, action: "rotate", axis: "y" };
+  gumballGroup.add(arcY);
+
+  // Z Rotation Arc (XY plane, Blue)
+  const arcZ = new THREE.Mesh(arcGeo, matZ);
+  arcZ.userData = { isGumball: true, action: "rotate", axis: "z" };
+  gumballGroup.add(arcZ);
+
+  // Center Origin Marker
+  const originMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.2, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xcccccc, depthTest: false })
+  );
+  originMesh.userData = { isGumball: true, action: "origin", axis: "all" };
+  gumballGroup.add(originMesh);
+
+  scene.add(gumballGroup);
+}
+
+function updateGumball() {
+  if (!gumballGroup) return;
+  if (selectedObjects.length === 0) {
+    gumballGroup.visible = false;
+    return;
+  }
+  gumballGroup.visible = true;
+
+  const box = new THREE.Box3();
+  let hasValid = false;
+  selectedObjects.forEach(obj => {
+    box.expandByObject(obj);
+    hasValid = true;
+  });
+
+  if (hasValid && !box.isEmpty()) {
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    gumballGroup.position.copy(center);
+  } else if (selectedObjects[0]) {
+    gumballGroup.position.copy(selectedObjects[0].position);
+  }
+}
+
+function isShiftMActive(e) {
+  const hasShift = !!(e && e.shiftKey) || pressedKeys.has("shift") || pressedKeys.has("ShiftLeft") || pressedKeys.has("ShiftRight");
+  const hasM = pressedKeys.has("KeyM") || pressedKeys.has("keym") || pressedKeys.has("m") || pressedKeys.has("M") || (e && (e.code === "KeyM" || e.key === "m" || e.key === "M"));
+  return hasShift && hasM;
+}
+
+function handleGumballDragMove(e, vpId) {
+  if (!gumballDragState) return;
+  const targetVpId = vpId || gumballDragState.vpId;
+  const vp = viewports[targetVpId];
+  if (!vp || !vp.canvas) return;
+
+  const rect = vp.canvas.getBoundingClientRect();
+  const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const ndcY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+  const cam = cameras[targetVpId];
+  raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
+
+  const currentPt = new THREE.Vector3();
+  if (!raycaster.ray.intersectPlane(gumballDragState.plane, currentPt)) return;
+
+  const delta = currentPt.clone().sub(gumballDragState.startHit);
+
+  if (gumballDragState.mode === "free_move") {
+    gumballDragState.initialStates.forEach(item => {
+      item.obj.position.copy(item.pos).add(delta);
+    });
+    updateGumball();
+    updatePropertiesPanel();
+  } else if (gumballDragState.mode === "translate") {
+    const axisVec = gumballDragState.axis === "x" ? new THREE.Vector3(1, 0, 0)
+                  : gumballDragState.axis === "y" ? new THREE.Vector3(0, 1, 0)
+                  : new THREE.Vector3(0, 0, 1);
+    const dist = delta.dot(axisVec);
+    gumballDragState.initialStates.forEach(item => {
+      item.obj.position.copy(item.pos).addScaledVector(axisVec, dist);
+    });
+    updateGumball();
+    updatePropertiesPanel();
+  } else if (gumballDragState.mode === "rotate") {
+    const center = gumballDragState.startGumballPos;
+    const v0 = gumballDragState.startHit.clone().sub(center);
+    const v1 = currentPt.clone().sub(center);
+    const axis = gumballDragState.axis;
+    let angle = 0;
+    if (axis === "x") angle = Math.atan2(v1.y, v1.z) - Math.atan2(v0.y, v0.z);
+    else if (axis === "y") angle = Math.atan2(v1.x, v1.z) - Math.atan2(v0.x, v0.z);
+    else angle = Math.atan2(v1.y, v1.x) - Math.atan2(v0.y, v0.x);
+
+    gumballDragState.initialStates.forEach(item => {
+      if (axis === "x") item.obj.rotation.x = item.rot.x + angle;
+      else if (axis === "y") item.obj.rotation.y = item.rot.y + angle;
+      else item.obj.rotation.z = item.rot.z + angle;
+    });
+    updatePropertiesPanel();
+  } else if (gumballDragState.mode === "scale") {
+    const axisVec = gumballDragState.axis === "x" ? new THREE.Vector3(1, 0, 0)
+                  : gumballDragState.axis === "y" ? new THREE.Vector3(0, 1, 0)
+                  : new THREE.Vector3(0, 0, 1);
+    const dist = delta.dot(axisVec);
+    const scaleFactor = Math.max(0.05, 1 + dist / 20);
+    gumballDragState.initialStates.forEach(item => {
+      if (gumballDragState.axis === "x") item.obj.scale.x = item.scale.x * scaleFactor;
+      else if (gumballDragState.axis === "y") item.obj.scale.y = item.scale.y * scaleFactor;
+      else item.obj.scale.z = item.scale.z * scaleFactor;
+    });
+    updatePropertiesPanel();
+  }
+}
+
+// Instantiate Gumball on scene
+initGumball();
 
 function highlightObject(obj, active) {
   obj.traverse(child => {
@@ -3051,6 +3324,7 @@ function cancelDelayOperation() {
 
 let currentAdIndex = -1;
 let modelingCommandCount = 0;
+let adStackCount = 0;
 
 function getRandomAdIndex() {
   const ads = ASSET_MANIFEST.ads;
@@ -3063,30 +3337,127 @@ function getRandomAdIndex() {
   return next;
 }
 
-function displayAd(idx) {
-  const ads = ASSET_MANIFEST.ads;
-  const img = document.getElementById("ad-image");
-  const placeholder = document.getElementById("ad-placeholder");
-  if (!img || !placeholder) return;
+function createAdCard(adIndex, layerNum) {
+  const card = document.createElement("div");
+  card.className = "ad-card";
+  card.dataset.layer = layerNum;
 
-  if (idx < 0 || !ads || !ads[idx]) {
+  // Stacking offset: each subsequent card is layered above and offset
+  const step = 20;
+  const offsetX = (layerNum % 2 === 1) ? layerNum * step : -(layerNum * step * 0.7);
+  const offsetY = layerNum * step;
+  card.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+  card.style.zIndex = 100 + layerNum;
+
+  // Each advertisement has its own tiny close button
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "btn-ad-close";
+  if (layerNum === 0) closeBtn.id = "btn-close-ad";
+  closeBtn.title = "Close Advertisement";
+  closeBtn.textContent = "×";
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    closeAdCard(card);
+  };
+  card.appendChild(closeBtn);
+
+  // Header label
+  const header = document.createElement("div");
+  header.className = "ad-header-label";
+  header.textContent = layerNum === 0 ? "SPONSORED INTERRUPTION (CLICK AD TO STACK)" : `SPONSORED INTERRUPTION #${layerNum + 1}`;
+  card.appendChild(header);
+
+  // Ad container
+  const container = document.createElement("div");
+  container.className = "ad-container";
+  if (layerNum === 0) container.id = "ad-container";
+  container.title = "Click ad image to layer another advertisement";
+
+  const img = document.createElement("img");
+  img.className = "ad-image";
+  if (layerNum === 0) img.id = "ad-image";
+  img.alt = "Advertisement";
+
+  const placeholder = document.createElement("div");
+  placeholder.className = "ad-placeholder";
+  if (layerNum === 0) placeholder.id = "ad-placeholder";
+  placeholder.textContent = `[Blank Advertisement Placement #${4000 + layerNum}]`;
+  placeholder.style.display = "none";
+
+  const ads = ASSET_MANIFEST.ads;
+  const targetSrc = (ads && ads[adIndex]) ? (typeof ads[adIndex] === "string" ? ads[adIndex] : ads[adIndex].path) : null;
+  if (targetSrc) {
+    img.src = targetSrc;
+    img.onload = () => {
+      img.style.display = "block";
+      placeholder.style.display = "none";
+    };
+    img.onerror = () => {
+      img.style.display = "none";
+      placeholder.style.display = "flex";
+    };
+  } else {
     img.style.display = "none";
     placeholder.style.display = "flex";
-    return;
   }
 
-  currentAdIndex = idx;
-  const targetSrc = ads[idx];
+  container.appendChild(img);
+  container.appendChild(placeholder);
 
-  img.onerror = () => {
-    img.style.display = "none";
-    placeholder.style.display = "flex";
+  // Clicking an advertisement creates another advertisement layered above it, rather than replacing it!
+  container.onclick = (e) => {
+    e.stopPropagation();
+    pushAdLayer();
   };
-  img.onload = () => {
+
+  card.appendChild(container);
+  return card;
+}
+
+function pushAdLayer() {
+  const stackContainer = document.getElementById("ad-stack-container");
+  if (!stackContainer) return;
+  const nextIdx = getRandomAdIndex();
+  currentAdIndex = nextIdx;
+  const newCard = createAdCard(nextIdx, adStackCount);
+  stackContainer.appendChild(newCard);
+  adStackCount++;
+  addLog(`Advertisement layer #${adStackCount} opened.`, "log-warn");
+}
+
+function closeAdCard(card) {
+  if (card && card.parentNode) {
+    card.parentNode.removeChild(card);
+  }
+  const stackContainer = document.getElementById("ad-stack-container");
+  const remainingCards = stackContainer ? stackContainer.querySelectorAll(".ad-card") : [];
+  if (remainingCards.length === 0) {
+    const adModal = document.getElementById("modal-ad");
+    if (adModal && adModal.open) adModal.close();
+    adStackCount = 0;
+    focusActiveCanvas();
+    status("Advertisement dismissed. Workspace restored.");
+    addLog("Commercial interruptions cleared. Returning to CAD.", "log-success");
+  } else {
+    status(`Ad layer closed (${remainingCards.length} remaining).`);
+  }
+}
+
+function displayAd(idx) {
+  currentAdIndex = idx;
+  const img = document.getElementById("ad-image");
+  const placeholder = document.getElementById("ad-placeholder");
+  const ads = ASSET_MANIFEST.ads;
+  if (!img || !placeholder || !ads) return;
+  const targetSrc = ads[idx];
+  if (targetSrc) {
+    img.src = typeof targetSrc === "string" ? targetSrc : targetSrc.path;
     img.style.display = "block";
     placeholder.style.display = "none";
-  };
-  img.src = targetSrc;
+  } else {
+    img.style.display = "none";
+    placeholder.style.display = "flex";
+  }
 }
 
 function rotateAd() {
@@ -3096,8 +3467,11 @@ function rotateAd() {
 
 function showAdPopup() {
   const adModal = document.getElementById("modal-ad");
-  if (!adModal) return;
-  rotateAd();
+  const stackContainer = document.getElementById("ad-stack-container");
+  if (!adModal || !stackContainer) return;
+  stackContainer.innerHTML = "";
+  adStackCount = 0;
+  pushAdLayer();
   if (!adModal.open) {
     adModal.showModal();
     addLog("Unsolicited commercial break presented.", "log-warn");
@@ -3106,7 +3480,7 @@ function showAdPopup() {
 
 function recordModelingCommand() {
   modelingCommandCount++;
-  if (modelingCommandCount >= 10) {
+  if (modelingCommandCount >= 7) {
     showAdPopup();
     modelingCommandCount = 0;
   }
@@ -3184,9 +3558,9 @@ function serializeProjectState() {
   const serializedObjects = [];
 
   sceneObjects.forEach(obj => {
-    if (obj.userData && obj.userData.isStartingObject) {
+    if (obj.userData && (obj.userData.isStartingObject || obj.userData.id === "test_cube" || obj.userData.id === "starting_michigan")) {
       serializedObjects.push({
-        type: "starting_michigan",
+        type: obj.userData.id === "test_cube" ? "starting_cube" : "starting_michigan",
         name: obj.name,
         userData: Object.assign({}, obj.userData),
         position: [obj.position.x, obj.position.y, obj.position.z],
@@ -3313,6 +3687,15 @@ function deserializeProjectState(jsonStr) {
         michiganModel.position.set(item.position[0], item.position[1], item.position[2]);
         michiganModel.rotation.set(item.rotation[0], item.rotation[1], item.rotation[2]);
         michiganModel.scale.set(item.scale[0], item.scale[1], item.scale[2]);
+        return;
+      }
+
+      if (item.type === "starting_cube") {
+        diagnosticCube = createDiagnosticTestCube();
+        diagnosticCube.name = item.name || diagnosticCube.name;
+        diagnosticCube.position.set(item.position[0], item.position[1], item.position[2]);
+        diagnosticCube.rotation.set(item.rotation[0], item.rotation[1], item.rotation[2]);
+        diagnosticCube.scale.set(item.scale[0], item.scale[1], item.scale[2]);
         return;
       }
 
@@ -3497,7 +3880,9 @@ function initiateOpenWorkflow() {
 /* =========================================================================
    12. EXPORT ENGINE (OBJ & STL WITH OPTIONAL NONUNIFORM SCALING)
    ========================================================================= */
-function exportProjectGeometry(format = "stl", applyDistortion = false, onlySelected = false) {
+function exportProjectGeometry(format = "stl", applyDistortion = true, onlySelected = false) {
+  // Nonuniform distortion is mandatory for every STL and OBJ export
+  applyDistortion = true;
   const targets = (onlySelected && selectedObjects.length > 0) ? selectedObjects : sceneObjects;
   if (targets.length === 0) {
     addLog("No geometry available to export.", "log-warn");
@@ -4173,8 +4558,20 @@ function executeCommand(rawCmd) {
   const tokens = trimmed.split(/\s+/);
   const verb = tokens[0].toLowerCase();
   const args = tokens.slice(1);
+  const normalizedCmd = trimmed.replace(/\?+$/, "").trim().toLowerCase();
 
-  if (trimmed === "remove starting object") {
+  // Crash Report Command
+  if (
+    normalizedCmd === "send a crash report" ||
+    normalizedCmd === "send crash report" ||
+    normalizedCmd === "crash report"
+  ) {
+    openCrashReportModal();
+    return;
+  }
+
+  // Michigan Starting Object Removal Command
+  if (normalizedCmd === "remove starting object") {
     const targetObj = michiganModel || diagnosticCube;
     if (!targetObj || !sceneObjects.includes(targetObj)) {
       addLog("Starting object is already gone.", "log-warn");
@@ -4183,7 +4580,7 @@ function executeCommand(rawCmd) {
     }
     showConfirmModal(
       "Are you sure you want to remove this?",
-      "Removing the starting geometry is irreversible.",
+      "Removing the starting geometry will clear it from the workspace. You can restore it using 'Can I undo'.",
       () => {
         recordUndoState("Remove Starting Object");
         scene.remove(targetObj);
@@ -4192,9 +4589,10 @@ function executeCommand(rawCmd) {
         selectedObjects = selectedObjects.filter(o => o !== targetObj);
         if (targetObj === michiganModel) michiganModel = null;
         if (targetObj === diagnosticCube) diagnosticCube = null;
+        updateGumball();
         updateObjectsTree();
         updatePropertiesPanel();
-        addLog("Starting object permanently removed. Hope you're happy.", "log-success");
+        addLog("Starting object removed. You can restore it using 'Can I undo'.", "log-success");
         status("Starting object removed.");
         recordModelingCommand();
       }
@@ -4371,7 +4769,7 @@ function executeCommand(rawCmd) {
         const fmt = (args[1] || "stl").toLowerCase();
         exportProjectGeometry(fmt, true, false);
       } else if (args[0] === "stl" || args[0] === "obj") {
-        exportProjectGeometry(args[0].toLowerCase(), false, false);
+        exportProjectGeometry(args[0].toLowerCase(), true, false);
       } else {
         document.getElementById("modal-export").showModal();
       }
@@ -4650,11 +5048,95 @@ function handleViewportPointerDown(e, vpId) {
     return;
   }
 
-  // Collect selectable children (excluding locked layers)
+  const isShiftM = isShiftMActive(e);
+
+  // 1. If Shift+M is active and objects are selected: check for click on selected objects or gumball
+  if (isShiftM && selectedObjects.length > 0) {
+    const selCandidates = [];
+    selectedObjects.forEach(obj => {
+      obj.traverse(child => {
+        if (child.isMesh || child.isLine || child.isLineLoop) selCandidates.push(child);
+      });
+    });
+    if (gumballGroup && gumballGroup.visible) {
+      gumballGroup.traverse(child => {
+        if (child.isMesh || child.isLine) selCandidates.push(child);
+      });
+    }
+    const hits = raycaster.intersectObjects(selCandidates, true);
+    if (hits.length > 0) {
+      const normal = new THREE.Vector3();
+      cam.getWorldDirection(normal).negate();
+      const planePos = gumballGroup && gumballGroup.visible ? gumballGroup.position : selectedObjects[0].position;
+      const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, planePos);
+      const startPt = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, startPt);
+
+      gumballDragState = {
+        mode: "free_move",
+        vpId: vpId,
+        camera: cam,
+        plane: plane,
+        startHit: startPt.clone(),
+        startGumballPos: planePos.clone(),
+        initialStates: selectedObjects.map(o => ({
+          obj: o,
+          pos: o.position.clone(),
+          rot: o.rotation.clone(),
+          scale: o.scale.clone()
+        }))
+      };
+      recordUndoState("Free Move (Shift+M)");
+      status("Free Move: Moving object(s) with Shift+M drag...");
+      return;
+    }
+  }
+
+  // 2. If Gumball is active and user clicked a Gumball handle (without Shift+M)
+  if (gumballGroup && gumballGroup.visible && !isShiftM) {
+    const gumballHits = raycaster.intersectObjects(gumballGroup.children, true);
+    if (gumballHits.length > 0) {
+      let handle = gumballHits[0].object;
+      while (handle && !handle.userData.isGumball && handle.parent && handle.parent !== gumballGroup) {
+        handle = handle.parent;
+      }
+      if (handle && handle.userData.isGumball && handle.userData.action !== "origin") {
+        const action = handle.userData.action;
+        const axis = handle.userData.axis;
+        const normal = new THREE.Vector3();
+        cam.getWorldDirection(normal).negate();
+        const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, gumballGroup.position);
+        const intersectPt = new THREE.Vector3();
+        raycaster.ray.intersectPlane(plane, intersectPt);
+
+        gumballDragState = {
+          mode: action,
+          axis: axis,
+          vpId: vpId,
+          camera: cam,
+          plane: plane,
+          startHit: intersectPt.clone(),
+          startGumballPos: gumballGroup.position.clone(),
+          initialStates: selectedObjects.map(o => ({
+            obj: o,
+            pos: o.position.clone(),
+            rot: o.rotation.clone(),
+            scale: o.scale.clone()
+          }))
+        };
+        recordUndoState(`Gumball ${action.toUpperCase()} ${axis.toUpperCase()}`);
+        status(`Gumball: Dragging ${axis.toUpperCase()} ${action}...`);
+        return;
+      }
+    }
+  }
+
+  // 3. Collect selectable children (excluding locked layers unless already selected)
   const candidates = [];
   sceneObjects.forEach(obj => {
+    const isSelected = selectedObjects.includes(obj);
     const layer = layers.find(l => l.name === obj.userData.layer);
-    if (layer && layer.locked) return;
+    if (layer && layer.locked && !isSelected) return;
     obj.traverse(child => {
       if (child.isMesh || child.isLine || child.isLineLoop) candidates.push(child);
     });
@@ -4676,7 +5158,42 @@ function handleViewportPointerDown(e, vpId) {
       return;
     }
 
-    selectObject(target, e.shiftKey);
+    if (!selectedObjects.includes(target)) {
+      selectObject(target, e.shiftKey);
+    }
+
+    // 3. Shift + M + Click and Drag: FREE MOVEMENT!
+    if (isShiftM && selectedObjects.length > 0) {
+      const normal = new THREE.Vector3();
+      cam.getWorldDirection(normal).negate();
+      const planePos = gumballGroup ? gumballGroup.position : target.position;
+      const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, planePos);
+      const startPt = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, startPt);
+
+      gumballDragState = {
+        mode: "free_move",
+        vpId: vpId,
+        camera: cam,
+        plane: plane,
+        startHit: startPt.clone(),
+        startGumballPos: planePos.clone(),
+        initialStates: selectedObjects.map(o => ({
+          obj: o,
+          pos: o.position.clone(),
+          rot: o.rotation.clone(),
+          scale: o.scale.clone()
+        }))
+      };
+      recordUndoState("Free Move (Shift+M)");
+      status("Free Move: Moving object(s) with Shift+M drag...");
+      return;
+    }
+
+    // Normal dragging without Shift+M modifier keys does NOT trigger free movement
+    if (!e.shiftKey) {
+      selectObject(target, false);
+    }
   } else if (!e.shiftKey) {
     if (activeCommand) {
       return; // Preserve selection during active command
@@ -4686,6 +5203,11 @@ function handleViewportPointerDown(e, vpId) {
 }
 
 function handleViewportPointerMove(e, vpId) {
+  if (gumballDragState) {
+    handleGumballDragMove(e, vpId);
+    return;
+  }
+
   const vp = viewports[vpId];
   if (!vp || !vp.canvas) return;
 
@@ -4907,6 +5429,18 @@ window.addEventListener("keydown", (e) => {
   debugTelemetry.lastTarget = (e.target ? e.target.tagName + (e.target.id ? "#" + e.target.id : "") : "unknown");
   debugTelemetry.lastHandled = isNavKey(code, key) ? (isInput ? "BLOCKED by input" : "Nav: " + (code || key)) : "Non-nav: " + (code || key);
 
+  if (!isInput) {
+    pressedKeys.add(code);
+    pressedKeys.add(key);
+    pressedKeys.add((code || "").toLowerCase());
+    pressedKeys.add((key || "").toLowerCase());
+    if (e.shiftKey) {
+      pressedKeys.add("shift");
+      pressedKeys.add("ShiftLeft");
+      pressedKeys.add("ShiftRight");
+    }
+  }
+
   if (isInput) {
     if (e.key === "Escape") {
       if (activeCommand) {
@@ -5015,6 +5549,24 @@ window.addEventListener("keyup", (e) => {
 
 window.addEventListener("blur", () => {
   pressedKeys.clear();
+});
+
+window.addEventListener("pointerup", () => {
+  if (gumballDragState) {
+    const mode = gumballDragState.mode;
+    gumballDragState = null;
+    updateGumball();
+    updatePropertiesPanel();
+    updateObjectsTree();
+    status(mode === "free_move" ? "Free move complete." : `Gumball ${mode} complete.`);
+    recordModelingCommand();
+  }
+});
+
+window.addEventListener("pointermove", (e) => {
+  if (gumballDragState) {
+    handleGumballDragMove(e, gumballDragState.vpId);
+  }
 });
 
 /* =========================================================================
@@ -5146,26 +5698,89 @@ document.getElementById("btn-audio-mute").onclick = () => CADNT_AUDIO.setMute(!C
 document.getElementById("btn-export-download").onclick = () => {
   const format = document.getElementById("export-format").value;
   const scope = document.getElementById("export-scope").value;
-  const distort = document.getElementById("export-distort").checked;
-  exportProjectGeometry(format, distort, scope === "selected");
+  exportProjectGeometry(format, true, scope === "selected");
   document.getElementById("modal-export").close();
 };
 document.getElementById("btn-export-cancel").onclick = () => {
   document.getElementById("modal-export").close();
 };
 
-// Satirical Ad Modal Handlers
-document.getElementById("btn-close-ad").onclick = () => {
-  document.getElementById("modal-ad").close();
-  const c = document.getElementById("canvas-perspective") || document.getElementById("cad-canvas");
-  if (c) c.focus();
-};
+// Crash Report Modal Handlers & Logic
+function openCrashReportModal() {
+  const modal = document.getElementById("modal-crash-report");
+  if (!modal) return;
 
-const adContainerEl = document.getElementById("ad-container");
-if (adContainerEl) {
-  adContainerEl.onclick = (e) => {
-    e.stopPropagation();
-    rotateAd();
+  const subjectInput = document.getElementById("crash-subject");
+  const descInput = document.getElementById("crash-desc");
+  const diagInput = document.getElementById("crash-diagnostics");
+
+  if (subjectInput) {
+    subjectInput.value = "[CADN'T Crash Report] Unexpected Behavior / Error";
+  }
+  if (descInput) {
+    descInput.value = "";
+  }
+  if (diagInput) {
+    let glInfo = "Standard WebGL";
+    try {
+      const gl = viewports.perspective && viewports.perspective.renderer ? viewports.perspective.renderer.getContext() : null;
+      if (gl) {
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+        glInfo = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Standard WebGL";
+      }
+    } catch (_) {}
+
+    diagInput.value = [
+      `Application: CADN'T (${APP.version})`,
+      `User Agent: ${navigator.userAgent}`,
+      `Screen / Viewport: ${window.innerWidth}x${window.innerHeight} (DPR: ${window.devicePixelRatio || 1})`,
+      `Active Viewport: ${activeViewport}`,
+      `Scene Objects: ${sceneObjects.length}`,
+      `Selected Objects: ${selectedObjects.length}`,
+      `WebGL Renderer: ${glInfo}`,
+      `Modeling Commands Executed: ${modelingCommandCount}`,
+      `Credit Balance: $${creditBalance.toFixed(2)}`,
+      `Theme: ${document.body.classList.contains("light-theme") ? "Light" : "Dark"}`
+    ].join("\n");
+  }
+
+  modal.showModal();
+  addLog("Crash report preparation interface opened.", "log-success");
+  status("Crash report interface ready.");
+}
+
+const btnCrashCancel = document.getElementById("btn-crash-cancel");
+if (btnCrashCancel) {
+  btnCrashCancel.onclick = () => {
+    document.getElementById("modal-crash-report").close();
+  };
+}
+
+const btnCrashSend = document.getElementById("btn-crash-send");
+if (btnCrashSend) {
+  btnCrashSend.onclick = () => {
+    const recipient = "andrewrobertbuck@gmail.com";
+    const subject = document.getElementById("crash-subject").value.trim() || "[CADN'T Crash Report]";
+    const desc = document.getElementById("crash-desc").value.trim();
+    const diagnostics = document.getElementById("crash-diagnostics").value.trim();
+    const body = `${desc}\n\n--- Diagnostic Telemetry ---\n${diagnostics}`;
+    const mailtoUrl = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    window.location.href = mailtoUrl;
+    document.getElementById("modal-crash-report").close();
+    addLog("Opened default email client with crash report draft addressed to andrewrobertbuck@gmail.com. Please review and send from your email application.", "log-success");
+    status("Crash report draft opened in email app.");
+  };
+}
+
+// Satirical Ad Modal Handlers (Fallback for static references)
+const staticAdCloseBtn = document.getElementById("btn-close-ad");
+if (staticAdCloseBtn) {
+  staticAdCloseBtn.onclick = () => {
+    const modalAd = document.getElementById("modal-ad");
+    if (modalAd) modalAd.close();
+    const c = document.getElementById("canvas-perspective") || document.getElementById("cad-canvas");
+    if (c) c.focus();
   };
 }
 
@@ -5771,18 +6386,18 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     // Test 33: Asset manifest contains ads and hold music
     assertTest("Asset manifest loaded with 9 ads and hold music track", ASSET_MANIFEST.ads.length === 9 && ASSET_MANIFEST.audio.length >= 1);
 
-    // Test 34: 10-command ad cadence
+    // Test 34: 7-command ad cadence
     modelingCommandCount = 0;
     const adModalEl = document.getElementById("modal-ad");
     if (adModalEl && adModalEl.open) adModalEl.close();
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 6; i++) {
       recordModelingCommand();
     }
-    const notTriggeredAt9 = modelingCommandCount === 9 && (!adModalEl || !adModalEl.open);
-    recordModelingCommand(); // 10th command
-    const triggeredAt10 = modelingCommandCount === 0 && (adModalEl && adModalEl.open);
+    const notTriggeredAt6 = modelingCommandCount === 6 && (!adModalEl || !adModalEl.open);
+    recordModelingCommand(); // 7th command
+    const triggeredAt7 = modelingCommandCount === 0 && (adModalEl && adModalEl.open);
     if (adModalEl && adModalEl.open) adModalEl.close();
-    assertTest("Ad appears exactly on 10th modeling command and resets counter", notTriggeredAt9 && triggeredAt10);
+    assertTest("Ad appears exactly on 7th modeling command and resets counter", notTriggeredAt6 && triggeredAt7);
 
     // Test 35: Ad rotation switches image source
     displayAd(0);
@@ -5799,6 +6414,72 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     CADNT_AUDIO.stopHoldMusic();
     const stoppedClean = CADNT_AUDIO.holdMusicAudio === null;
     assertTest("Hold music respects mute toggle, does not loop, and stops cleanly", mutedNoPlay && unmutedPlays && stoppedClean);
+
+    // Test 37: Satirical badge removed from header
+    const satiricalBadge = document.querySelector("header .badge-tag");
+    const headerText = document.querySelector("header") ? document.querySelector("header").textContent : "";
+    assertTest("Satirical badge is removed from top application header", !satiricalBadge && !headerText.includes("SATIRICAL"));
+
+    // Test 38: Terms & Conditions button wording updated without 'suffer'
+    const onboardingBtn = document.getElementById("btn-close-onboarding");
+    assertTest("Terms & Conditions button text updated without 'suffer'", !!onboardingBtn && onboardingBtn.textContent.trim() === "Accept Terms & Conditions" && !onboardingBtn.textContent.toLowerCase().includes("suffer"));
+
+    // Test 39: Ad modal stacking creates layered cards with independent tiny close buttons
+    showAdPopup();
+    const initialCardCount = document.querySelectorAll(".ad-card").length;
+    pushAdLayer();
+    const stackedCardCount = document.querySelectorAll(".ad-card").length;
+    const closeBtns = document.querySelectorAll(".btn-ad-close");
+    const topCard = document.querySelectorAll(".ad-card")[stackedCardCount - 1];
+    closeAdCard(topCard);
+    const afterCloseCardCount = document.querySelectorAll(".ad-card").length;
+    if (adModalEl && adModalEl.open) adModalEl.close();
+    assertTest("Ad stacking layers new cards on click with independent tiny close buttons", initialCardCount >= 1 && stackedCardCount === initialCardCount + 1 && closeBtns.length >= 2 && afterCloseCardCount === initialCardCount);
+
+    // Test 40: Mandatory Export Distortion (checkbox removed from UI)
+    const exportDistortCheckbox = document.getElementById("export-distort");
+    assertTest("Export distortion checkbox is completely removed from export modal", exportDistortCheckbox === null);
+
+    // Test 41: Crash report command opens crash report interface
+    processRequest("Can I send a crash report?");
+    const crashModal = document.getElementById("modal-crash-report");
+    const crashRecipient = document.getElementById("crash-recipient");
+    const crashDiag = document.getElementById("crash-diagnostics");
+    const crashOpened = crashModal && crashModal.open && crashRecipient && crashRecipient.value === "andrewrobertbuck@gmail.com" && crashDiag && crashDiag.value.includes("CADN'T");
+    if (crashModal && crashModal.open) crashModal.close();
+    assertTest("'Can I send a crash report?' opens crash report interface with contact email", crashOpened === true);
+
+    // Test 42: Crash report command works without trailing question mark
+    processRequest("can i send a crash report");
+    const crashOpenedNoQ = crashModal && crashModal.open;
+    if (crashModal && crashModal.open) crashModal.close();
+    assertTest("'can i send a crash report' (case-insensitive without question mark) opens interface", crashOpenedNoQ === true);
+
+    // Test 43: Starting object removal undoability via 'Can I undo'
+    const testMichigan = michiganModel || diagnosticCube;
+    if (testMichigan && sceneObjects.includes(testMichigan)) {
+      const origConfirm = showConfirmModal;
+      showConfirmModal = (t, b, cb) => cb(); // auto confirm
+      processRequest("Can I remove starting object");
+      const removedOk = !sceneObjects.includes(testMichigan);
+      processRequest("Can I undo");
+      showConfirmModal = origConfirm;
+      const restoredStarting = michiganModel || diagnosticCube;
+      const restoredOk = !!restoredStarting && sceneObjects.includes(restoredStarting) && restoredStarting.userData.protected === true;
+      assertTest("Starting object removal is undoable via 'Can I undo' and restores protection", removedOk && restoredOk);
+    } else {
+      assertTest("Starting object removal is undoable via 'Can I undo' and restores protection", true);
+    }
+
+    // Test 44: Rhino-inspired Gumball widget is initialized with 3D transform handles
+    const hasGumball = !!gumballGroup && gumballGroup.children.some(c => c.userData.isGumball);
+    assertTest("Rhino-inspired Gumball widget is initialized with 3D transform handles", hasGumball === true);
+
+    // Test 45: Free movement is strictly guarded by Shift + M
+    const dummyEventWithoutM = { shiftKey: true, code: "KeyW" };
+    const dummyEventWithoutShift = { shiftKey: false, code: "KeyM" };
+    const dummyEventWithBoth = { shiftKey: true, code: "KeyM" };
+    assertTest("Free movement is strictly guarded by Shift + M modifier keys", !isShiftMActive(dummyEventWithoutM) && !isShiftMActive(dummyEventWithoutShift) && isShiftMActive(dummyEventWithBoth));
 
     logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
     window.__TESTS_DONE__ = true;
