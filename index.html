@@ -3466,9 +3466,12 @@ function selectObject(obj, multi = false) {
   if (!selectedObjects.includes(obj)) {
     selectedObjects.push(obj);
     highlightObject(obj, true);
+    // Gumball must be hidden by default and not automatically reactivated when selecting another object
+    isGumballActive = false;
   } else if (multi) {
     selectedObjects = selectedObjects.filter(o => o !== obj);
     highlightObject(obj, false);
+    if (selectedObjects.length === 0) isGumballActive = false;
   }
 
   updatePropertiesPanel();
@@ -3484,6 +3487,7 @@ function selectObject(obj, multi = false) {
 function clearSelection() {
   selectedObjects.forEach(o => highlightObject(o, false));
   selectedObjects = [];
+  isGumballActive = false;
   updatePropertiesPanel();
   updateObjectsTree();
   updateGumball();
@@ -3494,6 +3498,7 @@ function clearSelection() {
    ========================================================================= */
 let gumballGroup = null;
 let gumballDragState = null;
+let isGumballActive = false;
 
 function initGumball() {
   if (gumballGroup) return;
@@ -3601,7 +3606,7 @@ function initGumball() {
 
 function updateGumball() {
   if (!gumballGroup) return;
-  if (selectedObjects.length === 0) {
+  if (!isGumballActive || selectedObjects.length === 0) {
     gumballGroup.visible = false;
     return;
   }
@@ -3647,6 +3652,9 @@ function handleGumballDragMove(e, vpId) {
   const delta = currentPt.clone().sub(gumballDragState.startHit);
 
   if (gumballDragState.mode === "free_move") {
+    if (delta.lengthSq() > 0.0001) {
+      gumballDragState.hasMoved = true;
+    }
     gumballDragState.initialStates.forEach(item => {
       item.obj.position.copy(item.pos).add(delta);
     });
@@ -4625,6 +4633,8 @@ function deserializeProjectState(jsonStr) {
 
   updateObjectsTree();
   updatePropertiesPanel();
+  isGumballActive = false;
+  updateGumball();
   return true;
 }
 
@@ -6150,7 +6160,28 @@ function executeCommand(rawCmd) {
   const tokens = trimmed.split(/\s+/);
   const verb = tokens[0].toLowerCase();
   const args = tokens.slice(1);
-  const normalizedCmd = trimmed.replace(/\?+$/, "").trim().toLowerCase();
+  const normalizedCmd = trimmed.replace(/[?!.,;]+$/, "").trim().toLowerCase();
+
+  // Gumball Activation Command: "Can I gumball?" (case-insensitive, optional trailing punctuation)
+  if (
+    normalizedCmd === "gumball" ||
+    normalizedCmd === "please gumball" ||
+    normalizedCmd === "gumball please" ||
+    verb.replace(/[?!.,;]+$/, "") === "gumball"
+  ) {
+    if (selectedObjects.length === 0) {
+      addLog("Gumball requested, but no object is selected. Select an object first.", "log-warn");
+      status("Select an object to display Gumball.");
+      isGumballActive = false;
+      updateGumball();
+      return;
+    }
+    isGumballActive = true;
+    updateGumball();
+    addLog("Gumball activated.", "log-success");
+    status("Gumball activated on selected object.");
+    return;
+  }
 
   // Crash Report Command
   if (
@@ -6694,8 +6725,14 @@ function handleViewportPointerDown(e, vpId) {
 
   const isShiftM = isShiftMActive(e);
 
-  // 1. If Shift+M is active and objects are selected: check for click on selected objects or gumball
+  // 1. Shift + M + Drag: FREE MOVEMENT (Requires active Gumball)
   if (isShiftM && selectedObjects.length > 0) {
+    if (!isGumballActive || !gumballGroup || !gumballGroup.visible) {
+      status("Gumball inactive. Type 'Can I gumball?' to activate.");
+      addLog("Free Move requires active Gumball. Type 'Can I gumball?' first.", "log-warn");
+      return;
+    }
+
     const selCandidates = [];
     selectedObjects.forEach(obj => {
       obj.traverse(child => {
@@ -6723,6 +6760,8 @@ function handleViewportPointerDown(e, vpId) {
         plane: plane,
         startHit: startPt.clone(),
         startGumballPos: planePos.clone(),
+        startSnapshot: serializeProjectState(),
+        hasMoved: false,
         initialStates: selectedObjects.map(o => ({
           obj: o,
           pos: o.position.clone(),
@@ -6730,14 +6769,13 @@ function handleViewportPointerDown(e, vpId) {
           scale: o.scale.clone()
         }))
       };
-      recordUndoState("Free Move (Shift+M)");
       status("Free Move: Moving object(s) with Shift+M drag...");
       return;
     }
   }
 
   // 2. If Gumball is active and user clicked a Gumball handle (without Shift+M)
-  if (gumballGroup && gumballGroup.visible && !isShiftM) {
+  if (isGumballActive && gumballGroup && gumballGroup.visible && !isShiftM) {
     const gumballHits = raycaster.intersectObjects(gumballGroup.children, true);
     if (gumballHits.length > 0) {
       let handle = gumballHits[0].object;
@@ -6805,44 +6843,11 @@ function handleViewportPointerDown(e, vpId) {
 
     if (!selectedObjects.includes(target)) {
       selectObject(target, e.shiftKey);
-    }
-
-    // 3. Shift + M + Click and Drag: FREE MOVEMENT!
-    if (isShiftM && selectedObjects.length > 0) {
-      const normal = new THREE.Vector3();
-      cam.getWorldDirection(normal).negate();
-      const planePos = gumballGroup ? gumballGroup.position : target.position;
-      const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, planePos);
-      const startPt = new THREE.Vector3();
-      raycaster.ray.intersectPlane(plane, startPt);
-
-      gumballDragState = {
-        mode: "free_move",
-        vpId: vpId,
-        camera: cam,
-        plane: plane,
-        startHit: startPt.clone(),
-        startGumballPos: planePos.clone(),
-        initialStates: selectedObjects.map(o => ({
-          obj: o,
-          pos: o.position.clone(),
-          rot: o.rotation.clone(),
-          scale: o.scale.clone()
-        }))
-      };
-      recordUndoState("Free Move (Shift+M)");
-      status("Free Move: Moving object(s) with Shift+M drag...");
-      return;
-    }
-
-    // Normal dragging without Shift+M modifier keys does NOT trigger free movement
-    if (!e.shiftKey) {
+    } else if (!e.shiftKey) {
       selectObject(target, false);
     }
   } else if (!e.shiftKey) {
-    if (activeCommand) {
-      return; // Preserve selection during active command
-    }
+    if (activeCommand) return;
     clearSelection();
   }
 }
@@ -7160,6 +7165,15 @@ window.addEventListener("keydown", (e) => {
     }
   }
 
+  if (e.key === "Escape" && isGumballActive) {
+    isGumballActive = false;
+    updateGumball();
+    status("Gumball dismissed.");
+    e.preventDefault();
+    debugTelemetry.defaultPrevented = true;
+    return;
+  }
+
   if (isNavKey(code, key)) {
     e.preventDefault();
     debugTelemetry.defaultPrevented = true;
@@ -7203,12 +7217,38 @@ window.addEventListener("blur", () => {
 window.addEventListener("pointerup", () => {
   if (gumballDragState) {
     const mode = gumballDragState.mode;
-    gumballDragState = null;
-    updateGumball();
-    updatePropertiesPanel();
-    updateObjectsTree();
-    status(mode === "free_move" ? "Free move complete." : `Gumball ${mode} complete.`);
-    recordModelingCommand();
+    const hasMoved = gumballDragState.hasMoved;
+    const startSnapshot = gumballDragState.startSnapshot;
+
+    if (mode === "free_move") {
+      // 1. End the transformation
+      gumballDragState = null;
+
+      // 2. Hide the Gumball immediately
+      isGumballActive = false;
+      if (gumballGroup) gumballGroup.visible = false;
+
+      // 3. Create one Undo step
+      if (hasMoved && startSnapshot) {
+        undoStack.push({ desc: "Free Move (Shift+M)", snapshot: startSnapshot });
+        if (undoStack.length > 30) undoStack.shift();
+        redoStack.length = 0;
+      }
+
+      updatePropertiesPanel();
+      updateObjectsTree();
+      status("Free move complete. Gumball dismissed.");
+      addLog("Free move complete. Gumball dismissed. Type 'Can I gumball?' to reactivate.", "log-success");
+      recordModelingCommand();
+    } else {
+      // Axis-specific handles (translate, rotate, scale)
+      gumballDragState = null;
+      updateGumball();
+      updatePropertiesPanel();
+      updateObjectsTree();
+      status(`Gumball ${mode} complete.`);
+      recordModelingCommand();
+    }
   }
 });
 
@@ -8398,6 +8438,60 @@ function runAllTests() {
     const dummyEventWithoutShift = { shiftKey: false, code: "KeyM" };
     const dummyEventWithBoth = { shiftKey: true, code: "KeyM" };
     assertTest("Free movement is strictly guarded by Shift + M modifier keys", !isShiftMActive(dummyEventWithoutM) && !isShiftMActive(dummyEventWithoutShift) && isShiftMActive(dummyEventWithBoth));
+
+    // Test 45b: Gumball widget is hidden by default upon object selection
+    createBoxPrimitive();
+    const gumballBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(gumballBox);
+    assertTest("Gumball is hidden by default upon object selection", gumballGroup.visible === false && isGumballActive === false);
+
+    // Test 45c: Gumball activates and displays on selected object via 'Can I gumball?'
+    processRequest("Can I gumball?");
+    assertTest("Gumball displays on selected object when 'Can I gumball?' is entered", gumballGroup.visible === true && isGumballActive === true);
+
+    // Test 45d: Gumball activation supports case-insensitivity and optional trailing punctuation
+    clearSelection();
+    selectObject(gumballBox);
+    processRequest("can i gumball");
+    const actNoQ = gumballGroup.visible === true && isGumballActive === true;
+    clearSelection();
+    selectObject(gumballBox);
+    processRequest("CAN I GUMBALL???");
+    const actMultiQ = gumballGroup.visible === true && isGumballActive === true;
+    assertTest("Gumball activation supports case-insensitivity and optional trailing punctuation", actNoQ && actMultiQ);
+
+    // Test 45e: Selecting another object does not automatically reactivate Gumball
+    createBoxPrimitive();
+    const otherBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(otherBox);
+    assertTest("Selecting another object does not automatically reactivate Gumball", gumballGroup.visible === false && isGumballActive === false);
+
+    // Test 45f: Completed Free Move immediately hides Gumball, ends transformation, and creates 1 Undo step
+    processRequest("Can I gumball?");
+    const initialPos = otherBox.position.clone();
+    const undoCountBefore = undoStack.length;
+    gumballDragState = {
+      mode: "free_move",
+      vpId: "top",
+      camera: cameras.top,
+      plane: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+      startHit: new THREE.Vector3(0, 0, 0),
+      startGumballPos: otherBox.position.clone(),
+      startSnapshot: serializeProjectState(),
+      hasMoved: true,
+      initialStates: [{ obj: otherBox, pos: otherBox.position.clone(), rot: otherBox.rotation.clone(), scale: otherBox.scale.clone() }]
+    };
+    otherBox.position.x += 15;
+    otherBox.position.z += 20;
+    window.dispatchEvent(new Event("pointerup"));
+    const freeMoveDismissed = (gumballGroup.visible === false && isGumballActive === false && gumballDragState === null);
+    const hasUndoStep = undoStack.length > 0 && undoStack[undoStack.length - 1].desc === "Free Move (Shift+M)";
+    assertTest("Completed Free Move immediately hides Gumball, ends transformation, and creates 1 Undo step", freeMoveDismissed && hasUndoStep);
+
+    // Test 45g: Undo restores object displaced by Free Move to exact pre-move position
+    processRequest("Can I undo");
+    const restoredFreeBox = sceneObjects[sceneObjects.length - 1];
+    assertTest("Can I undo restores object displaced by Free Move to exact pre-move position", restoredFreeBox && Math.abs(restoredFreeBox.position.x - initialPos.x) < 0.01 && Math.abs(restoredFreeBox.position.z - initialPos.z) < 0.01);
 
     logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
     window.__TESTS_DONE__ = true;

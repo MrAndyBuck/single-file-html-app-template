@@ -580,7 +580,51 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
   1. `checkpoint_b_01_connected_sketch_closing.png`: Connected sketch lines in progress on Top C-Plane showing 4 connected segments, cyan anchor dots, yellow snap box snapping back to $P_0$, and Command Bar showing `CONNECTED LINE` and prompt.
   2. `checkpoint_b_02_sketch_extruded_solid.png`: Closed profile extruded into true 3D solid `Extrude_2` (height 16mm) with shaded faces, wire edges, FeatureManager registration, and Properties panel readout.
   3. `checkpoint_b_03_rhino_move_point_to_point.png`: Rhino-style point-to-point Move in progress showing 3D base marker at centroid, rubberband line to destination point `(24, 0, 18)`, live translucent emerald ghost preview mesh across all 4 viewports, and Command Bar offset readout `dX: 24.0 dY: 0.0 dZ: 18.0 | Dist: 30.0 mm`.
+- **User Acceptance**: APPROVED BY USER ("looks sweet. I approve" - Commit `6ceb286`).
 
+---
 
+### Checkpoint C: Gumball Activation and Dismissal (Completed & Visually Verified)
 
+#### 1. Architectural & Behavioral Requirements Implemented
+- **Gumball Hidden by Default**:
+  - Selecting an object (via viewport click, multi-select, or FeatureManager tree) no longer automatically renders the Gumball widget.
+  - Internal state `isGumballActive` is initialized to `false`. In `updateGumball()`, `gumballGroup.visible` is strictly governed by `isGumballActive && selectedObjects.length > 0`.
+- **Explicit Activation via `Can I gumball?`**:
+  - Gumball appears strictly when the user enters the polite request `Can I gumball?`.
+  - Normalized command engine supports full case-insensitivity (`can i gumball`, `CAN I GUMBALL`, `Can I gumball`) and arbitrary trailing punctuation (`?`, `???`, `!`, `.`).
+  - If no object is currently selected when invoked, the system provides clear user guidance in the Command Log and status bar ("Select an object to display Gumball.") without displaying disconnected handles.
+  - When an object is selected, sets `isGumballActive = true` and displays the full 3D transform widget centered on the selection.
+- **Preserved Axis-Specific Transform Capabilities**:
+  - All standard Rhino 3D handles remain fully operational while Gumball is active:
+    - **Translation Arrows (X, Y, Z)**: Red, Green, and Blue cones/axes drag geometry along constrained world axes.
+    - **Rotation Arcs (X, Y, Z)**: Torus arc segments rotate geometry around constrained world axes with angle status readouts.
+    - **Scale Handles (X, Y, Z)**: Terminal cube boxes scale geometry proportionally or non-proportionally along selected axes.
+  - Axis manipulation preserves Gumball visibility on the selected object, updating the widget anchor to the object's new centroid upon release.
+- **Free Movement via `Shift + M + Drag`**:
+  - Free translation is strictly guarded by the simultaneous combination of `Shift + M` modifier keys plus pointer click-and-drag.
+  - Attempting Free Move when Gumball is inactive is rejected with advisory status and log notification: "Gumball inactive. Type 'Can I gumball?' to activate."
+- **Immediate Dismissal Following Free Move**:
+  - As soon as the user releases the mouse or trackpad following a completed Free Move (`pointerup`):
+    1. **Immediate Gumball Dismissal**: Sets `isGumballActive = false` and sets `gumballGroup.visible = false` immediately across all 4 viewports.
+    2. **Transformation Finalization**: Ends drag state (`gumballDragState = null`) and updates object matrices, properties, and tree listings.
+    3. **Single Undo Step Creation**: Records exactly one document snapshot to `undoStack` labeled `"Free Move (Shift+M)"`.
+    4. **Subsequent Interaction Gating**: Deactivates transform handles, requiring the user to explicitly enter `Can I gumball?` again before initiating another Gumball interaction.
+- **Selection Change Isolation**:
+  - Clicking another object in the viewport or selecting an item from the FeatureManager tree sets `isGumballActive = false` and dismisses the Gumball.
+  - Selecting another object does **not** automatically reactivate the Gumball; the user must enter `Can I gumball?` for each target.
+- **Escape Key Dismissal**:
+  - Pressing `Escape` when Gumball is active cleanly dismisses the widget (`isGumballActive = false; updateGumball();`) and reports "Gumball dismissed."
 
+#### 2. Verification & Visual Artifacts
+- **Automated Test Suite**: Passes **81/81** unit tests (100% passing), including new tests:
+  - Test 45b: Gumball widget is hidden by default upon object selection.
+  - Test 45c: Gumball activates and displays on selected object when `Can I gumball?` is entered.
+  - Test 45d: Gumball activation supports case-insensitivity and optional trailing punctuation (`can i gumball`, `CAN I GUMBALL???`).
+  - Test 45e: Selecting another object does not automatically reactivate Gumball.
+  - Test 45f: Completed Free Move immediately hides Gumball, ends transformation, and creates 1 Undo step.
+  - Test 45g: Undo restores object displaced by Free Move to exact pre-move position.
+- **Visual Artifacts Automatically Opened in macOS Preview**:
+  1. `checkpoint_c_01_gumball_hidden_by_default.png`: `Box_28` selected with yellow outline highlights across Top, Front, Right, and Perspective viewports, with Gumball completely hidden by default and status reading `Box_1 selected. Gumball hidden by default. Enter 'Can I gumball?' to activate.`
+  2. `checkpoint_c_02_gumball_activated_on_selection.png`: Request Bar showing `Can I gumball?`, Command Log confirming `Gumball activated.`, and 3D Gumball displayed on the selected box with red/green/blue translation arrows, rotation arcs, and scale boxes across all 4 viewports.
+  3. `checkpoint_c_03_free_move_gumball_dismissed.png`: Completed Free Move displacement to `(24, 0, 18)` with Gumball immediately hidden upon mouse release, Command Log reading `Free move complete. Gumball dismissed. Type 'Can I gumball?' to reactivate.`, and 1 Undo step recorded.
