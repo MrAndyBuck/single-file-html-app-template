@@ -11,15 +11,21 @@ const FILES = [
   "./vendor/three-exporters.js",
   "./vendor/three-loaders.js",
   "./assets/manifest.json",
+  "./assets/Finger.jpg",
   "./assets/ads/AmwayAppAd.jpeg",
   "./assets/ads/AppAds.jpeg",
+  "./assets/ads/AppleAppAd.jpeg",
   "./assets/ads/CnBAppAd.png",
   "./assets/ads/EnronAppAd.jpg",
+  "./assets/ads/GamblingAppAd.webp",
+  "./assets/ads/GamblingAppAd2.png",
   "./assets/ads/MomsAppAd.jpg",
   "./assets/ads/PalantirAppAd.jpeg",
   "./assets/ads/TheranosAppAd.jpeg",
   "./assets/ads/TourismAppAd.jpeg",
   "./assets/ads/ViagraAppAd.webp",
+  "./assets/ads/VirusAppAd.png",
+  "./assets/ads/ZuneAppAd.webp",
   "./assets/audio/New%20Recording%2012.m4a"
 ];
 

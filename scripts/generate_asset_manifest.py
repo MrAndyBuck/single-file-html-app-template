@@ -79,6 +79,9 @@ def update_sw_js(root_dir, ads, audio):
         '"./assets/manifest.json"'
     ]
 
+    if os.path.exists(os.path.join(root_dir, "assets", "Finger.jpg")):
+        base_files.append('"./assets/Finger.jpg"')
+
     ad_entries = [f'"./{ad}"' for ad in ads]
     audio_entries = [f'"./{urllib.parse.quote(a)}"' for a in audio]
 

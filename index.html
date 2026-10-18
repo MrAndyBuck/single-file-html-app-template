@@ -351,6 +351,8 @@
     min-height: 0;
     display: grid;
     grid-template-columns: repeat(2, 32px);
+    grid-auto-rows: 32px;
+    align-content: start;
     gap: 2px;
     justify-content: center;
     padding: 4px 2px;
@@ -1232,13 +1234,7 @@
     <button class="win95-tb-btn" id="tb-btn-print" title="Print Active Drawing">
       <svg viewBox="0 0 16 16" width="16" height="16"><rect x="3" y="1" width="10" height="5" fill="#fff" stroke="#000"/><rect x="2" y="5" width="12" height="6" fill="#808080" stroke="#000"/><rect x="4" y="9" width="8" height="6" fill="#fff" stroke="#000"/></svg>
     </button>
-    <div class="toolbar-sep"></div>
-    <button class="win95-tb-btn" id="tb-btn-undo" title="Undo (Can I undo)">
-      <svg viewBox="0 0 16 16" width="16" height="16"><path d="M6 3L2 7l4 4V8c5 0 8 3 8 7 0-6-3-9-8-9z" fill="#000080"/></svg>
-    </button>
-    <button class="win95-tb-btn" id="tb-btn-redo" title="Redo (Can I redo)">
-      <svg viewBox="0 0 16 16" width="16" height="16"><path d="M10 3l4 4-4 4V8c-5 0-8 3-8 7 0-6 3-9 8-9z" fill="#000080"/></svg>
-    </button>
+
     <div class="toolbar-sep"></div>
     <button class="win95-tb-btn text-tb-btn" id="btn-import-mesh" title="Import external STL or OBJ mesh ($10.00 fee)">Import</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-export-mesh" title="Export OBJ or STL file">Export</button>
@@ -1597,10 +1593,26 @@
   </h2>
   <p>The CADN'T Cloud Credit Marketplace is temporarily offline for scheduled server griefing.</p>
   <p>Please mail a cashier's check or certified money order payable to CADN'T Customer Friction Division.</p>
-  <div class="dialog-actions">
-    <button class="btn-dialog btn-secondary" id="btn-close-construction">Acknowledge</button>
+</dialog>
+
+<!-- Insufficient Funds Modal -->
+<dialog id="modal-insufficient-funds">
+  <h2>
+    <span class="win95-dialog-title">⚠️ Insufficient Funds</span>
+    <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
+  </h2>
+  <div style="padding: 6px; text-align: center;">
+    <p style="margin: 4px 0 8px 0; font-weight: bold; color: #800000; font-size: 12px;">Transaction Terminated: Insufficient Fictional Credits</p>
+    <div style="display: flex; justify-content: center; align-items: center; margin: 6px 0; background: #c0c0c0; border: 2px inset var(--win95-dark); padding: 4px; min-height: 120px;">
+      <img id="insufficient-funds-img" src="assets/Finger.jpg" alt="Finger.jpg" style="max-width: 320px; max-height: 240px; object-fit: contain; display: block;" onerror="this.onerror=null; this.src='assets/ads/Finger.jpg';">
+    </div>
+    <p id="insufficient-funds-msg" style="margin: 6px 0 4px 0; font-size: 11px;">You do not possess sufficient credits for this command. Your credit balance remains untouched ($0.00 deducted).</p>
+  </div>
+  <div class="dialog-actions" style="justify-content: center;">
+    <button class="btn-dialog btn-primary" id="btn-close-insufficient-funds">OK</button>
   </div>
 </dialog>
+
 
 <!-- Help Modal -->
 <dialog id="modal-help">
@@ -3918,13 +3930,18 @@ const ASSET_MANIFEST = {
   ads: [
     "assets/ads/AmwayAppAd.jpeg",
     "assets/ads/AppAds.jpeg",
+    "assets/ads/AppleAppAd.jpeg",
     "assets/ads/CnBAppAd.png",
     "assets/ads/EnronAppAd.jpg",
+    "assets/ads/GamblingAppAd.webp",
+    "assets/ads/GamblingAppAd2.png",
     "assets/ads/MomsAppAd.jpg",
     "assets/ads/PalantirAppAd.jpeg",
     "assets/ads/TheranosAppAd.jpeg",
     "assets/ads/TourismAppAd.jpeg",
-    "assets/ads/ViagraAppAd.webp"
+    "assets/ads/ViagraAppAd.webp",
+    "assets/ads/VirusAppAd.png",
+    "assets/ads/ZuneAppAd.webp"
   ],
   audio: [
     "assets/audio/New%20Recording%2012.m4a"
@@ -4108,14 +4125,25 @@ function updateEconomyDisplay() {
   localStorage.setItem("cadnt_credits", creditBalance.toFixed(2));
 }
 
+function showInsufficientFundsModal(opName = "Operation", fee = 49.00, balance = creditBalance) {
+  const modal = document.getElementById("modal-insufficient-funds");
+  if (!modal) return;
+  const msgEl = document.getElementById("insufficient-funds-msg");
+  if (msgEl) {
+    msgEl.textContent = `Insufficient credits for ${opName.toUpperCase()} ($${fee.toFixed(2)} required). Current balance: $${balance.toFixed(2)}. $0.00 deducted.`;
+  }
+  modal.showModal();
+}
+
 function attemptPaidOperation(opName, fee = 49.00) {
   showConfirmModal(
     `Paid Operation Authorization (${opName.toUpperCase()})`,
     `Executing ${opName.toUpperCase()} requires a flat fee of $${fee.toFixed(2)} from your fictional CAD balance. Current balance: $${creditBalance.toFixed(2)}. Authorize deduction?`,
     () => {
       if (creditBalance < fee) {
-        addLog(`Insufficient credits for ${opName.toUpperCase()} ($${fee.toFixed(2)} required).`, "log-nope");
-        document.getElementById("modal-construction").showModal();
+        addLog(`Insufficient credits for ${opName.toUpperCase()} ($${fee.toFixed(2)} required). Balance: $${creditBalance.toFixed(2)}. $0.00 deducted.`, "log-nope");
+        status(`Transaction failed: Insufficient credits for ${opName.toUpperCase()}. $0.00 deducted.`);
+        showInsufficientFundsModal(opName, fee, creditBalance);
         shakeRequestBar();
         return;
       }
@@ -4786,9 +4814,9 @@ function exportProjectGeometry(format = "stl", applyDistortion = true, onlySelec
    ========================================================================= */
 function initiateImportWorkflow() {
   if (creditBalance < 10) {
-    addLog("Insufficient fictional credits to import CAD asset ($10.00 required). Current balance: $" + creditBalance.toFixed(2), "log-nope");
-    status("Import rejected: Insufficient credits.");
-    document.getElementById("modal-construction").showModal();
+    addLog("Insufficient fictional credits to import CAD asset ($10.00 required). Current balance: $" + creditBalance.toFixed(2) + ". $0.00 deducted.", "log-nope");
+    status("Import rejected: Insufficient credits. $0.00 deducted.");
+    showInsufficientFundsModal("Import", 10.00, creditBalance);
     shakeRequestBar();
     return;
   }
@@ -6073,14 +6101,17 @@ function setupFilletOrChamferCommand(mode, args = {}) {
       const val = Math.max(0.2, parseFloat(valInp ? valInp.value : defaultVal) || defaultVal);
       const edgesToCut = [...selectedEdgeIds];
 
+      const fee = 49.00;
+      if (creditBalance < fee) {
+        addLog(`Insufficient credits for ${mode.toUpperCase()} ($${fee.toFixed(2)} required). Current balance: $${creditBalance.toFixed(2)}. $0.00 deducted.`, "log-nope");
+        status(`Transaction failed: Insufficient credits for ${mode.toUpperCase()}. $0.00 deducted.`);
+        showInsufficientFundsModal(mode, fee, creditBalance);
+        shakeRequestBar();
+        return;
+      }
+
       this.cleanup();
       finishActiveCommand();
-
-      const fee = 49.00;
-      if (creditBalance >= fee) {
-        creditBalance -= fee;
-        updateEconomyDisplay();
-      }
 
       triggerArtificialDelay(`Calculating ${mode.toUpperCase()} Topology Edges...`, () => {
         recordUndoState(mode === "fillet" ? "Fillet Edge(s)" : "Chamfer Edge(s)");
@@ -6098,6 +6129,9 @@ function setupFilletOrChamferCommand(mode, args = {}) {
           target.name = (mode === "fillet" ? "Fillet_" : "Chamfer_") + (++primitiveCounter);
           target.userData.type = mode === "fillet" ? "FilletedSolid" : "ChamferedSolid";
           target.userData.filletParams = { mode, param: val, edges: edgesToCut };
+
+          creditBalance -= fee;
+          updateEconomyDisplay();
 
           selectObject(target);
           updateObjectsTree();
@@ -7297,6 +7331,16 @@ const modalConstruction = document.getElementById("modal-construction");
 document.getElementById("btn-buy-credits").onclick = () => modalConstruction.showModal();
 document.getElementById("btn-close-construction").onclick = () => modalConstruction.close();
 
+// Insufficient Funds Modal
+const modalInsufficientFunds = document.getElementById("modal-insufficient-funds");
+const btnCloseInsufficientFunds = document.getElementById("btn-close-insufficient-funds");
+if (btnCloseInsufficientFunds && modalInsufficientFunds) {
+  btnCloseInsufficientFunds.onclick = () => {
+    modalInsufficientFunds.close();
+    focusActiveCanvas();
+  };
+}
+
 // About Modal
 const modalAbout = document.getElementById("modal-about");
 document.getElementById("btn-about-open").onclick = () => modalAbout.showModal();
@@ -8342,7 +8386,7 @@ function runAllTests() {
     assertTest("Ad modal contains tiny close button and blank ad placement placeholder", !!adCloseBtn && adCloseBtn.clientWidth <= 14 && !!adPlaceholder);
 
     // Test 33: Asset manifest contains ads and hold music
-    assertTest("Asset manifest loaded with 9 ads and hold music track", ASSET_MANIFEST.ads.length === 9 && ASSET_MANIFEST.audio.length >= 1);
+    assertTest("Asset manifest loaded with 14 ads and hold music track", ASSET_MANIFEST.ads.length === 14 && ASSET_MANIFEST.audio.length >= 1);
 
     // Test 34: 7-command ad cadence
     modelingCommandCount = 0;
@@ -8492,6 +8536,40 @@ function runAllTests() {
     processRequest("Can I undo");
     const restoredFreeBox = sceneObjects[sceneObjects.length - 1];
     assertTest("Can I undo restores object displaced by Free Move to exact pre-move position", restoredFreeBox && Math.abs(restoredFreeBox.position.x - initialPos.x) < 0.01 && Math.abs(restoredFreeBox.position.z - initialPos.z) < 0.01);
+
+    // Test 46: Forward and Back manual navigation buttons are removed from top standard toolbar
+    const navUndoBtn = document.getElementById("tb-btn-undo");
+    const navRedoBtn = document.getElementById("tb-btn-redo");
+    assertTest("Manual Forward and Back navigation buttons are removed from top standard toolbar", navUndoBtn === null && navRedoBtn === null);
+
+    // Test 47: Right-side Features toolbar uses compact dense icon grid styling
+    const modelingToolbar = document.querySelector(".modeling-toolbar-body");
+    const toolbarStyle = modelingToolbar ? window.getComputedStyle(modelingToolbar) : null;
+    const isCompactGrid = toolbarStyle && (toolbarStyle.alignContent === "start" || toolbarStyle.alignContent === "flex-start") && toolbarStyle.gridAutoRows === "32px";
+    assertTest("Right-side Features toolbar uses compact dense icon grid layout", isCompactGrid === true);
+
+    // Test 48: Insufficient funds popup appears on failed paid transaction without credit deduction
+    const origCredits = creditBalance;
+    creditBalance = 5.00; // less than $49 or $10 fee
+    updateEconomyDisplay();
+    const origDelay = triggerArtificialDelay;
+    const origConfirm = showConfirmModal;
+    showConfirmModal = (t, b, cb) => cb();
+    let delayTriggered = false;
+    triggerArtificialDelay = () => { delayTriggered = true; };
+    const modalInsFunds = document.getElementById("modal-insufficient-funds");
+    if (modalInsFunds && modalInsFunds.open) modalInsFunds.close();
+    attemptPaidOperation("fillet", 49.00);
+    const popupOpened = modalInsFunds && modalInsFunds.open;
+    const zeroDeducted = creditBalance === 5.00 && !delayTriggered;
+    const imgEl = document.getElementById("insufficient-funds-img");
+    const imgCorrectSrc = imgEl && (imgEl.getAttribute("src") === "assets/Finger.jpg" || imgEl.src.includes("Finger.jpg"));
+    if (modalInsFunds && modalInsFunds.open) modalInsFunds.close();
+    triggerArtificialDelay = origDelay;
+    showConfirmModal = origConfirm;
+    creditBalance = origCredits;
+    updateEconomyDisplay();
+    assertTest("Insufficient funds popup appears on failed paid transaction with Finger.jpg and $0 deducted", popupOpened && zeroDeducted && imgCorrectSrc);
 
     logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
     window.__TESTS_DONE__ = true;

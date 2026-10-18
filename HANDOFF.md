@@ -628,3 +628,55 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
   1. `checkpoint_c_01_gumball_hidden_by_default.png`: `Box_28` selected with yellow outline highlights across Top, Front, Right, and Perspective viewports, with Gumball completely hidden by default and status reading `Box_1 selected. Gumball hidden by default. Enter 'Can I gumball?' to activate.`
   2. `checkpoint_c_02_gumball_activated_on_selection.png`: Request Bar showing `Can I gumball?`, Command Log confirming `Gumball activated.`, and 3D Gumball displayed on the selected box with red/green/blue translation arrows, rotation arcs, and scale boxes across all 4 viewports.
   3. `checkpoint_c_03_free_move_gumball_dismissed.png`: Completed Free Move displacement to `(24, 0, 18)` with Gumball immediately hidden upon mouse release, Command Log reading `Free move complete. Gumball dismissed. Type 'Can I gumball?' to reactivate.`, and 1 Undo step recorded.
+
+### Checkpoint D: Compact Toolbar, Navigation Button Removal, Insufficient Funds Popup, and Additional Ads
+
+#### 1. Implementation Architecture & Key Changes
+- **Removal of Manual Navigation Buttons**:
+  - Removed `#tb-btn-undo` and `#tb-btn-redo` interface buttons along with their preceding separator `<div class="toolbar-sep"></div>` from `#win95-standard-toolbar`.
+  - The standard toolbar now displays only document and utility actions: New Part, Open Project, Save Project, Print, Import, Export, Sound, Theme, Tutorial, Help, About, and Economy Chip.
+  - Strictly preserved internal undo/redo engine: `executeUndo()`, `executeRedo()`, and the document history stack remain 100% functional via Request Bar commands (`Can I undo`, `Can I redo`).
+  - Preserved keyboard camera navigation (`W`, `S`, `A`, `D` for orbit, Arrow keys for pan, Shift+Arrows for zoom) and trackpad selection behavior.
+- **Compact Features Toolbar Grid**:
+  - Re-architected `.modeling-toolbar-body` CSS styling:
+    - Added `align-content: start;` and `grid-auto-rows: 32px;` with `gap: 2px; justify-content: center;`.
+    - Eliminated excessive vertical dead space that previously stretched rows across the full 800px vertical height of the right dock.
+    - All 18 modeling commands (Box, Extrude, Revolve, Sweep, Loft, Fillet, Chamfer, Shell, Draft, Rib, Hole, Pattern, Mirror, Split, Combine, Gumball, etc.) now render as a dense, compact 2-column icon grid starting at the top of the dock, consistent with Windows 95 / early SolidWorks tool palettes.
+    - Retained wandering toolbar relocation behavior: clicking a tool continues to swap icon positions via `relocateToolbarIcons()` across the dense grid.
+- **Insufficient Funds Modal (`Finger.jpg`)**:
+  - Created retro Windows 95 modal dialog `<dialog id="modal-insufficient-funds">` with titlebar `⚠️ Insufficient Funds`, caption close `✕` button, and an `[OK]` dismiss button.
+  - Houses the supplied image `assets/Finger.jpg` (736×935 px, pointing finger) with its original filename preserved and unmodified.
+  - Triggered whenever a user attempts any paid operation without sufficient fictional credits:
+    - `attemptPaidOperation(opName, fee)` (e.g. primitive creations or transforms if balance < fee).
+    - `initiateImportWorkflow()` ($10.00 fee when balance < $10.00).
+    - Fillet & Chamfer commit ($49.00 fee when balance < $49.00).
+  - **Zero Deduction on Failure**: Guarantees $0.00 credits are deducted when a transaction fails due to insufficient funds; the user's credit balance remains completely untouched.
+  - **Non-blocking & Dismissible**: Dismissible via `[OK]` button, caption `✕` button, or `Escape` key, restoring full access to the CAD workspace without permanently freezing or trapping viewport interaction.
+- **New Advertisement Registration & Offline Caching**:
+  - Located and copied all 5 newly supplied advertisement images from `Documents/Antigravity/assets/Ads/` into `assets/ads/`:
+    - `AppleAppAd.jpeg`
+    - `GamblingAppAd.webp`
+    - `GamblingAppAd2.png`
+    - `VirusAppAd.png`
+    - `ZuneAppAd.webp`
+  - Total registered advertisements expanded from 9 to 14.
+  - Automatically regenerated `assets/manifest.json` and updated `sw.js` with all 14 advertisement images plus `./assets/Finger.jpg` for offline PWA functionality.
+  - Synchronized `ASSET_MANIFEST` in `index.html` with dynamic runtime fallback `loadAssetManifest()`.
+  - Maintained all core advertisement interactions:
+    - Triggers every 7 modeling command attempts (`count % 7 === 0`).
+    - Centered modal dialog with red satire neon border.
+    - Tiny immediately visible 10px close button (`.btn-ad-close`).
+    - Clicking an advertisement spawns another ad layered above it with cascading offsets (`pushAdLayer()`).
+    - Stacked advertisements are individually dismissible; closing the final ad restores the CAD workspace.
+
+#### 2. Verification & Visual Artifacts
+- **Automated Test Suite**: Passes **84/84** unit tests (100% passing), including new tests:
+  - Test 33: Asset manifest loaded with 14 ads and hold music track.
+  - Test 46: Forward and Back manual navigation buttons are removed from top standard toolbar.
+  - Test 47: Right-side Features toolbar uses compact dense icon grid layout (`align-content: start; grid-auto-rows: 32px`).
+  - Test 48: Insufficient funds popup appears on failed paid transaction with Finger.jpg and $0 deducted.
+- **Visual Artifacts Automatically Opened in macOS Preview**:
+  1. `checkpoint_d_01_compact_toolbar_no_nav_buttons.png`: Clean standard toolbar with Forward/Back manual buttons removed, and right-side Features dock showing the compact 2-column icon grid neatly docked at the top.
+  2. `checkpoint_d_02_insufficient_funds_finger_popup.png`: Retro Windows 95 `⚠️ Insufficient Funds` dialog displaying `Finger.jpg` in full fidelity upon an attempted paid operation with $5.00 balance, verifying $0.00 deducted and balance preserved.
+  3. `checkpoint_d_03_advertisements_rotation_and_stacking.png`: Centered advertisement modal displaying newly registered `AppleAppAd.jpeg` with `VirusAppAd.png` dynamically stacked on top, with independent tiny close buttons.
+
