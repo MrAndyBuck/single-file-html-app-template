@@ -32,6 +32,7 @@
 | **Trackpad Wheel Restriction** | **YES** | **YES** | **YES** | **YES** | Mouse/trackpad wheel zoom strictly cancelled on all 4 viewport canvases with user toast advisory. User accepted. |
 | **Service Worker & Cache Freshness** | **YES** | **YES** | **YES** | **YES** | Network-First for HTML/navigation, unconditional `skipWaiting()` and `clients.claim()`, `#chip` click hard-purges SW registrations and cache storage. |
 | **Interactive Command Bar (`#command-bar`)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Clear command badge, dynamic instructions, parameter inputs, `[✓ Confirm (Enter)]`, `[✕ Cancel (Esc)]`. |
+| **Functional 2D Line Command (`Can I line`)**| **YES** | **YES** | **YES** | *Pending Review* | Interactive C-plane sketching (Top/Front/Right/Persp); Command Bar with Start coords & dynamic Length; green rubberband preview with yellow endpoint indicator dots; length & coord status readout; raycaster threshold 2.5; `Line_N` FeatureManager registration; Properties panel geometry box (Start, End, Length, Plane); Gumball transform support; native `.cadnt` archive serialization & restore. |
 | **Boolean Union (CSG)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Interactive multi-solid selection; computes CSG union, produces unified solid mesh with edge wires. |
 | **Boolean Difference (CSG)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | 2-stage Base vs. Tool selection; computes CSG subtraction, updates all 4 views. |
 | **Join (Curves & Meshes)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Chains curve segments into `ClosedProfile` (extrudable) or polyline; merges mesh geometries. Distinct from CSG Union. |
@@ -393,9 +394,68 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
    [checkpoint_a_07_loading_hold_music.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_07_loading_hold_music.png)
    - Demonstrates classic Windows 95 segmented blue progress bar with satirical status messages.
 
-### C. Sequential Checkpoint Roadmap
-- **Checkpoint A**: Complete Retro Interface Redesign (Completed & Ready for Visual Review).
-- **Checkpoint B**: Functional Line Command (Gated pending Checkpoint A acceptance).
-- **Checkpoint C**: Functional Fillet & Chamfer Commands with Geometry Repair (Gated pending Checkpoint B).
-- **Checkpoint D**: Wandering Toolbar Icons & 85% Hold Music Volume (Gated pending Checkpoint C).
+### C. Checkpoint B — Functional 2D Line Command Engine (Completed & Visually Verified)
+
+#### 1. Technical Architecture & Implementation Details
+- **Command Bar Integration (`#command-bar`)**:
+  - Activating `Can I line` or clicking the Line toolbar icon reveals the sunken `#command-bar` above the Request Bar.
+  - Controls include:
+    - Command Badge: `[LINE]` in navy blue.
+    - Context Prompt: Live instruction guiding start point placement, coordinate entry, or length definition.
+    - C-Plane Selector: Interactive dropdown allowing explicit switching between `Top (X/Z)`, `Front (X/Y)`, `Right (Z/Y)`, and `Persp (X/Z)`.
+    - Coordinate Input: `Start: X, Y, Z` with Enter key listener to place $P_1$ numerically.
+    - Length Input: `Length` input field dynamically updated during mouse drag; supports direct numeric entry to lock line distance along current pointer heading.
+    - Action Buttons: `✓ Finish (Enter)` and `✕ Cancel (Esc)` to commit or abort sketching cleanly without leaving ghost geometry.
+- **Interactive Viewport Sketching & Rubberband**:
+  - Live cursor tracking records `lastPointerCPlanePos` across all four viewports.
+  - Real-time green rubberband line (`0x39ff14`) connects start point to cursor.
+  - Distinct yellow endpoint indicator spheres (`0xffff00`, radius 0.8) denote $P_1$ and $P_2$ vertices.
+  - Real-time status bar readout displays coordinates and length: `P1: (X1, Y1, Z1) → P2: (X2, Y2, Z2) | Len: L.L mm`.
+- **Flexible Request Bar Syntax**:
+  - `Can I line`: Starts interactive click-to-place line sketch mode.
+  - `Can I line <length>` (e.g. `Can I line 35`): Immediately generates a line of exact length along active C-plane.
+  - `Can I line <x1> <y1> <x2> <y2>` (e.g. `Can I line 0 0 30 30`): Generates 2D line between coordinate pairs on current plane.
+  - `Can I line <x1> <y1> <z1> <x2> <y2> <z2>`: Generates 3D line between full spatial coordinates.
+  - `Can I line <x1,y1> <x2,y2>`: Supports comma-delimited points.
+- **Raycaster Selection Optimization**:
+  - Standard Three.js raycasting on thin 1px lines is notoriously difficult to hit in high-DPI viewports.
+  - Initialized `raycaster.params.Line = { threshold: 2.5 }`, providing reliable, comfortable line selection across all 4 orthographic and perspective viewports.
+- **FeatureManager & Object Properties Integration**:
+  - Generated lines are registered as `Line_N` entities with `userData.type === "SketchCurve"`.
+  - Displayed in the FeatureManager DesignTree with a dedicated SketchCurve icon and royal blue selection state.
+  - Object Properties dock displays a prominent **Line Geometry** group positioned right below Type & Layer, exposing:
+    - `Start:` $(X_1, Y_1, Z_1)$
+    - `End:` $(X_2, Y_2, Z_2)$
+    - `Length:` $L.LL\text{ mm}$
+    - `Plane:` Active C-Plane
+- **Rhino-Inspired Gumball & Transform Compatibility**:
+  - Selecting a 2D line displays the 3D Gumball transform widget centered on the line, enabling translation, rotation, and scaling.
+  - Selected line color highlights in bright yellow (`0xffff00`), reverting to crisp blueprint cyan (`0x00d4ff`) when deselected.
+- **Document Serialization & Persistence**:
+  - Full roundtrip persistence in `.cadnt` native JSON archive format via `serializeProjectState()` and `deserializeProjectState()`.
+  - Restored lines retain all position buffers, transforms, userData attributes, and selection capabilities.
+- **Automated Test Suite**:
+  - Passes 61/61 automated tests, including new tests verifying `Can I line 35`, properties panel geometry readout, command bar activation, and raycaster threshold configuration.
+
+#### 2. Visual Verification Artifacts (Checkpoint B)
+Captured via automated headless Chrome CDP session under macOS Retina High-DPI ($1400 \times 900$):
+
+1. **Active Line Sketching & Rubberband**:
+   [checkpoint_b_01_line_sketch_active.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_b_01_line_sketch_active.png)
+   - Shows active Line sketching mode with `#command-bar` (Badge, C-Plane dropdown, Start coords, Length input), green rubberband preview line, yellow endpoint indicator dots in the Top viewport, and status bar coordinate/length readout.
+2. **Completed Line Selected with Gumball & Properties Readout**:
+   [checkpoint_b_02_line_selected_gumball.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_b_02_line_selected_gumball.png)
+   - Shows completed line highlighted in bright yellow (`0xffff00`) with Rhino-inspired 3D Gumball widget, FeatureManager tree selection `[SketchCurve] Line_2`, and Object Properties panel displaying the Line Geometry box (Start, End, Length: 65.19 mm, Plane: TOP).
+3. **Project Roundtrip Archive Persistence**:
+   [checkpoint_b_03_line_roundtrip_save.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_b_03_line_roundtrip_save.png)
+   - Demonstrates project serialization and reload: the line entity is fully reconstituted from JSON archive, restored to scene objects, and selectable in all viewports.
+
+---
+
+### D. Sequential Checkpoint Roadmap
+- **Checkpoint A**: Complete Retro Interface Redesign (**APPROVED BY USER** - Commit `cb5a658`).
+- **Checkpoint B**: Functional 2D Line Command Engine (**COMPLETED & READY FOR USER REVIEW**).
+- **Checkpoint C**: Functional Fillet & Chamfer Commands with Geometry Modification (Gated pending Checkpoint B acceptance).
+- **Checkpoint D**: Wandering Toolbar Icons & 85% Hold Music Volume (Gated pending Checkpoint C acceptance).
+
 

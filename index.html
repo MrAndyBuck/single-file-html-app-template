@@ -2292,6 +2292,7 @@ function createConePrimitive() {
 let activeSketchMode = null; // 'line' | 'rect' | 'circle'
 let sketchPoints = [];
 let rubberbandObj = null;
+let lastPointerCPlanePos = null;
 
 function getCPlane(vp) {
   if (vp === "top") return new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Y = 0 (XZ)
@@ -2300,49 +2301,192 @@ function getCPlane(vp) {
   return new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Perspective Y = 0
 }
 
+function setupLineCommand() {
+  const bar = document.getElementById("command-bar");
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
+
+  bar.style.display = "flex";
+  badge.textContent = "LINE";
+  prompt.textContent = `Click in active viewport (${activeViewport.toUpperCase()}) to establish Start Point (or enter coordinates).`;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "✓ Finish (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:2px; font-weight:bold;">Plane:</span>
+    <select id="line-param-plane" class="prop-input" style="height:20px; font-size:11px; width:100px;">
+      <option value="top" ${activeViewport === "top" ? "selected" : ""}>Top (X/Z)</option>
+      <option value="front" ${activeViewport === "front" ? "selected" : ""}>Front (X/Y)</option>
+      <option value="right" ${activeViewport === "right" ? "selected" : ""}>Right (Z/Y)</option>
+      <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
+    </select>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Start:</span>
+    <input id="line-param-start" class="prop-input" placeholder="X, Y, Z" style="width:100px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Length:</span>
+    <input id="line-param-len" class="prop-input" placeholder="Length" type="number" step="1" style="width:65px; height:20px;" disabled>
+  `;
+
+  const planeSel = document.getElementById("line-param-plane");
+  if (planeSel) {
+    planeSel.onchange = () => {
+      setActiveViewport(planeSel.value);
+      focusActiveCanvas();
+      status(`Line: C-Plane switched to ${planeSel.value.toUpperCase()}`);
+    };
+  }
+
+  const startInp = document.getElementById("line-param-start");
+  const lenInp = document.getElementById("line-param-len");
+
+  if (startInp) {
+    startInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const parts = startInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          const pt = new THREE.Vector3(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+          handleSketchClick(pt, activeViewport);
+          if (lenInp) lenInp.focus();
+        }
+      }
+    };
+  }
+
+  if (lenInp) {
+    lenInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const l = parseFloat(lenInp.value);
+        if (!isNaN(l) && l > 0 && sketchPoints.length >= 1) {
+          const p1 = sketchPoints[0];
+          let dir = new THREE.Vector3(1, 0, 0);
+          if (lastPointerCPlanePos) {
+            dir = lastPointerCPlanePos.clone().sub(p1);
+            if (dir.lengthSq() > 0.0001) dir.normalize();
+            else dir.set(1, 0, 0);
+          }
+          const p2 = p1.clone().add(dir.multiplyScalar(l));
+          handleSketchClick(p2, activeViewport);
+        }
+      }
+    };
+  }
+
+  confirmBtn.onclick = () => {
+    if (sketchPoints.length >= 2) {
+      const p1 = sketchPoints[0];
+      const p2 = sketchPoints[sketchPoints.length - 1];
+      const lineObj = createLineSketch([p1, p2], activeViewport, false);
+      cancelSketch();
+      selectObject(lineObj);
+    } else if (sketchPoints.length === 1 && lenInp && parseFloat(lenInp.value) > 0) {
+      const l = parseFloat(lenInp.value);
+      const p1 = sketchPoints[0];
+      const p2 = p1.clone().add(new THREE.Vector3(l, 0, 0));
+      const lineObj = createLineSketch([p1, p2], activeViewport, false);
+      cancelSketch();
+      selectObject(lineObj);
+    }
+  };
+
+  cancelBtn.onclick = () => {
+    cancelSketch();
+    status("Line command cancelled.");
+  };
+}
+
 function startSketch(mode) {
   cancelSketch();
   activeSketchMode = mode;
   sketchPoints = [];
-  status(`Sketch ${mode.toUpperCase()}: Click in active viewport on C-Plane. Press Escape to cancel.`);
-  addLog(`Entered ${mode.toUpperCase()} sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  if (mode === "line") {
+    setupLineCommand();
+    status("Line Sketch: Click to place start point, or enter coordinates. (Esc to cancel)");
+    addLog(`Entered LINE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  } else {
+    status(`Sketch ${mode.toUpperCase()}: Click in active viewport on C-Plane. Press Escape to cancel.`);
+    addLog(`Entered ${mode.toUpperCase()} sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  }
 }
 
 function cancelSketch() {
   activeSketchMode = null;
   sketchPoints = [];
+  lastPointerCPlanePos = null;
   if (rubberbandObj) {
     scene.remove(rubberbandObj);
     rubberbandObj = null;
+  }
+  const bar = document.getElementById("command-bar");
+  if (bar && !activeCommand) {
+    bar.style.display = "none";
   }
 }
 
 function updateRubberband(currentPt, vp) {
   if (!activeSketchMode || sketchPoints.length === 0) return;
-  if (rubberbandObj) scene.remove(rubberbandObj);
+  if (rubberbandObj) {
+    scene.remove(rubberbandObj);
+    rubberbandObj = null;
+  }
 
-  const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
   if (activeSketchMode === "line") {
-    const pts = [sketchPoints[sketchPoints.length - 1], currentPt];
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    rubberbandObj = new THREE.Line(geo, mat);
+    const p1 = sketchPoints[sketchPoints.length - 1];
+    const p2 = currentPt;
+    const len = p1.distanceTo(p2);
+
+    const group = new THREE.Group();
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+    const line = new THREE.Line(lineGeo, lineMat);
+    group.add(line);
+
+    // Endpoint dots
+    const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const dot1 = new THREE.Mesh(dotGeo, dotMat);
+    dot1.position.copy(p1);
+    const dot2 = new THREE.Mesh(dotGeo, dotMat);
+    dot2.position.copy(p2);
+    group.add(dot1);
+    group.add(dot2);
+
+    rubberbandObj = group;
+    scene.add(rubberbandObj);
+
+    // Update status readout
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      coordsReadout.textContent = `P1: (${p1.x.toFixed(1)}, ${p1.y.toFixed(1)}, ${p1.z.toFixed(1)}) → P2: (${p2.x.toFixed(1)}, ${p2.y.toFixed(1)}, ${p2.z.toFixed(1)}) | Len: ${len.toFixed(1)} mm`;
+    }
+
+    const lenInp = document.getElementById("line-param-len");
+    if (lenInp && document.activeElement !== lenInp) {
+      lenInp.value = len.toFixed(1);
+    }
   } else if (activeSketchMode === "rect") {
     const c1 = sketchPoints[0];
     const c2 = currentPt;
     const pts = getRectCorners(c1, c2, vp);
     pts.push(pts[0]);
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
     rubberbandObj = new THREE.Line(geo, mat);
+    scene.add(rubberbandObj);
   } else if (activeSketchMode === "circle") {
     const center = sketchPoints[0];
     const radius = center.distanceTo(currentPt);
     const pts = getCirclePoints(center, radius, vp, 36);
     pts.push(pts[0]);
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
     rubberbandObj = new THREE.Line(geo, mat);
-  }
-
-  if (rubberbandObj) {
     scene.add(rubberbandObj);
   }
 }
@@ -2398,13 +2542,31 @@ function handleSketchClick(pt, vp) {
   pt.z = Math.round(pt.z * 2) / 2;
 
   if (activeSketchMode === "line") {
-    if (sketchPoints.length > 0 && pt.distanceTo(sketchPoints[0]) < 2.0 && sketchPoints.length >= 2) {
-      createLineSketch(sketchPoints, vp, true);
+    sketchPoints.push(pt.clone());
+    if (sketchPoints.length === 1) {
+      const prompt = document.getElementById("command-prompt");
+      if (prompt) prompt.textContent = `P1 set at (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)}). Move cursor to preview, click End Point (or enter Length/Coords).`;
+      status(`Line: Start point set at (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)}). Move cursor to preview line.`);
+
+      const startInp = document.getElementById("line-param-start");
+      if (startInp) startInp.value = `${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)}`;
+      const lenInp = document.getElementById("line-param-len");
+      if (lenInp) {
+        lenInp.disabled = false;
+        lenInp.focus();
+      }
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn) confirmBtn.disabled = false;
+    } else if (sketchPoints.length >= 2) {
+      const p1 = sketchPoints[0];
+      const p2 = sketchPoints[sketchPoints.length - 1];
+      const lineObj = createLineSketch([p1, p2], vp, false);
       cancelSketch();
+      selectObject(lineObj);
+      status(`Line created: from (${p1.x.toFixed(1)}, ${p1.y.toFixed(1)}, ${p1.z.toFixed(1)}) to (${p2.x.toFixed(1)}, ${p2.y.toFixed(1)}, ${p2.z.toFixed(1)}) [${p1.distanceTo(p2).toFixed(1)} mm].`);
+      addLog(`Created 2D Line '${lineObj.name}' (${p1.distanceTo(p2).toFixed(1)} mm) on ${vp.toUpperCase()} plane.`, "log-success");
       return;
     }
-    sketchPoints.push(pt.clone());
-    status(`Line vertex ${sketchPoints.length} set. Click start to close, or press Enter.`);
   } else if (activeSketchMode === "rect") {
     if (sketchPoints.length === 0) {
       sketchPoints.push(pt.clone());
@@ -2429,7 +2591,7 @@ function createLineSketch(points, planeName, isClosed = false) {
   recordUndoState(isClosed ? "Profile Sketch" : "Line Sketch");
   const geo = new THREE.BufferGeometry().setFromPoints(points);
   const mat = new THREE.LineBasicMaterial({
-    color: isClosed ? 0x00e5ff : 0xffff00,
+    color: isClosed ? 0x00e5ff : 0x00d4ff,
     linewidth: 2
   });
   const line = isClosed ? new THREE.LineLoop(geo, mat) : new THREE.Line(geo, mat);
@@ -2447,7 +2609,7 @@ function createLineSketch(points, planeName, isClosed = false) {
     shape.closePath();
   }
 
-  const name = (isClosed ? "Profile_" : "Curve_") + (++primitiveCounter);
+  const name = (isClosed ? "Profile_" : "Line_") + (++primitiveCounter);
   line.name = name;
   line.userData = {
     id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
@@ -3102,6 +3264,7 @@ function transformSelected(type, args = {}) {
    5. SELECTION & PROPERTIES
    ========================================================================= */
 const raycaster = new THREE.Raycaster();
+raycaster.params.Line = { threshold: 2.5 };
 const mouse = new THREE.Vector2();
 
 function selectObject(obj, multi = false) {
@@ -3357,7 +3520,7 @@ function highlightObject(obj, active) {
         child.userData.origColor = child.userData.origColor || child.material.color.getHex();
         child.material.color.setHex(0xffff00);
       } else {
-        child.material.color.setHex(child.userData.origColor || (obj.userData.closed ? 0x00e5ff : 0xffff00));
+        child.material.color.setHex(child.userData.origColor || (obj.userData.closed ? 0x00e5ff : 0x00d4ff));
       }
     } else if (child.isMesh) {
       if (active) {
@@ -3429,6 +3592,23 @@ function updatePropertiesPanel() {
         </select>
       </div>
     </div>
+    ${obj.userData.type === "SketchCurve" && obj.userData.points && obj.userData.points.length >= 2 ? (() => {
+      const p1 = obj.userData.points[0];
+      const p2 = obj.userData.points[obj.userData.points.length - 1];
+      const p1Vec = (p1 && p1.isVector3) ? p1 : new THREE.Vector3(p1.x, p1.y, p1.z);
+      const p2Vec = (p2 && p2.isVector3) ? p2 : new THREE.Vector3(p2.x, p2.y, p2.z);
+      const len = p1Vec.distanceTo(p2Vec);
+      return `
+      <div class="prop-group">
+        <div class="prop-label">Line Geometry</div>
+        <div style="font-size:11px; line-height:1.6; background:var(--bg-canvas); padding:4px 6px; border:1px inset #808080;">
+          <div><b>Start:</b> (${p1Vec.x.toFixed(1)}, ${p1Vec.y.toFixed(1)}, ${p1Vec.z.toFixed(1)})</div>
+          <div><b>End:</b> (${p2Vec.x.toFixed(1)}, ${p2Vec.y.toFixed(1)}, ${p2Vec.z.toFixed(1)})</div>
+          <div><b>Length:</b> ${len.toFixed(2)} mm</div>
+          <div><b>Plane:</b> ${(obj.userData.plane || 'Top').toUpperCase()}</div>
+        </div>
+      </div>`;
+    })() : ""}
     <div class="prop-group">
       <div class="prop-label">Position (X, Y, Z)</div>
       <div class="prop-row">
@@ -5114,10 +5294,38 @@ function executeCommand(rawCmd) {
       break;
 
     case "line":
-      if (args.length >= 2) {
-        // e.g. "Can I line 0,0 20,20"
+      if (args.length === 1 && !isNaN(parseFloat(args[0]))) {
+        const len = parseFloat(args[0]);
+        let p1 = new THREE.Vector3(0, 0, 0);
+        let p2 = new THREE.Vector3(len, 0, 0);
+        if (activeViewport === "front") p2 = new THREE.Vector3(len, 0, 0);
+        else if (activeViewport === "right") p2 = new THREE.Vector3(0, 0, len);
+        else p2 = new THREE.Vector3(len, 0, 0);
+        createLineSketch([p1, p2], activeViewport, false);
+      } else if (args.length === 4 && args.every(a => !isNaN(parseFloat(a)))) {
+        const nums = args.map(Number);
+        let p1, p2;
+        if (activeViewport === "front") {
+          p1 = new THREE.Vector3(nums[0], nums[1], 0);
+          p2 = new THREE.Vector3(nums[2], nums[3], 0);
+        } else if (activeViewport === "right") {
+          p1 = new THREE.Vector3(0, nums[1], nums[0]);
+          p2 = new THREE.Vector3(0, nums[3], nums[2]);
+        } else {
+          p1 = new THREE.Vector3(nums[0], 0, nums[1]);
+          p2 = new THREE.Vector3(nums[2], 0, nums[3]);
+        }
+        createLineSketch([p1, p2], activeViewport, false);
+      } else if (args.length === 6 && args.every(a => !isNaN(parseFloat(a)))) {
+        const nums = args.map(Number);
+        const p1 = new THREE.Vector3(nums[0], nums[1], nums[2]);
+        const p2 = new THREE.Vector3(nums[3], nums[4], nums[5]);
+        createLineSketch([p1, p2], activeViewport, false);
+      } else if (args.length >= 2 && args[0].includes(",")) {
         const pts = args.map(arg => {
           const coords = arg.split(",").map(Number);
+          if (activeViewport === "front") return new THREE.Vector3(coords[0] || 0, coords[1] || 0, 0);
+          if (activeViewport === "right") return new THREE.Vector3(0, coords[1] || 0, coords[0] || 0);
           return new THREE.Vector3(coords[0] || 0, 0, coords[1] || 0);
         });
         createLineSketch(pts, activeViewport, false);
@@ -5679,6 +5887,7 @@ function handleViewportPointerMove(e, vpId) {
   const plane = getCPlane(vpId);
   const intersectPt = new THREE.Vector3();
   if (raycaster.ray.intersectPlane(plane, intersectPt)) {
+    lastPointerCPlanePos = intersectPt.clone();
     if (activeSketchMode) {
       updateRubberband(intersectPt, vpId);
     }
@@ -6865,6 +7074,22 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     // Test 12: 2D Line Sketching
     const lineObj = createLineSketch([new THREE.Vector3(0, 0, 0), new THREE.Vector3(15, 0, 0), new THREE.Vector3(15, 0, 15)], "top", false);
     assertTest("2D Line Sketch creates Curve entity", lineObj && lineObj.userData.type === "SketchCurve" && lineObj.userData.closed === false);
+
+    // Test 12b: Can I line with numeric argument & properties readout
+    processRequest("Can I line 35");
+    const createdLine = sceneObjects[sceneObjects.length - 1];
+    assertTest("Request bar 'Can I line 35' creates Line entity", createdLine && createdLine.userData.type === "SketchCurve" && createdLine.name.startsWith("Line_"));
+    selectObject(createdLine);
+    const propHtml = document.getElementById("properties-panel").innerHTML;
+    assertTest("Properties panel displays Line Geometry readout", propHtml.includes("Line Geometry") && propHtml.includes("35.00 mm"));
+
+    // Test 12c: Line command UI setup & raycaster threshold
+    startSketch("line");
+    const cmdBar = document.getElementById("command-bar");
+    const lineStartInp = document.getElementById("line-param-start");
+    assertTest("Line sketch activates command bar with C-plane and coordinate inputs", cmdBar && cmdBar.style.display !== "none" && !!lineStartInp);
+    assertTest("Raycaster line selection threshold configured for all viewports", raycaster.params.Line && raycaster.params.Line.threshold >= 2.0);
+    cancelSketch();
 
     // Test 13: 2D Closed Rectangle Profile
     const rectObj = createRectSketch(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(10, 0, 10), "top");
