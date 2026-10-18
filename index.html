@@ -3609,6 +3609,15 @@ function updatePropertiesPanel() {
         </div>
       </div>`;
     })() : ""}
+    ${(obj.userData.type === "FilletedSolid" || obj.userData.type === "ChamferedSolid") && obj.userData.filletParams ? `
+    <div class="prop-group">
+      <div class="prop-label">${obj.userData.type === "FilletedSolid" ? "Fillet Parameters" : "Chamfer Parameters"}</div>
+      <div style="font-size:11px; line-height:1.6; background:var(--bg-canvas); padding:4px 6px; border:1px inset #808080;">
+        <div><b>Operation:</b> ${obj.userData.filletParams.mode.toUpperCase()}</div>
+        <div><b>${obj.userData.filletParams.mode === "fillet" ? "Radius:" : "Distance:"}</b> ${obj.userData.filletParams.param.toFixed(1)} mm</div>
+        <div><b>Edges Cut:</b> ${obj.userData.filletParams.edges.length} edges</div>
+      </div>
+    </div>` : ""}
     <div class="prop-group">
       <div class="prop-label">Position (X, Y, Z)</div>
       <div class="prop-row">
@@ -3752,6 +3761,7 @@ const CADNT_AUDIO = {
   droneOsc: null,
   droneGain: null,
   holdMusicAudio: null,
+  volume: 0.85,
 
   init() {
     if (!this.ctx && typeof AudioContext !== "undefined") {
@@ -3839,7 +3849,7 @@ const CADNT_AUDIO = {
     try {
       const audio = new Audio(trackSrc);
       audio.loop = false;
-      audio.volume = 0.5;
+      audio.volume = this.volume;
       this.holdMusicAudio = audio;
       const playPromise = audio.play();
       if (playPromise !== undefined) {
@@ -4117,8 +4127,11 @@ function showAdPopup() {
   }
 }
 
-function recordModelingCommand() {
+function recordModelingCommand(cmd) {
   modelingCommandCount++;
+  if (typeof relocateToolbarIcons === "function") {
+    relocateToolbarIcons(cmd);
+  }
   if (modelingCommandCount >= 7) {
     showAdPopup();
     modelingCommandCount = 0;
@@ -4126,7 +4139,7 @@ function recordModelingCommand() {
 }
 
 function triggerArtificialDelay(title, taskFn) {
-  if (DEBUG) {
+  if (DEBUG || window.IS_TESTING) {
     taskFn();
     return;
   }
@@ -4667,6 +4680,9 @@ let activeCommand = null;
 
 function cancelActiveCommand(reason = "Command cancelled.") {
   if (!activeCommand) return;
+  if (typeof activeCommand.cleanup === "function") {
+    activeCommand.cleanup();
+  }
   activeCommand = null;
   const bar = document.getElementById("command-bar");
   if (bar) bar.style.display = "none";
@@ -4676,6 +4692,9 @@ function cancelActiveCommand(reason = "Command cancelled.") {
 }
 
 function finishActiveCommand() {
+  if (activeCommand && typeof activeCommand.cleanup === "function") {
+    activeCommand.cleanup();
+  }
   activeCommand = null;
   const bar = document.getElementById("command-bar");
   if (bar) bar.style.display = "none";
@@ -4699,6 +4718,9 @@ function startModelingCommand(type, initialArgs = {}) {
   bar.style.display = "flex";
   params.innerHTML = "";
   confirmBtn.disabled = true;
+  if (typeof relocateToolbarIcons === "function") {
+    relocateToolbarIcons(type);
+  }
 
   switch (type.toLowerCase()) {
     case "union":
@@ -4723,6 +4745,12 @@ function startModelingCommand(type, initialArgs = {}) {
       break;
     case "scale":
       setupScaleCommand(initialArgs);
+      break;
+    case "fillet":
+      setupFilletOrChamferCommand("fillet", initialArgs);
+      break;
+    case "chamfer":
+      setupFilletOrChamferCommand("chamfer", initialArgs);
       break;
     default:
       bar.style.display = "none";
@@ -5161,6 +5189,480 @@ function setupScaleCommand(args) {
   if (factorInput) factorInput.focus();
 }
 
+/* =========================================================================
+   4.7 FILLET & CHAMFER ENGINE (EDGE SELECTION, PARAMETERS, PREVIEWS, CSG CUTS)
+   ========================================================================= */
+
+function getBoxEdgeSegments(mesh) {
+  mesh.geometry.computeBoundingBox();
+  const bbox = mesh.geometry.boundingBox;
+  const w2 = (bbox.max.x - bbox.min.x) / 2;
+  const h2 = (bbox.max.y - bbox.min.y) / 2;
+  const d2 = (bbox.max.z - bbox.min.z) / 2;
+  const cx = (bbox.max.x + bbox.min.x) / 2;
+  const cy = (bbox.max.y + bbox.min.y) / 2;
+  const cz = (bbox.max.z + bbox.min.z) / 2;
+
+  return [
+    // 0..3: Vertical edges (parallel to Y, corners of X/Z)
+    { id: 0, group: "vertical", p1: new THREE.Vector3(cx + w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2) },
+    { id: 1, group: "vertical", p1: new THREE.Vector3(cx - w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz + d2) },
+    { id: 2, group: "vertical", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz - d2) },
+    { id: 3, group: "vertical", p1: new THREE.Vector3(cx + w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz - d2) },
+
+    // 4..7: Horizontal X edges (parallel to X, corners of Y/Z)
+    { id: 4, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2) },
+    { id: 5, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz - d2) },
+    { id: 6, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz + d2) },
+    { id: 7, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz - d2) },
+
+    // 8..11: Horizontal Z edges (parallel to Z, corners of X/Y)
+    { id: 8, group: "horizontal", p1: new THREE.Vector3(cx + w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2) },
+    { id: 9, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz + d2) },
+    { id: 10, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy - h2, cz + d2) },
+    { id: 11, group: "horizontal", p1: new THREE.Vector3(cx + w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz + d2) }
+  ];
+}
+
+function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
+  mesh.geometry.computeBoundingBox();
+  const bbox = mesh.geometry.boundingBox;
+  const w = Math.max(0.1, bbox.max.x - bbox.min.x);
+  const h = Math.max(0.1, bbox.max.y - bbox.min.y);
+  const d = Math.max(0.1, bbox.max.z - bbox.min.z);
+  const w2 = w / 2;
+  const h2 = h / 2;
+  const d2 = d / 2;
+  const p = Math.max(0.1, Math.min(param, w2 * 0.48, h2 * 0.48, d2 * 0.48));
+
+  const cx = (bbox.max.x + bbox.min.x) / 2;
+  const cy = (bbox.max.y + bbox.min.y) / 2;
+  const cz = (bbox.max.z + bbox.min.z) / 2;
+
+  let csg = CSG.fromMesh(mesh);
+
+  // 12 canonical edges on a box
+  const vertConfigs = [
+    { id: 0, sx:  1, sz:  1 },
+    { id: 1, sx: -1, sz:  1 },
+    { id: 2, sx: -1, sz: -1 },
+    { id: 3, sx:  1, sz: -1 }
+  ];
+
+  const horizXConfigs = [
+    { id: 4, sy:  1, sz:  1 },
+    { id: 5, sy:  1, sz: -1 },
+    { id: 6, sy: -1, sz:  1 },
+    { id: 7, sy: -1, sz: -1 }
+  ];
+
+  const horizZConfigs = [
+    { id: 8,  sx:  1, sy:  1 },
+    { id: 9,  sx: -1, sy:  1 },
+    { id: 10, sx: -1, sy: -1 },
+    { id: 11, sx:  1, sy: -1 }
+  ];
+
+  // 1. Cut Vertical Edges
+  for (let c of vertConfigs) {
+    if (edgeIndices && !edgeIndices.includes(c.id)) continue;
+    const sx = c.sx, sz = c.sz;
+    const cornerX = cx + sx * w2, cornerZ = cz + sz * d2;
+    const shape = new THREE.Shape();
+    if (mode === "chamfer") {
+      shape.moveTo(cornerX - sx * p, cornerZ);
+      shape.lineTo(cornerX + sx * 0.1, cornerZ + sz * 0.1);
+      shape.lineTo(cornerX, cornerZ - sz * p);
+    } else {
+      const centerX = cornerX - sx * p, centerZ = cornerZ - sz * p;
+      shape.moveTo(cornerX - sx * p, cornerZ);
+      shape.lineTo(cornerX + sx * 0.1, cornerZ + sz * 0.1);
+      shape.lineTo(cornerX, cornerZ - sz * p);
+      const segs = 6;
+      for (let i = 0; i <= segs; i++) {
+        const theta = (i / segs) * (Math.PI / 2);
+        let ang;
+        if (sx > 0 && sz > 0) ang = theta;
+        else if (sx < 0 && sz > 0) ang = Math.PI - theta;
+        else if (sx < 0 && sz < 0) ang = Math.PI + theta;
+        else ang = -theta;
+        shape.lineTo(centerX + Math.cos(ang) * p, centerZ + Math.sin(ang) * p);
+      }
+    }
+    shape.closePath();
+    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: h + 4, bevelEnabled: false });
+    cutterGeo.rotateX(Math.PI / 2);
+    cutterGeo.translate(0, cy + (h + 4) / 2, 0);
+    const cutterMesh = new THREE.Mesh(cutterGeo);
+    csg = csg.subtract(CSG.fromMesh(cutterMesh));
+  }
+
+  // 2. Cut Horizontal X Edges
+  for (let c of horizXConfigs) {
+    if (edgeIndices && !edgeIndices.includes(c.id)) continue;
+    const sy = c.sy, sz = c.sz;
+    const cornerY = cy + sy * h2, cornerZ = cz + sz * d2;
+    const shape = new THREE.Shape();
+    if (mode === "chamfer") {
+      shape.moveTo(cornerZ - sz * p, cornerY);
+      shape.lineTo(cornerZ + sz * 0.1, cornerY + sy * 0.1);
+      shape.lineTo(cornerZ, cornerY - sy * c);
+    } else {
+      const centerY = cornerY - sy * p, centerZ = cornerZ - sz * p;
+      shape.moveTo(cornerZ - sz * p, cornerY);
+      shape.lineTo(cornerZ + sz * 0.1, cornerY + sy * 0.1);
+      shape.lineTo(cornerZ, cornerY - sy * p);
+      const segs = 6;
+      for (let i = 0; i <= segs; i++) {
+        const theta = (i / segs) * (Math.PI / 2);
+        let ang;
+        if (sz > 0 && sy > 0) ang = theta;
+        else if (sz < 0 && sy > 0) ang = Math.PI - theta;
+        else if (sz < 0 && sy < 0) ang = Math.PI + theta;
+        else ang = -theta;
+        shape.lineTo(centerZ + Math.cos(ang) * p, centerY + Math.sin(ang) * p);
+      }
+    }
+    shape.closePath();
+    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: w + 4, bevelEnabled: false });
+    cutterGeo.rotateY(Math.PI / 2);
+    cutterGeo.translate(cx - (w + 4) / 2, 0, 0);
+    const cutterMesh = new THREE.Mesh(cutterGeo);
+    csg = csg.subtract(CSG.fromMesh(cutterMesh));
+  }
+
+  // 3. Cut Horizontal Z Edges
+  for (let c of horizZConfigs) {
+    if (edgeIndices && !edgeIndices.includes(c.id)) continue;
+    const sx = c.sx, sy = c.sy;
+    const cornerX = cx + sx * w2, cornerY = cy + sy * h2;
+    const shape = new THREE.Shape();
+    if (mode === "chamfer") {
+      shape.moveTo(cornerX - sx * p, cornerY);
+      shape.lineTo(cornerX + sx * 0.1, cornerY + sy * 0.1);
+      shape.lineTo(cornerX, cornerY - sy * p);
+    } else {
+      const centerX = cornerX - sx * p, centerY = cornerY - sy * p;
+      shape.moveTo(cornerX - sx * p, cornerY);
+      shape.lineTo(cornerX + sx * 0.1, cornerY + sy * 0.1);
+      shape.lineTo(cornerX, cornerY - sy * p);
+      const segs = 6;
+      for (let i = 0; i <= segs; i++) {
+        const theta = (i / segs) * (Math.PI / 2);
+        let ang;
+        if (sx > 0 && sy > 0) ang = theta;
+        else if (sx < 0 && sy > 0) ang = Math.PI - theta;
+        else if (sx < 0 && sy < 0) ang = Math.PI + theta;
+        else ang = -theta;
+        shape.lineTo(centerX + Math.cos(ang) * p, centerY + Math.sin(ang) * p);
+      }
+    }
+    shape.closePath();
+    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: d + 4, bevelEnabled: false });
+    cutterGeo.translate(0, 0, cz - (d + 4) / 2);
+    const cutterMesh = new THREE.Mesh(cutterGeo);
+    csg = csg.subtract(CSG.fromMesh(cutterMesh));
+  }
+
+  const resMesh = CSG.toMesh(csg, new THREE.Matrix4(), mesh.material);
+  resMesh.geometry.computeVertexNormals();
+  return resMesh.geometry;
+}
+
+function setupFilletOrChamferCommand(mode, args = {}) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  badge.textContent = mode === "fillet" ? "FILLET EDGES" : "CHAMFER EDGES";
+  confirmBtn.textContent = "✓ Apply (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  let target = selectedObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
+  if (!target) {
+    target = sceneObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
+    if (target) selectObject(target);
+  }
+
+  if (!target) {
+    createBoxPrimitive();
+    target = sceneObjects[sceneObjects.length - 1];
+    selectObject(target);
+  }
+
+  const defaultVal = args.val || (mode === "fillet" ? 2.5 : 2.0);
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:2px; font-weight:bold;">Edges:</span>
+    <select id="fillet-param-scope" class="prop-input" style="height:20px; font-size:11px; width:120px;">
+      <option value="all">All Edges (12)</option>
+      <option value="vertical">Vertical Edges (4)</option>
+      <option value="horizontal">Horizontal Edges (8)</option>
+      <option value="selected">Selected Edge(s)</option>
+    </select>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">${mode === "fillet" ? "Radius:" : "Distance:"}</span>
+    <input id="fillet-param-val" class="prop-input" type="number" step="0.5" min="0.2" value="${defaultVal}" style="width:55px; height:20px;">
+    <span style="font-size:11px; margin-left:2px;">mm</span>
+    <label style="font-size:11px; margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;">
+      <input type="checkbox" id="fillet-preview-chk" checked style="margin-right:3px;"> Preview
+    </label>
+  `;
+
+  let edgeSegments = getBoxEdgeSegments(target);
+  let selectedEdgeIds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  let currentScope = "all";
+  let edgeOverlayGroup = new THREE.Group();
+  edgeOverlayGroup.name = "Fillet_Edge_Helpers";
+  target.add(edgeOverlayGroup);
+
+  let previewMesh = null;
+
+  function renderEdgeHelpers() {
+    while (edgeOverlayGroup.children.length > 0) {
+      edgeOverlayGroup.remove(edgeOverlayGroup.children[0]);
+    }
+    edgeSegments.forEach(seg => {
+      const isSel = selectedEdgeIds.includes(seg.id);
+      const mat = new THREE.LineBasicMaterial({
+        color: isSel ? 0xffff00 : 0x00d4ff,
+        linewidth: isSel ? 3 : 1.5,
+        depthTest: false
+      });
+      const geo = new THREE.BufferGeometry().setFromPoints([seg.p1, seg.p2]);
+      const line = new THREE.Line(geo, mat);
+      line.renderOrder = 999;
+      line.userData = { isFilletEdge: true, edgeId: seg.id };
+      edgeOverlayGroup.add(line);
+
+      if (isSel) {
+        const mid = seg.p1.clone().add(seg.p2).multiplyScalar(0.5);
+        const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00, depthTest: false });
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 8), dotMat);
+        dot.position.copy(mid);
+        dot.renderOrder = 1000;
+        dot.userData = { isFilletEdge: true, edgeId: seg.id };
+        edgeOverlayGroup.add(dot);
+      }
+    });
+  }
+
+  function updatePreview() {
+    if (previewMesh) {
+      target.remove(previewMesh);
+      previewMesh.geometry.dispose();
+      previewMesh = null;
+    }
+    const chk = document.getElementById("fillet-preview-chk");
+    if (!chk || !chk.checked || selectedEdgeIds.length === 0) return;
+
+    const valInp = document.getElementById("fillet-param-val");
+    const val = Math.max(0.2, parseFloat(valInp ? valInp.value : defaultVal) || defaultVal);
+
+    try {
+      const pGeo = computeEdgeCutGeometry(target, mode, val, selectedEdgeIds);
+      const pMat = new THREE.MeshBasicMaterial({
+        color: 0x39ff14,
+        wireframe: true,
+        depthTest: false
+      });
+      previewMesh = new THREE.Mesh(pGeo, pMat);
+      previewMesh.renderOrder = 998;
+      target.add(previewMesh);
+    } catch (err) {
+      console.warn("Fillet/Chamfer preview calculation error:", err);
+    }
+  }
+
+  function updatePrompt() {
+    const valInp = document.getElementById("fillet-param-val");
+    const val = parseFloat(valInp ? valInp.value : defaultVal) || defaultVal;
+    prompt.textContent = `${mode.toUpperCase()} on '${target.name}': ${selectedEdgeIds.length} edge(s) selected (${val.toFixed(1)} mm). Click [✓ Apply] (or Enter).`;
+    confirmBtn.disabled = selectedEdgeIds.length === 0;
+  }
+
+  const scopeSel = document.getElementById("fillet-param-scope");
+  if (scopeSel) {
+    scopeSel.onchange = () => {
+      currentScope = scopeSel.value;
+      if (currentScope === "all") {
+        selectedEdgeIds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+      } else if (currentScope === "vertical") {
+        selectedEdgeIds = [0, 1, 2, 3];
+      } else if (currentScope === "horizontal") {
+        selectedEdgeIds = [4, 5, 6, 7, 8, 9, 10, 11];
+      }
+      renderEdgeHelpers();
+      updatePreview();
+      updatePrompt();
+    };
+  }
+
+  const valInp = document.getElementById("fillet-param-val");
+  if (valInp) {
+    valInp.oninput = () => {
+      updatePreview();
+      updatePrompt();
+    };
+    valInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!confirmBtn.disabled) activeCommand.confirm();
+      }
+    };
+  }
+
+  const chk = document.getElementById("fillet-preview-chk");
+  if (chk) {
+    chk.onchange = () => updatePreview();
+  }
+
+  activeCommand = {
+    type: mode,
+    target: target,
+    get currentScope() { return currentScope; },
+    toggleEdge(edgeId) {
+      if (currentScope !== "selected") {
+        currentScope = "selected";
+        if (scopeSel) scopeSel.value = "selected";
+        selectedEdgeIds = [edgeId];
+      } else {
+        const idx = selectedEdgeIds.indexOf(edgeId);
+        if (idx !== -1) {
+          selectedEdgeIds.splice(idx, 1);
+        } else {
+          selectedEdgeIds.push(edgeId);
+        }
+      }
+      renderEdgeHelpers();
+      updatePreview();
+      updatePrompt();
+    },
+    handleSelect(t, hitChild) {
+      if (hitChild && hitChild.userData && hitChild.userData.isFilletEdge) {
+        this.toggleEdge(hitChild.userData.edgeId);
+        return;
+      }
+      if (t && t.isMesh && t !== target && !t.userData.protected && !t.userData.locked) {
+        this.cleanup();
+        setupFilletOrChamferCommand(mode, { val: parseFloat(valInp.value) || defaultVal });
+      }
+    },
+    cleanup() {
+      if (previewMesh) {
+        target.remove(previewMesh);
+        previewMesh.geometry.dispose();
+        previewMesh = null;
+      }
+      if (edgeOverlayGroup) {
+        target.remove(edgeOverlayGroup);
+        edgeOverlayGroup = null;
+      }
+    },
+    confirm() {
+      if (selectedEdgeIds.length === 0) return;
+      const val = Math.max(0.2, parseFloat(valInp ? valInp.value : defaultVal) || defaultVal);
+      const edgesToCut = [...selectedEdgeIds];
+
+      this.cleanup();
+      finishActiveCommand();
+
+      const fee = 49.00;
+      if (creditBalance >= fee) {
+        creditBalance -= fee;
+        updateEconomyDisplay();
+      }
+
+      triggerArtificialDelay(`Calculating ${mode.toUpperCase()} Topology Edges...`, () => {
+        recordUndoState(mode === "fillet" ? "Fillet Edge(s)" : "Chamfer Edge(s)");
+        try {
+          const newGeo = computeEdgeCutGeometry(target, mode, val, edgesToCut);
+          target.geometry.dispose();
+          target.geometry = newGeo;
+
+          const oldWire = target.children.find(c => c.isLineSegments);
+          if (oldWire) target.remove(oldWire);
+          const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+          const newWire = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry, 20), wireMat);
+          target.add(newWire);
+
+          target.name = (mode === "fillet" ? "Fillet_" : "Chamfer_") + (++primitiveCounter);
+          target.userData.type = mode === "fillet" ? "FilletedSolid" : "ChamferedSolid";
+          target.userData.filletParams = { mode, param: val, edges: edgesToCut };
+
+          selectObject(target);
+          updateObjectsTree();
+          updatePropertiesPanel();
+          recordModelingCommand();
+          status(`${mode.toUpperCase()} applied: ${val.toFixed(1)} mm on ${target.name} (${edgesToCut.length} edges).`);
+          addLog(`Applied ${mode.toUpperCase()} (${val.toFixed(1)} mm, ${edgesToCut.length} edges) to '${target.name}'. $${fee.toFixed(2)} deducted.`, "log-success");
+        } catch (err) {
+          console.error(`Error computing ${mode}:`, err);
+          addLog(`Failed to compute ${mode}: ` + err.message, "log-nope");
+          status(`Error computing ${mode}.`);
+        }
+      });
+    }
+  };
+
+  renderEdgeHelpers();
+  updatePreview();
+  updatePrompt();
+  confirmBtn.disabled = false;
+  if (valInp) valInp.focus();
+}
+
+function executeDirectEdgeCut(mode, param = 2.5) {
+  let target = selectedObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
+  if (!target) {
+    target = sceneObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
+  }
+  if (!target) {
+    createBoxPrimitive();
+    target = sceneObjects[sceneObjects.length - 1];
+  }
+  if (!target) {
+    status(`No solid object available to ${mode}.`);
+    return;
+  }
+
+  recordUndoState(mode === "fillet" ? "Fillet Edge(s)" : "Chamfer Edge(s)");
+  const fee = 49.00;
+  if (creditBalance >= fee) {
+    creditBalance -= fee;
+    updateEconomyDisplay();
+  }
+
+  try {
+    const allEdges = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    const newGeo = computeEdgeCutGeometry(target, mode, param, allEdges);
+    target.geometry.dispose();
+    target.geometry = newGeo;
+
+    const oldWire = target.children.find(c => c.isLineSegments);
+    if (oldWire) target.remove(oldWire);
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+    const newWire = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry, 20), wireMat);
+    target.add(newWire);
+
+    target.name = (mode === "fillet" ? "Fillet_" : "Chamfer_") + (++primitiveCounter);
+    target.userData.type = mode === "fillet" ? "FilletedSolid" : "ChamferedSolid";
+    target.userData.filletParams = { mode, param: param, edges: allEdges };
+
+    selectObject(target);
+    updateObjectsTree();
+    updatePropertiesPanel();
+    recordModelingCommand();
+    status(`${mode.toUpperCase()} applied: ${param.toFixed(1)} mm on ${target.name}.`);
+    addLog(`Applied ${mode.toUpperCase()} (${param.toFixed(1)} mm) to '${target.name}'. $${fee.toFixed(2)} deducted.`, "log-success");
+  } catch (err) {
+    console.error(`Direct ${mode} error:`, err);
+    addLog(`Failed to apply ${mode}: ` + err.message, "log-nope");
+    status(`Error applying ${mode}.`);
+  }
+}
+
 // Wire Command Bar buttons
 document.getElementById("btn-cmd-confirm").onclick = () => {
   if (activeCommand && typeof activeCommand.confirm === "function") {
@@ -5455,11 +5957,19 @@ function executeCommand(rawCmd) {
       break;
 
     case "fillet":
-      attemptPaidOperation("fillet", 49.00);
+      if (args.length >= 1 && !isNaN(parseFloat(args[0]))) {
+        executeDirectEdgeCut("fillet", parseFloat(args[0]));
+      } else {
+        startModelingCommand("fillet");
+      }
       break;
 
     case "chamfer":
-      attemptPaidOperation("chamfer", 49.00);
+      if (args.length >= 1 && !isNaN(parseFloat(args[0]))) {
+        executeDirectEdgeCut("chamfer", parseFloat(args[0]));
+      } else {
+        startModelingCommand("chamfer");
+      }
       break;
 
     case "sweep":
@@ -5555,18 +6065,29 @@ document.getElementById("btn-submit-request").onclick = () => {
    ========================================================================= */
 const toolbar = document.getElementById("left-toolbar");
 
-function relocateToolbarIcons() {
+function relocateToolbarIcons(targetBtnOrCmd) {
   const buttons = Array.from(toolbar.querySelectorAll(".tool-btn"));
   if (buttons.length < 2) return;
 
-  // Pick two random distinct indices and swap them
-  const i = Math.floor(Math.random() * buttons.length);
-  let j = Math.floor(Math.random() * buttons.length);
-  while (j === i) {
-    j = Math.floor(Math.random() * buttons.length);
+  let btnA = null;
+  if (targetBtnOrCmd instanceof HTMLElement) {
+    btnA = targetBtnOrCmd;
+  } else if (typeof targetBtnOrCmd === "string") {
+    btnA = toolbar.querySelector(`.tool-btn[data-cmd="${targetBtnOrCmd}"]`);
   }
 
-  const btnA = buttons[i];
+  let i = -1;
+  if (btnA) {
+    i = buttons.indexOf(btnA);
+  }
+  if (i === -1) {
+    i = Math.floor(Math.random() * buttons.length);
+    btnA = buttons[i];
+  }
+
+  // Ensure j != i so the icon never lands on the same position it just occupied
+  let j = Math.floor(Math.random() * (buttons.length - 1));
+  if (j >= i) j++;
   const btnB = buttons[j];
 
   const parent = toolbar;
@@ -5582,7 +6103,8 @@ function relocateToolbarIcons() {
     parent.insertBefore(btnA, nextB);
   }
 
-  addLog("Toolbar buttons relocated for ergonomic optimization.", "log-warn");
+  const nameA = btnA.querySelector("span") ? btnA.querySelector("span").textContent : "Command";
+  addLog(`Toolbar icon for '${nameA}' relocated for ergonomic optimization.`, "log-warn");
 }
 
 toolbar.addEventListener("click", (e) => {
@@ -5592,11 +6114,11 @@ toolbar.addEventListener("click", (e) => {
   const cmd = btn.dataset.cmd;
   const name = btn.querySelector("span").textContent;
 
-  const isInteractiveCmd = ["union", "difference", "join", "extrude", "move", "rotate", "scale", "line", "rect", "circle", "spline"].includes(cmd);
+  const isInteractiveCmd = ["union", "difference", "join", "extrude", "move", "rotate", "scale", "line", "rect", "circle", "spline", "fillet", "chamfer"].includes(cmd);
 
   if (DEBUG || isInteractiveCmd) {
     executeToolbarCommand(cmd);
-    relocateToolbarIcons();
+    relocateToolbarIcons(btn);
     return;
   }
 
@@ -5605,7 +6127,7 @@ toolbar.addEventListener("click", (e) => {
     `Are you sure you want to invoke the ${name} command from the toolbar?`,
     () => {
       executeToolbarCommand(cmd);
-      relocateToolbarIcons();
+      relocateToolbarIcons(btn);
     }
   );
 });
@@ -5632,6 +6154,8 @@ function executeToolbarCommand(cmd) {
       break;
     case "chamfer":
     case "fillet":
+      startModelingCommand(cmd);
+      break;
     case "sweep":
       attemptPaidOperation(cmd, 49.00);
       break;
@@ -5821,7 +6345,7 @@ function handleViewportPointerDown(e, vpId) {
       target = target.parent;
     }
     if (activeCommand && typeof activeCommand.handleSelect === "function") {
-      activeCommand.handleSelect(target);
+      activeCommand.handleSelect(target, hitMesh);
       return;
     }
 
@@ -6976,14 +7500,22 @@ if (snapMode === "light_export") {
 }
 
 /* =========================================================================
-   11. AUTOMATED TEST SUITE (?run_tests=1)
+   11. AUTOMATED TEST SUITE (?run_tests=1 or window.runAllTests())
    ========================================================================= */
-if (new URLSearchParams(location.search).has("run_tests")) {
+window.__TEST_RESULTS__ = { total: 0, passed: 0, failed: 0, details: [] };
+
+function runAllTests() {
+  window.IS_TESTING = true;
   window.__TEST_RESULTS__ = { total: 0, passed: 0, failed: 0, details: [] };
-  const resDiv = document.createElement("pre");
-  resDiv.id = "test-results-log";
-  resDiv.style.cssText = "position:fixed; top:0; left:0; z-index:99999; background:black; color:lime; font-size:12px; padding:10px; max-height:100vh; overflow:auto;";
-  document.body.appendChild(resDiv);
+  let resDiv = document.getElementById("test-results-log");
+  if (!resDiv) {
+    resDiv = document.createElement("pre");
+    resDiv.id = "test-results-log";
+    resDiv.style.cssText = "position:fixed; top:0; left:0; z-index:99999; background:black; color:lime; font-size:12px; padding:10px; max-height:100vh; overflow:auto;";
+    document.body.appendChild(resDiv);
+  } else {
+    resDiv.textContent = "";
+  }
 
   function logTestMsg(msg) {
     resDiv.textContent += msg + "\n";
@@ -7002,8 +7534,6 @@ if (new URLSearchParams(location.search).has("run_tests")) {
       logTestMsg(`[TEST-FAIL] ${name}`);
     }
   }
-
-  function runAllTests() {
     logTestMsg("=== STARTING CADN'T COMPREHENSIVE AUTOMATED TESTS ===");
 
     // Test 1: App Identity
@@ -7053,9 +7583,12 @@ if (new URLSearchParams(location.search).has("run_tests")) {
 
     // Test 8: Wandering Toolbar Relocation
     const tbBefore = Array.from(toolbar.querySelectorAll(".tool-btn")).map(b => b.dataset.cmd).join(",");
-    relocateToolbarIcons();
+    const boxBtn = toolbar.querySelector(".tool-btn[data-cmd='box']");
+    const boxIdxBefore = Array.from(toolbar.querySelectorAll(".tool-btn")).indexOf(boxBtn);
+    relocateToolbarIcons("box");
     const tbAfter = Array.from(toolbar.querySelectorAll(".tool-btn")).map(b => b.dataset.cmd).join(",");
-    assertTest("Toolbar icon relocation shifts layout order", tbBefore !== tbAfter);
+    const boxIdxAfter = Array.from(toolbar.querySelectorAll(".tool-btn")).indexOf(boxBtn);
+    assertTest("Toolbar icon relocation shifts layout order and guarantees target icon changes slot", tbBefore !== tbAfter && boxIdxBefore !== boxIdxAfter);
 
     // Test 9: Trackpad Navigation Lock
     const wheelEvt = new WheelEvent("wheel", { cancelable: true });
@@ -7144,6 +7677,29 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     performBooleanOperation("difference");
     const diffResult = sceneObjects[sceneObjects.length - 1];
     assertTest("Boolean Difference produces computed 3D cut CSG mesh", diffResult && diffResult.name.includes("Diff_Solid") && diffResult.geometry.attributes.position.count > 0);
+
+    // Test 18b: Fillet Command with real geometry modification & edge selection
+    createBoxPrimitive();
+    const boxFilletTarget = sceneObjects[sceneObjects.length - 1];
+    const initialBoxVerts = boxFilletTarget.geometry.attributes.position.count;
+    selectObject(boxFilletTarget);
+    startModelingCommand("fillet");
+    const filletBar = document.getElementById("command-bar");
+    const filletBadge = document.getElementById("command-badge");
+    const filletScope = document.getElementById("fillet-param-scope");
+    const filletEdgeHelper = boxFilletTarget.children.find(c => c.name === "Fillet_Edge_Helpers");
+    assertTest("Fillet command opens command bar with edge selector & overlays", filletBar && filletBar.style.display !== "none" && filletBadge.textContent === "FILLET EDGES" && !!filletEdgeHelper);
+    activeCommand.confirm();
+    const filletedSolid = selectedObjects[0];
+    assertTest("Fillet produces real rounded geometry with modified vertex count", filletedSolid && filletedSolid.userData.type === "FilletedSolid" && filletedSolid.geometry.attributes.position.count > initialBoxVerts);
+
+    // Test 18c: Chamfer Command with real geometry modification
+    createBoxPrimitive();
+    const boxChamferTarget = sceneObjects[sceneObjects.length - 1];
+    selectObject(boxChamferTarget);
+    processRequest("Can I chamfer 2.5");
+    const chamferedSolid = selectedObjects[0];
+    assertTest("Chamfer produces real beveled geometry with ChamferedSolid type", chamferedSolid && chamferedSolid.userData.type === "ChamferedSolid" && chamferedSolid.geometry.attributes.position.count > initialBoxVerts);
 
     // Test 19: Layer Management
     const testLayer = addLayer("CAM Toolpaths");
@@ -7269,7 +7825,7 @@ if (new URLSearchParams(location.search).has("run_tests")) {
     const mutedNoPlay = CADNT_AUDIO.holdMusicAudio === null;
     CADNT_AUDIO.setMute(false);
     CADNT_AUDIO.playHoldMusic();
-    const unmutedPlays = !!CADNT_AUDIO.holdMusicAudio && CADNT_AUDIO.holdMusicAudio.loop === false && Math.abs(CADNT_AUDIO.holdMusicAudio.volume - 0.5) < 0.01;
+    const unmutedPlays = !!CADNT_AUDIO.holdMusicAudio && CADNT_AUDIO.holdMusicAudio.loop === false && Math.abs(CADNT_AUDIO.holdMusicAudio.volume - 0.85) < 0.01;
     CADNT_AUDIO.stopHoldMusic();
     const stoppedClean = CADNT_AUDIO.holdMusicAudio === null;
     assertTest("Hold music respects mute toggle, does not loop, and stops cleanly", mutedNoPlay && unmutedPlays && stoppedClean);
@@ -7342,11 +7898,14 @@ if (new URLSearchParams(location.search).has("run_tests")) {
 
     logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
     window.__TESTS_DONE__ = true;
+    window.IS_TESTING = false;
   }
 
-  // Run immediately after setup
-  runAllTests();
-}
+  window.runAllTests = runAllTests;
+
+  if (new URLSearchParams(location.search).has("run_tests")) {
+    runAllTests();
+  }
 
 </script>
 </body>
