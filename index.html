@@ -5193,7 +5193,7 @@ function setupScaleCommand(args) {
    4.7 FILLET & CHAMFER ENGINE (EDGE SELECTION, PARAMETERS, PREVIEWS, CSG CUTS)
    ========================================================================= */
 
-function getBoxEdgeSegments(mesh) {
+function getSolidEdges(mesh) {
   mesh.geometry.computeBoundingBox();
   const bbox = mesh.geometry.boundingBox;
   const w2 = (bbox.max.x - bbox.min.x) / 2;
@@ -5205,24 +5205,25 @@ function getBoxEdgeSegments(mesh) {
 
   return [
     // 0..3: Vertical edges (parallel to Y, corners of X/Z)
-    { id: 0, group: "vertical", p1: new THREE.Vector3(cx + w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2) },
-    { id: 1, group: "vertical", p1: new THREE.Vector3(cx - w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz + d2) },
-    { id: 2, group: "vertical", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz - d2) },
-    { id: 3, group: "vertical", p1: new THREE.Vector3(cx + w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz - d2) },
+    { id: 0, group: "vertical", p1: new THREE.Vector3(cx + w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2), nA: new THREE.Vector3(1, 0, 0), nB: new THREE.Vector3(0, 0, 1) },
+    { id: 1, group: "vertical", p1: new THREE.Vector3(cx - w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz + d2), nA: new THREE.Vector3(-1, 0, 0), nB: new THREE.Vector3(0, 0, 1) },
+    { id: 2, group: "vertical", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz - d2), nA: new THREE.Vector3(-1, 0, 0), nB: new THREE.Vector3(0, 0, -1) },
+    { id: 3, group: "vertical", p1: new THREE.Vector3(cx + w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz - d2), nA: new THREE.Vector3(1, 0, 0), nB: new THREE.Vector3(0, 0, -1) },
 
     // 4..7: Horizontal X edges (parallel to X, corners of Y/Z)
-    { id: 4, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2) },
-    { id: 5, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz - d2) },
-    { id: 6, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz + d2) },
-    { id: 7, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz - d2) },
+    { id: 4, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2), nA: new THREE.Vector3(0, 1, 0), nB: new THREE.Vector3(0, 0, 1) },
+    { id: 5, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz - d2), nA: new THREE.Vector3(0, 1, 0), nB: new THREE.Vector3(0, 0, -1) },
+    { id: 6, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz + d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz + d2), nA: new THREE.Vector3(0, -1, 0), nB: new THREE.Vector3(0, 0, 1) },
+    { id: 7, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz - d2), nA: new THREE.Vector3(0, -1, 0), nB: new THREE.Vector3(0, 0, -1) },
 
     // 8..11: Horizontal Z edges (parallel to Z, corners of X/Y)
-    { id: 8, group: "horizontal", p1: new THREE.Vector3(cx + w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2) },
-    { id: 9, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz + d2) },
-    { id: 10, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy - h2, cz + d2) },
-    { id: 11, group: "horizontal", p1: new THREE.Vector3(cx + w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz + d2) }
+    { id: 8, group: "horizontal", p1: new THREE.Vector3(cx + w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy + h2, cz + d2), nA: new THREE.Vector3(1, 0, 0), nB: new THREE.Vector3(0, 1, 0) },
+    { id: 9, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy + h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy + h2, cz + d2), nA: new THREE.Vector3(-1, 0, 0), nB: new THREE.Vector3(0, 1, 0) },
+    { id: 10, group: "horizontal", p1: new THREE.Vector3(cx - w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx - w2, cy - h2, cz + d2), nA: new THREE.Vector3(-1, 0, 0), nB: new THREE.Vector3(0, -1, 0) },
+    { id: 11, group: "horizontal", p1: new THREE.Vector3(cx + w2, cy - h2, cz - d2), p2: new THREE.Vector3(cx + w2, cy - h2, cz + d2), nA: new THREE.Vector3(1, 0, 0), nB: new THREE.Vector3(0, -1, 0) }
   ];
 }
+const getBoxEdgeSegments = getSolidEdges;
 
 function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
   mesh.geometry.computeBoundingBox();
@@ -5230,137 +5231,71 @@ function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
   const w = Math.max(0.1, bbox.max.x - bbox.min.x);
   const h = Math.max(0.1, bbox.max.y - bbox.min.y);
   const d = Math.max(0.1, bbox.max.z - bbox.min.z);
-  const w2 = w / 2;
-  const h2 = h / 2;
-  const d2 = d / 2;
-  const p = Math.max(0.1, Math.min(param, w2 * 0.48, h2 * 0.48, d2 * 0.48));
+  const p = Math.max(0.1, Math.min(param, (w / 2) * 0.48, (h / 2) * 0.48, (d / 2) * 0.48));
 
-  const cx = (bbox.max.x + bbox.min.x) / 2;
-  const cy = (bbox.max.y + bbox.min.y) / 2;
-  const cz = (bbox.max.z + bbox.min.z) / 2;
+  // Perform CSG strictly in local mesh coordinates to avoid matrix displacement
+  const localMesh = new THREE.Mesh(mesh.geometry, mesh.material);
+  localMesh.matrix.identity();
+  let csg = CSG.fromMesh(localMesh);
 
-  let csg = CSG.fromMesh(mesh);
+  const edges = getSolidEdges(mesh);
+  const indicesToCut = edgeIndices !== null ? edgeIndices : edges.map(e => e.id);
 
-  // 12 canonical edges on a box
-  const vertConfigs = [
-    { id: 0, sx:  1, sz:  1 },
-    { id: 1, sx: -1, sz:  1 },
-    { id: 2, sx: -1, sz: -1 },
-    { id: 3, sx:  1, sz: -1 }
-  ];
+  for (let edgeId of indicesToCut) {
+    const seg = edges.find(e => e.id === edgeId);
+    if (!seg) continue;
 
-  const horizXConfigs = [
-    { id: 4, sy:  1, sz:  1 },
-    { id: 5, sy:  1, sz: -1 },
-    { id: 6, sy: -1, sz:  1 },
-    { id: 7, sy: -1, sz: -1 }
-  ];
+    const p1 = seg.p1, p2 = seg.p2;
+    const L = p1.distanceTo(p2);
+    if (L < 0.001) continue;
+    const u = new THREE.Vector3().subVectors(p2, p1).normalize();
+    const m = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
 
-  const horizZConfigs = [
-    { id: 8,  sx:  1, sy:  1 },
-    { id: 9,  sx: -1, sy:  1 },
-    { id: 10, sx: -1, sy: -1 },
-    { id: 11, sx:  1, sy: -1 }
-  ];
+    let b1 = seg.nA.clone().normalize();
+    let b2 = seg.nB.clone().normalize();
+    let b3 = u.clone().normalize();
 
-  // 1. Cut Vertical Edges
-  for (let c of vertConfigs) {
-    if (edgeIndices && !edgeIndices.includes(c.id)) continue;
-    const sx = c.sx, sz = c.sz;
-    const cornerX = cx + sx * w2, cornerZ = cz + sz * d2;
-    const shape = new THREE.Shape();
-    if (mode === "chamfer") {
-      shape.moveTo(cornerX - sx * p, cornerZ);
-      shape.lineTo(cornerX + sx * 0.1, cornerZ + sz * 0.1);
-      shape.lineTo(cornerX, cornerZ - sz * p);
-    } else {
-      const centerX = cornerX - sx * p, centerZ = cornerZ - sz * p;
-      shape.moveTo(cornerX - sx * p, cornerZ);
-      shape.lineTo(cornerX + sx * 0.1, cornerZ + sz * 0.1);
-      shape.lineTo(cornerX, cornerZ - sz * p);
-      const segs = 6;
-      for (let i = 0; i <= segs; i++) {
-        const theta = (i / segs) * (Math.PI / 2);
-        let ang;
-        if (sx > 0 && sz > 0) ang = theta;
-        else if (sx < 0 && sz > 0) ang = Math.PI - theta;
-        else if (sx < 0 && sz < 0) ang = Math.PI + theta;
-        else ang = -theta;
-        shape.lineTo(centerX + Math.cos(ang) * p, centerZ + Math.sin(ang) * p);
-      }
+    // Ensure right-handed orthonormal basis to prevent ThreeCSG polygon normal inversion
+    const det = b1.dot(new THREE.Vector3().crossVectors(b2, b3));
+    if (det < 0) {
+      b1 = seg.nB.clone().normalize();
+      b2 = seg.nA.clone().normalize();
     }
-    shape.closePath();
-    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: h + 4, bevelEnabled: false });
-    cutterGeo.rotateX(Math.PI / 2);
-    cutterGeo.translate(0, cy + (h + 4) / 2, 0);
-    const cutterMesh = new THREE.Mesh(cutterGeo);
-    csg = csg.subtract(CSG.fromMesh(cutterMesh));
-  }
 
-  // 2. Cut Horizontal X Edges
-  for (let c of horizXConfigs) {
-    if (edgeIndices && !edgeIndices.includes(c.id)) continue;
-    const sy = c.sy, sz = c.sz;
-    const cornerY = cy + sy * h2, cornerZ = cz + sz * d2;
     const shape = new THREE.Shape();
-    if (mode === "chamfer") {
-      shape.moveTo(cornerZ - sz * p, cornerY);
-      shape.lineTo(cornerZ + sz * 0.1, cornerY + sy * 0.1);
-      shape.lineTo(cornerZ, cornerY - sy * c);
-    } else {
-      const centerY = cornerY - sy * p, centerZ = cornerZ - sz * p;
-      shape.moveTo(cornerZ - sz * p, cornerY);
-      shape.lineTo(cornerZ + sz * 0.1, cornerY + sy * 0.1);
-      shape.lineTo(cornerZ, cornerY - sy * p);
-      const segs = 6;
-      for (let i = 0; i <= segs; i++) {
-        const theta = (i / segs) * (Math.PI / 2);
-        let ang;
-        if (sz > 0 && sy > 0) ang = theta;
-        else if (sz < 0 && sy > 0) ang = Math.PI - theta;
-        else if (sz < 0 && sy < 0) ang = Math.PI + theta;
-        else ang = -theta;
-        shape.lineTo(centerZ + Math.cos(ang) * p, centerY + Math.sin(ang) * p);
-      }
-    }
-    shape.closePath();
-    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: w + 4, bevelEnabled: false });
-    cutterGeo.rotateY(Math.PI / 2);
-    cutterGeo.translate(cx - (w + 4) / 2, 0, 0);
-    const cutterMesh = new THREE.Mesh(cutterGeo);
-    csg = csg.subtract(CSG.fromMesh(cutterMesh));
-  }
+    const M = p + 2.0;
 
-  // 3. Cut Horizontal Z Edges
-  for (let c of horizZConfigs) {
-    if (edgeIndices && !edgeIndices.includes(c.id)) continue;
-    const sx = c.sx, sy = c.sy;
-    const cornerX = cx + sx * w2, cornerY = cy + sy * h2;
-    const shape = new THREE.Shape();
     if (mode === "chamfer") {
-      shape.moveTo(cornerX - sx * p, cornerY);
-      shape.lineTo(cornerX + sx * 0.1, cornerY + sy * 0.1);
-      shape.lineTo(cornerX, cornerY - sy * p);
+      shape.moveTo(-p, 0);
+      shape.lineTo(0, -p);
+      shape.lineTo(M, -p);
+      shape.lineTo(M, M);
+      shape.lineTo(-p, M);
+      shape.closePath();
     } else {
-      const centerX = cornerX - sx * p, centerY = cornerY - sy * p;
-      shape.moveTo(cornerX - sx * p, cornerY);
-      shape.lineTo(cornerX + sx * 0.1, cornerY + sy * 0.1);
-      shape.lineTo(cornerX, cornerY - sy * p);
-      const segs = 6;
+      shape.moveTo(-p, 0);
+      const segs = 16;
       for (let i = 0; i <= segs; i++) {
-        const theta = (i / segs) * (Math.PI / 2);
-        let ang;
-        if (sx > 0 && sy > 0) ang = theta;
-        else if (sx < 0 && sy > 0) ang = Math.PI - theta;
-        else if (sx < 0 && sy < 0) ang = Math.PI + theta;
-        else ang = -theta;
-        shape.lineTo(centerX + Math.cos(ang) * p, centerY + Math.sin(ang) * p);
+        const theta = (Math.PI / 2) * (1 - i / segs);
+        shape.lineTo(-p + p * Math.cos(theta), -p + p * Math.sin(theta));
       }
+      shape.lineTo(M, -p);
+      shape.lineTo(M, M);
+      shape.lineTo(-p, M);
+      shape.closePath();
     }
-    shape.closePath();
-    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: d + 4, bevelEnabled: false });
-    cutterGeo.translate(0, 0, cz - (d + 4) / 2);
+
+    const depth = L + 4.0;
+    const cutterGeo = new THREE.ExtrudeGeometry(shape, { depth: depth, bevelEnabled: false });
+    cutterGeo.translate(0, 0, -depth / 2);
+
+    const basisMat = new THREE.Matrix4();
+    basisMat.makeBasis(b1, b2, b3);
+    basisMat.setPosition(m);
+    cutterGeo.applyMatrix4(basisMat);
+
     const cutterMesh = new THREE.Mesh(cutterGeo);
+    cutterMesh.matrix.identity();
     csg = csg.subtract(CSG.fromMesh(cutterMesh));
   }
 
@@ -5396,11 +5331,12 @@ function setupFilletOrChamferCommand(mode, args = {}) {
 
   params.innerHTML = `
     <span style="font-size:11px; margin-right:2px; font-weight:bold;">Edges:</span>
-    <select id="fillet-param-scope" class="prop-input" style="height:20px; font-size:11px; width:120px;">
+    <select id="fillet-param-scope" class="prop-input" style="height:20px; font-size:11px; width:135px;">
+      <option value="selected" selected>Selected Edge(s) (0)</option>
       <option value="all">All Edges (12)</option>
       <option value="vertical">Vertical Edges (4)</option>
       <option value="horizontal">Horizontal Edges (8)</option>
-      <option value="selected">Selected Edge(s)</option>
+      <option value="clear">Clear Selection (0)</option>
     </select>
     <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">${mode === "fillet" ? "Radius:" : "Distance:"}</span>
     <input id="fillet-param-val" class="prop-input" type="number" step="0.5" min="0.2" value="${defaultVal}" style="width:55px; height:20px;">
@@ -5410,9 +5346,9 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     </label>
   `;
 
-  let edgeSegments = getBoxEdgeSegments(target);
-  let selectedEdgeIds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  let currentScope = "all";
+  let edgeSegments = getSolidEdges(target);
+  let selectedEdgeIds = [];
+  let currentScope = "selected";
   let edgeOverlayGroup = new THREE.Group();
   edgeOverlayGroup.name = "Fillet_Edge_Helpers";
   target.add(edgeOverlayGroup);
@@ -5425,6 +5361,8 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     }
     edgeSegments.forEach(seg => {
       const isSel = selectedEdgeIds.includes(seg.id);
+      
+      // 1. Edge Line overlay
       const mat = new THREE.LineBasicMaterial({
         color: isSel ? 0xffff00 : 0x00d4ff,
         linewidth: isSel ? 3 : 1.5,
@@ -5432,18 +5370,39 @@ function setupFilletOrChamferCommand(mode, args = {}) {
       });
       const geo = new THREE.BufferGeometry().setFromPoints([seg.p1, seg.p2]);
       const line = new THREE.Line(geo, mat);
-      line.renderOrder = 999;
+      line.renderOrder = isSel ? 1000 : 999;
       line.userData = { isFilletEdge: true, edgeId: seg.id };
       edgeOverlayGroup.add(line);
 
-      if (isSel) {
-        const mid = seg.p1.clone().add(seg.p2).multiplyScalar(0.5);
-        const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00, depthTest: false });
-        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 8), dotMat);
-        dot.position.copy(mid);
-        dot.renderOrder = 1000;
-        dot.userData = { isFilletEdge: true, edgeId: seg.id };
-        edgeOverlayGroup.add(dot);
+      // 2. Midpoint indicator dot
+      const mid = seg.p1.clone().add(seg.p2).multiplyScalar(0.5);
+      const dotMat = new THREE.MeshBasicMaterial({
+        color: isSel ? 0xffff00 : 0x00d4ff,
+        depthTest: false
+      });
+      const dotRadius = isSel ? 0.8 : 0.45;
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(dotRadius, 8, 8), dotMat);
+      dot.position.copy(mid);
+      dot.renderOrder = isSel ? 1001 : 999;
+      dot.userData = { isFilletEdge: true, edgeId: seg.id };
+      edgeOverlayGroup.add(dot);
+
+      // 3. Invisible pick cylinder capsule along edge for easy clicking
+      const L = seg.p1.distanceTo(seg.p2);
+      if (L > 0.001) {
+        const cylGeo = new THREE.CylinderGeometry(1.8, 1.8, L, 8);
+        const cylMat = new THREE.MeshBasicMaterial({
+          transparent: true,
+          opacity: 0,
+          depthWrite: false
+        });
+        const pickCyl = new THREE.Mesh(cylGeo, cylMat);
+        pickCyl.position.copy(mid);
+        const u = seg.p2.clone().sub(seg.p1).normalize();
+        pickCyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), u);
+        pickCyl.renderOrder = 997;
+        pickCyl.userData = { isFilletEdge: true, edgeId: seg.id };
+        edgeOverlayGroup.add(pickCyl);
       }
     });
   }
@@ -5478,8 +5437,16 @@ function setupFilletOrChamferCommand(mode, args = {}) {
   function updatePrompt() {
     const valInp = document.getElementById("fillet-param-val");
     const val = parseFloat(valInp ? valInp.value : defaultVal) || defaultVal;
-    prompt.textContent = `${mode.toUpperCase()} on '${target.name}': ${selectedEdgeIds.length} edge(s) selected (${val.toFixed(1)} mm). Click [✓ Apply] (or Enter).`;
-    confirmBtn.disabled = selectedEdgeIds.length === 0;
+    const count = selectedEdgeIds.length;
+    if (count === 0) {
+      prompt.textContent = `${mode.toUpperCase()} on '${target.name}': Select edges in viewport or scope (${val.toFixed(1)} mm).`;
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = "0.5";
+    } else {
+      prompt.textContent = `${mode.toUpperCase()} on '${target.name}': ${count} edge(s) selected (${val.toFixed(1)} mm). Click [✓ Apply] (or Enter).`;
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = "1";
+    }
   }
 
   const scopeSel = document.getElementById("fillet-param-scope");
@@ -5487,12 +5454,18 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     scopeSel.onchange = () => {
       currentScope = scopeSel.value;
       if (currentScope === "all") {
-        selectedEdgeIds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        selectedEdgeIds = edgeSegments.map(e => e.id);
       } else if (currentScope === "vertical") {
-        selectedEdgeIds = [0, 1, 2, 3];
+        selectedEdgeIds = edgeSegments.filter(e => e.group === "vertical").map(e => e.id);
       } else if (currentScope === "horizontal") {
-        selectedEdgeIds = [4, 5, 6, 7, 8, 9, 10, 11];
+        selectedEdgeIds = edgeSegments.filter(e => e.group === "horizontal").map(e => e.id);
+      } else if (currentScope === "clear") {
+        selectedEdgeIds = [];
+        currentScope = "selected";
+        scopeSel.value = "selected";
       }
+      const selOpt = scopeSel.querySelector('option[value="selected"]');
+      if (selOpt) selOpt.textContent = `Selected Edge(s) (${selectedEdgeIds.length})`;
       renderEdgeHelpers();
       updatePreview();
       updatePrompt();
@@ -5522,18 +5495,19 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     type: mode,
     target: target,
     get currentScope() { return currentScope; },
+    selectedEdgeCount() { return selectedEdgeIds.length; },
     toggleEdge(edgeId) {
-      if (currentScope !== "selected") {
-        currentScope = "selected";
-        if (scopeSel) scopeSel.value = "selected";
-        selectedEdgeIds = [edgeId];
+      const idx = selectedEdgeIds.indexOf(edgeId);
+      if (idx !== -1) {
+        selectedEdgeIds.splice(idx, 1);
       } else {
-        const idx = selectedEdgeIds.indexOf(edgeId);
-        if (idx !== -1) {
-          selectedEdgeIds.splice(idx, 1);
-        } else {
-          selectedEdgeIds.push(edgeId);
-        }
+        selectedEdgeIds.push(edgeId);
+      }
+      currentScope = "selected";
+      if (scopeSel) {
+        scopeSel.value = "selected";
+        const selOpt = scopeSel.querySelector('option[value="selected"]');
+        if (selOpt) selOpt.textContent = `Selected Edge(s) (${selectedEdgeIds.length})`;
       }
       renderEdgeHelpers();
       updatePreview();
@@ -5609,58 +5583,11 @@ function setupFilletOrChamferCommand(mode, args = {}) {
   renderEdgeHelpers();
   updatePreview();
   updatePrompt();
-  confirmBtn.disabled = false;
   if (valInp) valInp.focus();
 }
 
 function executeDirectEdgeCut(mode, param = 2.5) {
-  let target = selectedObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
-  if (!target) {
-    target = sceneObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
-  }
-  if (!target) {
-    createBoxPrimitive();
-    target = sceneObjects[sceneObjects.length - 1];
-  }
-  if (!target) {
-    status(`No solid object available to ${mode}.`);
-    return;
-  }
-
-  recordUndoState(mode === "fillet" ? "Fillet Edge(s)" : "Chamfer Edge(s)");
-  const fee = 49.00;
-  if (creditBalance >= fee) {
-    creditBalance -= fee;
-    updateEconomyDisplay();
-  }
-
-  try {
-    const allEdges = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-    const newGeo = computeEdgeCutGeometry(target, mode, param, allEdges);
-    target.geometry.dispose();
-    target.geometry = newGeo;
-
-    const oldWire = target.children.find(c => c.isLineSegments);
-    if (oldWire) target.remove(oldWire);
-    const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
-    const newWire = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry, 20), wireMat);
-    target.add(newWire);
-
-    target.name = (mode === "fillet" ? "Fillet_" : "Chamfer_") + (++primitiveCounter);
-    target.userData.type = mode === "fillet" ? "FilletedSolid" : "ChamferedSolid";
-    target.userData.filletParams = { mode, param: param, edges: allEdges };
-
-    selectObject(target);
-    updateObjectsTree();
-    updatePropertiesPanel();
-    recordModelingCommand();
-    status(`${mode.toUpperCase()} applied: ${param.toFixed(1)} mm on ${target.name}.`);
-    addLog(`Applied ${mode.toUpperCase()} (${param.toFixed(1)} mm) to '${target.name}'. $${fee.toFixed(2)} deducted.`, "log-success");
-  } catch (err) {
-    console.error(`Direct ${mode} error:`, err);
-    addLog(`Failed to apply ${mode}: ` + err.message, "log-nope");
-    status(`Error applying ${mode}.`);
-  }
+  startModelingCommand(mode, { val: param });
 }
 
 // Wire Command Bar buttons
@@ -5957,19 +5884,11 @@ function executeCommand(rawCmd) {
       break;
 
     case "fillet":
-      if (args.length >= 1 && !isNaN(parseFloat(args[0]))) {
-        executeDirectEdgeCut("fillet", parseFloat(args[0]));
-      } else {
-        startModelingCommand("fillet");
-      }
+      startModelingCommand("fillet", args.length >= 1 && !isNaN(parseFloat(args[0])) ? { val: parseFloat(args[0]) } : {});
       break;
 
     case "chamfer":
-      if (args.length >= 1 && !isNaN(parseFloat(args[0]))) {
-        executeDirectEdgeCut("chamfer", parseFloat(args[0]));
-      } else {
-        startModelingCommand("chamfer");
-      }
+      startModelingCommand("chamfer", args.length >= 1 && !isNaN(parseFloat(args[0])) ? { val: parseFloat(args[0]) } : {});
       break;
 
     case "sweep":
@@ -6335,7 +6254,8 @@ function handleViewportPointerDown(e, vpId) {
 
   const hits = raycaster.intersectObjects(candidates, false);
   if (hits.length > 0) {
-    let hitMesh = hits[0].object;
+    const edgeHit = hits.find(h => h.object.userData && h.object.userData.isFilletEdge);
+    let hitMesh = edgeHit ? edgeHit.object : hits[0].object;
     let target = hitMesh;
     while (target.parent && target.parent !== scene) {
       if (sceneObjects.includes(target.parent)) {
@@ -7689,6 +7609,10 @@ function runAllTests() {
     const filletScope = document.getElementById("fillet-param-scope");
     const filletEdgeHelper = boxFilletTarget.children.find(c => c.name === "Fillet_Edge_Helpers");
     assertTest("Fillet command opens command bar with edge selector & overlays", filletBar && filletBar.style.display !== "none" && filletBadge.textContent === "FILLET EDGES" && !!filletEdgeHelper);
+    assertTest("Fillet initially has 0 edges selected (mandatory individual selection)", activeCommand && activeCommand.selectedEdgeCount() === 0);
+    activeCommand.toggleEdge(0);
+    activeCommand.toggleEdge(1);
+    assertTest("Fillet edge selection registers 2 selected edges", activeCommand.selectedEdgeCount() === 2);
     activeCommand.confirm();
     const filletedSolid = selectedObjects[0];
     assertTest("Fillet produces real rounded geometry with modified vertex count", filletedSolid && filletedSolid.userData.type === "FilletedSolid" && filletedSolid.geometry.attributes.position.count > initialBoxVerts);
@@ -7698,6 +7622,11 @@ function runAllTests() {
     const boxChamferTarget = sceneObjects[sceneObjects.length - 1];
     selectObject(boxChamferTarget);
     processRequest("Can I chamfer 2.5");
+    const chamferScope = document.getElementById("fillet-param-scope");
+    chamferScope.value = "vertical";
+    chamferScope.onchange();
+    assertTest("Chamfer vertical scope selects 4 edges", activeCommand && activeCommand.selectedEdgeCount() === 4);
+    activeCommand.confirm();
     const chamferedSolid = selectedObjects[0];
     assertTest("Chamfer produces real beveled geometry with ChamferedSolid type", chamferedSolid && chamferedSolid.userData.type === "ChamferedSolid" && chamferedSolid.geometry.attributes.position.count > initialBoxVerts);
 

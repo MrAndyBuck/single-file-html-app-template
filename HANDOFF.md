@@ -512,7 +512,45 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
 ### F. Sequential Checkpoint Roadmap Summary
 - **Checkpoint A**: Complete Retro Interface Redesign (**APPROVED BY USER** - Commit `cb5a658`).
 - **Checkpoint B**: Functional 2D Line Command Engine (**APPROVED BY USER** - Commit `8c24f35`).
-- **Checkpoint C**: Functional Fillet & Chamfer Commands with Geometry Modification (**COMPLETED & VISUALLY VERIFIED** - 64/64 tests pass).
-- **Checkpoint D**: Wandering Toolbar Icons & 85% Hold Music Volume (**COMPLETED & VISUALLY VERIFIED** - 64/64 tests pass).
+- **Checkpoint C**: Functional Fillet & Chamfer Commands with Geometry Modification (**COMPLETED & VISUALLY VERIFIED** - Commit `015a35e`).
+- **Checkpoint D**: Wandering Toolbar Icons & 85% Hold Music Volume (**COMPLETED & VISUALLY VERIFIED** - Commit `015a35e`).
+
+---
+
+## Milestone 2: Modeling and Interface Refinements (In Flight)
+
+### Checkpoint A: Repair Fillet & Chamfer Geometry with Mandatory Individual-Edge Selection (Completed & Visually Verified)
+
+#### 1. Root Cause Analysis of Prior Malformed Geometry
+- **Cutter Coordinate Displacement**: Previously, `CSG.fromMesh(mesh)` applied `mesh.matrix` (transforming geometry to world space), whereas `cutterMesh` was generated in local geometry space with identity matrix. Furthermore, `CSG.toMesh(csg, new THREE.Matrix4(), ...)` returned geometry in world coordinates which was re-assigned to `mesh.geometry` while `mesh.position` remained non-zero, displacing the mesh upward and misaligning cut bounds.
+- **Basis Orientation Reflection**: Basis matrices formed without determinant checks had $\det < 0$, which inverted ThreeCSG polygon winding normals and caused subtraction cuts to invert solid geometry.
+- **Horizontal X Cutter Typo**: Line 5309 contained typo `cornerY - sy * c` where `c` was an object instead of parameter `p`.
+- **Face Occlusion in Edge Raycasting**: 1px edge lines were occluded by solid faces in 3D pointer raycasting.
+
+#### 2. Architectural & Algorithmic Solutions Implemented
+- **Local Coordinate CSG Execution**: All CSG operations execute on a local cloned mesh with identity matrix, guaranteeing zero world-space position displacement or bounding box drift.
+- **Right-Handed Orthonormal Basis**: Universal edge cutter computes basis $(\mathbf{b}_1, \mathbf{b}_2, \mathbf{b}_3)$ from face normals $\mathbf{n}_A, \mathbf{n}_B$ and unit edge direction $\mathbf{u}$. Determinant check swaps $\mathbf{b}_1, \mathbf{b}_2$ if $\det < 0$, strictly guaranteeing $\det = +1.0$ and correct polygon winding.
+- **Exact Cutter Profiles**:
+  - **Chamfer**: Triangular prism with cross-section $(-d, 0) \to (0, -d) \to (M, -d) \to (M, M) \to (-d, M) \to (-d, 0)$ where $M = d + 2.0$. Slices corner from distance $d$ on Face A to distance $d$ on Face B.
+  - **Fillet**: 16-segment circular arc centered at $(-R, -R)$ tangent to both faces, removing sharp corner and creating true rounded cylindrical radius.
+- **Mandatory Individual-Edge Selection**:
+  - Initial selection starts empty: `selectedEdgeIds = []` (does not automatically cut all edges).
+  - Scope dropdown options: `Selected Edge(s) (0)`, `All Edges (12)`, `Vertical Edges (4)`, `Horizontal Edges (8)`, `Clear Selection (0)`.
+  - Edge helpers render unselected edges in cyan (`0x00d4ff`) with hollow anchor dots, and selected edges in bold yellow (`0xffff00`) with midpoint yellow spheres.
+  - Invisible cylinder capsules (radius 1.8 mm) along each edge ensure pointer raycasting reliably prioritizes edges over solid faces in all 4 viewports.
+  - Apply button `[✓ Apply (Enter)]` is disabled with 50% opacity until at least one edge is selected.
+  - Live emerald green wireframe preview mesh (`0x39ff14`) updates in real time on any parameter or edge selection change.
+- **Fictional Economy & Undo Protection**:
+  - $49.00 fee is deducted strictly upon successful operation completion.
+  - Fully undoable via `Can I undo`, restoring original geometry, wireframes, and credit balance.
+
+#### 3. Verification & Visual Artifacts
+- **Automated Tests**: Passes 67/67 unit tests (100% passing), including new tests verifying initial 0-edge mandatory selection, individual edge toggling, scope selection, and geometry modification.
+- **Exact Dimension Comparison**: Box ($20\times 20\times 20$) with 3.0mm fillet has arc vertices matching $(x - 7.0)^2 + (z - 7.0)^2 = 3.0^2$; 3.5mm chamfer produces exact flat bevel connecting $x=6.5, z=10$ to $x=10, z=6.5$. Unaffected faces and sharp edges remain completely unmodified.
+- **Visual Artifacts Opened in macOS Preview**:
+  1. `checkpoint_a_01_fillet_edge_selection_preview.png`: Fillet Command Bar active with 2 selected edges highlighted yellow, cyan unselected edges, and live emerald green preview mesh.
+  2. `checkpoint_a_02_fillet_completed_solid.png`: Completed `Fillet_3` solid with rounded cylindrical corners, FeatureManager registration, Properties panel parameters, and $49 fee deduction.
+  3. `checkpoint_a_03_chamfer_selected_edges.png`: Completed `Chamfer_5` solid alongside `Fillet_3`, showing 45-degree flat bevel facets and unmodified planar faces.
+
 
 
