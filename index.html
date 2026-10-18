@@ -1429,6 +1429,24 @@
           <button id="btn-toggle-test-primitives" style="width:100%; margin-top:4px; padding:3px 6px; background:var(--win95-bg); border:1px solid #000; font-family:var(--font-mono); font-size:10px; cursor:pointer;">
             Toggle 4-View Test Primitives [ON/OFF]
           </button>
+          <hr class="debug-divider">
+          <div class="debug-section-title">Ad Shuffle Bag (Non-Replacement)</div>
+          <div class="debug-row">
+            <span class="debug-label">Remaining in Bag:</span>
+            <span id="dbg-ads-remaining" class="debug-val">14 / 14</span>
+          </div>
+          <div class="debug-row">
+            <span class="debug-label">Shown in Cycle:</span>
+            <span id="dbg-ads-shown-count" class="debug-val">0 / 14</span>
+          </div>
+          <div class="debug-row" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span class="debug-label">Appeared in Current Cycle:</span>
+            <div id="dbg-ads-history" style="font-size: 9px; max-height: 40px; overflow-y: auto; width: 100%; color: #39ff14; background: #000; padding: 2px 4px; word-break: break-all;">(none yet in cycle)</div>
+          </div>
+          <div class="debug-row" style="flex-direction: column; align-items: flex-start; gap: 2px;">
+            <span class="debug-label">Pending in Current Bag:</span>
+            <div id="dbg-ads-pending" style="font-size: 9px; max-height: 40px; overflow-y: auto; width: 100%; color: #ffff00; background: #000; padding: 2px 4px; word-break: break-all;">...</div>
+          </div>
         </div>
       </div>
     </main>
@@ -1602,11 +1620,10 @@
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
   <div style="padding: 6px; text-align: center;">
-    <p style="margin: 4px 0 8px 0; font-weight: bold; color: #800000; font-size: 12px;">Transaction Terminated: Insufficient Fictional Credits</p>
     <div style="display: flex; justify-content: center; align-items: center; margin: 6px 0; background: #c0c0c0; border: 2px inset var(--win95-dark); padding: 4px; min-height: 120px;">
       <img id="insufficient-funds-img" src="assets/Finger.jpg" alt="Finger.jpg" style="max-width: 320px; max-height: 240px; object-fit: contain; display: block;" onerror="this.onerror=null; this.src='assets/ads/Finger.jpg';">
     </div>
-    <p id="insufficient-funds-msg" style="margin: 6px 0 4px 0; font-size: 11px;">You do not possess sufficient credits for this command. Your credit balance remains untouched ($0.00 deducted).</p>
+    <p id="insufficient-funds-msg" style="margin: 8px 0 6px 0; font-size: 14px; font-weight: bold; font-family: var(--font-ui); color: #000000;">haha broke bitch</p>
   </div>
   <div class="dialog-actions" style="justify-content: center;">
     <button class="btn-dialog btn-primary" id="btn-close-insufficient-funds">OK</button>
@@ -4363,7 +4380,7 @@ function showInsufficientFundsModal(opName = "Operation", fee = 49.00, balance =
   if (!modal) return;
   const msgEl = document.getElementById("insufficient-funds-msg");
   if (msgEl) {
-    msgEl.textContent = `Insufficient credits for ${opName.toUpperCase()} ($${fee.toFixed(2)} required). Current balance: $${balance.toFixed(2)}. $0.00 deducted.`;
+    msgEl.textContent = "haha broke bitch";
   }
   modal.showModal();
 }
@@ -4426,19 +4443,87 @@ function cancelDelayOperation() {
   status("Operation canceled.");
 }
 
+/* =========================================================================
+   8.1 ADVERTISEMENT SHUFFLE BAG (NON-REPLACEMENT POOL)
+   ========================================================================= */
 let currentAdIndex = -1;
 let modelingCommandCount = 0;
 let adStackCount = 0;
+let adShuffleBag = [];
+let adHistoryInCycle = [];
+let lastShownAdIndex = -1;
 
-function getRandomAdIndex() {
-  const ads = ASSET_MANIFEST.ads;
-  if (!ads || ads.length === 0) return -1;
-  if (ads.length === 1) return 0;
-  let next = Math.floor(Math.random() * ads.length);
-  if (next === currentAdIndex) {
-    next = (next + 1) % ads.length;
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+}
+
+function initializeOrRefillAdBag() {
+  const ads = (typeof ASSET_MANIFEST !== "undefined" && ASSET_MANIFEST.ads) ? ASSET_MANIFEST.ads : [];
+  if (ads.length === 0) return;
+  const indices = ads.map((_, i) => i);
+  let shuffled = shuffleArray(indices);
+  // Avoid displaying the same advertisement at the boundary between cycles when more than one advertisement exists
+  if (ads.length > 1 && lastShownAdIndex !== -1 && shuffled[0] === lastShownAdIndex) {
+    const swapIdx = 1 + Math.floor(Math.random() * (shuffled.length - 1));
+    [shuffled[0], shuffled[swapIdx]] = [shuffled[swapIdx], shuffled[0]];
+  }
+  adShuffleBag = shuffled;
+  adHistoryInCycle = [];
+  updateAdDebugView();
+}
+
+function getNextShuffleBagAdIndex() {
+  const ads = (typeof ASSET_MANIFEST !== "undefined" && ASSET_MANIFEST.ads) ? ASSET_MANIFEST.ads : [];
+  if (ads.length === 0) return -1;
+  if (ads.length === 1) return 0;
+  if (adShuffleBag.length === 0) {
+    initializeOrRefillAdBag();
+  }
+  const next = adShuffleBag.shift();
+  adHistoryInCycle.push(next);
+  lastShownAdIndex = next;
+  updateAdDebugView();
   return next;
+}
+
+function updateAdDebugView() {
+  const ads = (typeof ASSET_MANIFEST !== "undefined" && ASSET_MANIFEST.ads) ? ASSET_MANIFEST.ads : [];
+  const total = ads.length;
+  const remainingEl = document.getElementById("dbg-ads-remaining");
+  if (remainingEl) remainingEl.textContent = `${adShuffleBag.length} / ${total}`;
+
+  const shownCountEl = document.getElementById("dbg-ads-shown-count");
+  if (shownCountEl) shownCountEl.textContent = `${adHistoryInCycle.length} / ${total}`;
+
+  const historyEl = document.getElementById("dbg-ads-history");
+  if (historyEl) {
+    if (adHistoryInCycle.length === 0) {
+      historyEl.textContent = "(none yet in cycle)";
+    } else {
+      historyEl.textContent = adHistoryInCycle.map((idx, step) => {
+        const adObj = ads[idx];
+        const name = typeof adObj === "string" ? adObj.split("/").pop() : (adObj && adObj.name ? adObj.name : idx);
+        return `#${step + 1}: [${idx}] ${name}`;
+      }).join(", ");
+    }
+  }
+
+  const pendingEl = document.getElementById("dbg-ads-pending");
+  if (pendingEl) {
+    if (adShuffleBag.length === 0) {
+      pendingEl.textContent = "(bag empty — will reshuffle next)";
+    } else {
+      pendingEl.textContent = adShuffleBag.map(idx => {
+        const adObj = ads[idx];
+        return typeof adObj === "string" ? adObj.split("/").pop() : (adObj && adObj.name ? adObj.name : idx);
+      }).join(", ");
+    }
+  }
 }
 
 function createAdCard(adIndex, layerNum) {
@@ -4508,7 +4593,7 @@ function createAdCard(adIndex, layerNum) {
   container.appendChild(img);
   container.appendChild(placeholder);
 
-  // Clicking an advertisement creates another advertisement layered above it, rather than replacing it!
+  // Clicking an advertisement creates another advertisement layered above it, without counting as a CAD command!
   container.onclick = (e) => {
     e.stopPropagation();
     pushAdLayer();
@@ -4521,7 +4606,7 @@ function createAdCard(adIndex, layerNum) {
 function pushAdLayer() {
   const stackContainer = document.getElementById("ad-stack-container");
   if (!stackContainer) return;
-  const nextIdx = getRandomAdIndex();
+  const nextIdx = getNextShuffleBagAdIndex();
   currentAdIndex = nextIdx;
   const newCard = createAdCard(nextIdx, adStackCount);
   stackContainer.appendChild(newCard);
@@ -4565,7 +4650,7 @@ function displayAd(idx) {
 }
 
 function rotateAd() {
-  const nextIdx = getRandomAdIndex();
+  const nextIdx = getNextShuffleBagAdIndex();
   displayAd(nextIdx);
 }
 
@@ -6227,38 +6312,43 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     while (edgeOverlayGroup.children.length > 0) {
       edgeOverlayGroup.remove(edgeOverlayGroup.children[0]);
     }
+    const hoveredId = activeCommand ? activeCommand.hoveredEdgeId : null;
+
     edgeSegments.forEach(seg => {
       const isSel = selectedEdgeIds.includes(seg.id);
+      const isHov = hoveredId === seg.id;
       
       // 1. Edge Line overlay
+      const edgeColor = isHov ? 0xff7700 : (isSel ? 0xffff00 : 0x00d4ff);
+      const edgeWidth = isHov ? 4 : (isSel ? 3 : 1.5);
       const mat = new THREE.LineBasicMaterial({
-        color: isSel ? 0xffff00 : 0x00d4ff,
-        linewidth: isSel ? 3 : 1.5,
+        color: edgeColor,
+        linewidth: edgeWidth,
         depthTest: false
       });
       const geo = new THREE.BufferGeometry().setFromPoints([seg.p1, seg.p2]);
       const line = new THREE.Line(geo, mat);
-      line.renderOrder = isSel ? 1000 : 999;
+      line.renderOrder = isHov ? 1002 : (isSel ? 1000 : 999);
       line.userData = { isFilletEdge: true, edgeId: seg.id };
       edgeOverlayGroup.add(line);
 
       // 2. Midpoint indicator dot
       const mid = seg.p1.clone().add(seg.p2).multiplyScalar(0.5);
       const dotMat = new THREE.MeshBasicMaterial({
-        color: isSel ? 0xffff00 : 0x00d4ff,
+        color: edgeColor,
         depthTest: false
       });
-      const dotRadius = isSel ? 0.8 : 0.45;
+      const dotRadius = isHov ? 1.1 : (isSel ? 0.8 : 0.45);
       const dot = new THREE.Mesh(new THREE.SphereGeometry(dotRadius, 8, 8), dotMat);
       dot.position.copy(mid);
-      dot.renderOrder = isSel ? 1001 : 999;
+      dot.renderOrder = isHov ? 1003 : (isSel ? 1001 : 999);
       dot.userData = { isFilletEdge: true, edgeId: seg.id };
       edgeOverlayGroup.add(dot);
 
-      // 3. Invisible pick cylinder capsule along edge for easy clicking
+      // 3. Invisible pick cylinder capsule along edge for raycasting fallback
       const L = seg.p1.distanceTo(seg.p2);
       if (L > 0.001) {
-        const cylGeo = new THREE.CylinderGeometry(1.8, 1.8, L, 8);
+        const cylGeo = new THREE.CylinderGeometry(2.4, 2.4, L, 8);
         const cylMat = new THREE.MeshBasicMaterial({
           transparent: true,
           opacity: 0,
@@ -6362,8 +6452,86 @@ function setupFilletOrChamferCommand(mode, args = {}) {
   activeCommand = {
     type: mode,
     target: target,
+    hoveredEdgeId: null,
     get currentScope() { return currentScope; },
     selectedEdgeCount() { return selectedEdgeIds.length; },
+    findEdgeUnderPointer(vpId, e) {
+      if (!vpId || !viewports[vpId] || !viewports[vpId].canvas || !e) return null;
+      const vp = viewports[vpId];
+      const cam = cameras[vpId];
+      const rect = vp.canvas.getBoundingClientRect();
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      if (mouseX < rect.left || mouseX > rect.right || mouseY < rect.top || mouseY > rect.bottom) return null;
+
+      let bestEdge = null;
+      let minDistance = 24; // 24 pixel screen-space threshold
+
+      target.updateMatrixWorld(true);
+
+      edgeSegments.forEach(seg => {
+        const p1World = seg.p1.clone().applyMatrix4(target.matrixWorld);
+        const p2World = seg.p2.clone().applyMatrix4(target.matrixWorld);
+
+        const p1Proj = p1World.clone().project(cam);
+        const p2Proj = p2World.clone().project(cam);
+
+        if (p1Proj.z > 1 && p2Proj.z > 1) return;
+
+        const x1 = ((p1Proj.x + 1) / 2) * rect.width + rect.left;
+        const y1 = ((-p1Proj.y + 1) / 2) * rect.height + rect.top;
+        const x2 = ((p2Proj.x + 1) / 2) * rect.width + rect.left;
+        const y2 = ((-p2Proj.y + 1) / 2) * rect.height + rect.top;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const lenSq = dx * dx + dy * dy;
+        let dist = 999;
+        if (lenSq < 0.001) {
+          dist = Math.hypot(mouseX - x1, mouseY - y1);
+        } else {
+          let t = ((mouseX - x1) * dx + (mouseY - y1) * dy) / lenSq;
+          t = Math.max(0, Math.min(1, t));
+          const projX = x1 + t * dx;
+          const projY = y1 + t * dy;
+          dist = Math.hypot(mouseX - projX, mouseY - projY);
+        }
+
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestEdge = seg;
+        }
+      });
+
+      return bestEdge;
+    },
+    handlePointerMove(pt, vpId, e, raycaster) {
+      const edge = this.findEdgeUnderPointer(vpId, e);
+      const edgeId = edge ? edge.id : null;
+      if (edgeId !== this.hoveredEdgeId) {
+        this.hoveredEdgeId = edgeId;
+        renderEdgeHelpers();
+        renderAllViewports();
+      }
+      const coordsReadout = document.getElementById("coords-readout");
+      if (coordsReadout) {
+        if (edge) {
+          const action = selectedEdgeIds.includes(edge.id) ? "deselect" : "select";
+          coordsReadout.textContent = `[EDGE #${edge.id}] ${edge.group.toUpperCase()} (L=${edge.p1.distanceTo(edge.p2).toFixed(1)}mm) — Click to ${action}`;
+        } else if (pt) {
+          coordsReadout.textContent = `X: ${pt.x.toFixed(1)} Y: ${pt.y.toFixed(1)} Z: ${pt.z.toFixed(1)}`;
+        }
+      }
+    },
+    handlePointerDown(pt, vpId, e, raycaster) {
+      const edge = this.findEdgeUnderPointer(vpId, e);
+      if (edge) {
+        this.toggleEdge(edge.id);
+        renderAllViewports();
+        return true;
+      }
+      return false;
+    },
     toggleEdge(edgeId) {
       const idx = selectedEdgeIds.indexOf(edgeId);
       if (idx !== -1) {
@@ -8098,6 +8266,10 @@ function updateDebugOverlay() {
   const dpr = (window.devicePixelRatio || 1).toFixed(1);
   const elDims = document.getElementById("dbg-canvas-dims");
   if (elDims) elDims.textContent = `${cssW}×${cssH} stage (${bufW}×${bufH} active-buf, DPR:${dpr}) [4-Canvas Architecture]`;
+
+  if (typeof updateAdDebugView === "function") {
+    updateAdDebugView();
+  }
 }
 
 // Debug HUD Minimize Toggle & Test Primitive Toggle
@@ -8931,7 +9103,7 @@ function runAllTests() {
     const isCompactGrid = toolbarStyle && (toolbarStyle.alignContent === "start" || toolbarStyle.alignContent === "flex-start") && toolbarStyle.gridAutoRows === "32px";
     assertTest("Right-side Features toolbar uses compact dense icon grid layout", isCompactGrid === true);
 
-    // Test 48: Insufficient funds popup appears on failed paid transaction without credit deduction
+    // Test 48: Insufficient funds popup appears on failed paid transaction with 'haha broke bitch' and $0 deducted
     const origCredits = creditBalance;
     creditBalance = 5.00; // less than $49 or $10 fee
     updateEconomyDisplay();
@@ -8947,12 +9119,85 @@ function runAllTests() {
     const zeroDeducted = creditBalance === 5.00 && !delayTriggered;
     const imgEl = document.getElementById("insufficient-funds-img");
     const imgCorrectSrc = imgEl && (imgEl.getAttribute("src") === "assets/Finger.jpg" || imgEl.src.includes("Finger.jpg"));
+    const msgEl = document.getElementById("insufficient-funds-msg");
+    const exactMsg = msgEl && msgEl.textContent.trim() === "haha broke bitch";
     if (modalInsFunds && modalInsFunds.open) modalInsFunds.close();
     triggerArtificialDelay = origDelay;
     showConfirmModal = origConfirm;
     creditBalance = origCredits;
     updateEconomyDisplay();
-    assertTest("Insufficient funds popup appears on failed paid transaction with Finger.jpg and $0 deducted", popupOpened && zeroDeducted && imgCorrectSrc);
+    assertTest("Insufficient funds popup appears on failed paid transaction with Finger.jpg, 'haha broke bitch', and $0 deducted", popupOpened && zeroDeducted && imgCorrectSrc && exactMsg);
+
+    // Test 49: Advertisement Shuffle Bag (selection without replacement across all 14 ads)
+    const adPoolSize = ASSET_MANIFEST.ads.length;
+    initializeOrRefillAdBag();
+    const seenIndices = new Set();
+    let prevIndex = -1;
+    let noImmediateBoundaryRepeat = true;
+    for (let c = 0; c < adPoolSize; c++) {
+      const idx = getNextShuffleBagAdIndex();
+      seenIndices.add(idx);
+      prevIndex = idx;
+    }
+    const allSeenOnce = seenIndices.size === adPoolSize;
+    // Next draw triggers reshuffle without boundary repeat
+    const nextCycleFirst = getNextShuffleBagAdIndex();
+    if (adPoolSize > 1 && nextCycleFirst === prevIndex) {
+      noImmediateBoundaryRepeat = false;
+    }
+    assertTest("Ad shuffle bag draws all 14 registered ads without replacement and avoids cycle boundary repeats", allSeenOnce && noImmediateBoundaryRepeat);
+
+    // Test 50: Single-Edge Fillet applies rounded radius to selected edge and leaves unaffected edges intact
+    createBoxPrimitive();
+    const filletBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(filletBox);
+    startModelingCommand("fillet", { val: 2.0 });
+    activeCommand.toggleEdge(0); // Select exactly 1 edge (Edge #0)
+    const singleEdgeCountOk = activeCommand.selectedEdgeCount() === 1;
+    activeCommand.confirm();
+    const filletMesh = sceneObjects[sceneObjects.length - 1];
+    const filletPos = filletMesh.geometry.attributes.position.array;
+    let hasCutCornerInFillet = false;
+    for (let i = 0; i < filletPos.length; i += 3) {
+      if (Math.abs(filletPos[i] - 7) < 0.01 && Math.abs(filletPos[i + 2] - 7) < 0.01) {
+        hasCutCornerInFillet = true;
+        break;
+      }
+    }
+    // Check unaffected corner (-7, 7, -7)
+    let hasUnaffectedCornerFillet = false;
+    for (let i = 0; i < filletPos.length; i += 3) {
+      if (Math.abs(filletPos[i] - (-7)) < 0.01 && Math.abs(filletPos[i + 1] - 7) < 0.01 && Math.abs(filletPos[i + 2] - (-7)) < 0.01) {
+        hasUnaffectedCornerFillet = true;
+        break;
+      }
+    }
+    assertTest("Single-edge Fillet modifies only chosen edge with rounded geometry and preserves unaffected corners", singleEdgeCountOk && !hasCutCornerInFillet && hasUnaffectedCornerFillet);
+
+    // Test 51: Single-Edge Chamfer applies flat 45-degree cut to selected edge and leaves unaffected edges intact
+    createBoxPrimitive();
+    const chamferBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(chamferBox);
+    startModelingCommand("chamfer", { val: 2.0 });
+    activeCommand.toggleEdge(0); // Select exactly 1 edge (Edge #0)
+    activeCommand.confirm();
+    const chamferMesh = sceneObjects[sceneObjects.length - 1];
+    const chamferPos = chamferMesh.geometry.attributes.position.array;
+    let hasCutCornerInChamfer = false;
+    for (let i = 0; i < chamferPos.length; i += 3) {
+      if (Math.abs(chamferPos[i] - 7) < 0.01 && Math.abs(chamferPos[i + 2] - 7) < 0.01) {
+        hasCutCornerInChamfer = true;
+        break;
+      }
+    }
+    let hasUnaffectedCornerChamfer = false;
+    for (let i = 0; i < chamferPos.length; i += 3) {
+      if (Math.abs(chamferPos[i] - (-7)) < 0.01 && Math.abs(chamferPos[i + 1] - 7) < 0.01 && Math.abs(chamferPos[i + 2] - (-7)) < 0.01) {
+        hasUnaffectedCornerChamfer = true;
+        break;
+      }
+    }
+    assertTest("Single-edge Chamfer modifies only chosen edge with 45-degree flat plane and preserves unaffected corners", !hasCutCornerInChamfer && hasUnaffectedCornerChamfer);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });

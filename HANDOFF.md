@@ -729,4 +729,66 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
   3. `rhino_move_step3_exact_corner_coincidence_verified.png`: Finalized move across all 4 viewports demonstrating exact corner coincidence between Box A and Box B ($|\mathbf{P}_{A,\text{corner}} - \mathbf{P}_{B,\text{corner}}| = 0.0000\text{ mm}$), verified with visual reticle and centered confirmation badge.
   4. `slow_gumball_free_move_4_percent.png`: Slow Gumball Free Move in action showing 3D Gumball handles centered on `Slow_Gumball_Box`, displaced smoothly by exactly 4.0mm in X and 4.0mm in Z after a 100mm cursor drag, verifying the exact 0.04 geometric multiplier.
 
+---
+
+### Milestone: User Acceptance Corrections (Insufficient Funds, Single-Edge Fillet/Chamfer, Compact Toolbar, and Ad Shuffle Bag)
+
+#### 1. Architectural & Algorithmic Solutions Implemented
+- **Insufficient Funds Modal (`Finger.jpg` + "haha broke bitch")**:
+  - Maintained `<dialog id="modal-insufficient-funds">` with authentic Windows 95 titlebar, caption close `✕` button, and `[OK]` dismiss button.
+  - Preserved `assets/Finger.jpg` in full fidelity.
+  - Displays exactly the requested user text: **`haha broke bitch`** in bold UI font.
+  - Guaranteed $0.00 deducted on failure: when a paid operation (e.g. Fillet/Chamfer at $49.00, Import at $10.00) is attempted with insufficient credits, the popup appears, fictional credit balance remains completely untouched, and no artificial delay is triggered.
+  - Fully dismissible via `[OK]` button, caption close `✕`, or `Escape`, restoring normal workspace access.
+- **Single-Edge Fillet and Chamfer Mesh Operations & Edge Selection**:
+  - **Screen-Space Edge Proximity Detection**:
+    - Projecting 3D edge world endpoints to viewport screen space with a generous 24px threshold (`findEdgeUnderPointer`).
+    - Eliminates fragile raycasting misses on thin edge cylinders.
+  - **Real-Time Hover Highlight & HUD Feedback**:
+    - Hovering an edge in any viewport highlights it in bright orange (`0xff7700`, 4px width, enlarged 1.1mm midpoint dot) with real-time status bar readout:
+      `[EDGE #0] VERTICAL (L=20.0mm) — Click to select`.
+  - **Pointer-Based Edge Selection**:
+    - Clicking an edge in the viewport toggles selection and updates the live preview immediately (`activeCommand.handlePointerDown`).
+    - Supports selecting **exactly one edge**.
+  - **Single-Edge Cut Geometry & Unaffected Mesh Preservation**:
+    - `computeEdgeCutGeometry(mesh, mode, param, [edgeId])` constructs an orthonormal cutter basis aligned with the chosen edge's outward normals and subtracts it locally via ThreeCSG.
+    - **Single-Edge Fillet**: Replaces the sharp 90° corner with a smooth 16-segment circular arc of specified radius. Leaves the other 11 edges and all 5 opposite faces completely untouched and planar. Computed normals ensure smooth shading along the fillet arc.
+    - **Single-Edge Chamfer**: Replaces the sharp 90° corner with an exact flat 45° bevel plane of specified distance. Leaves all unaffected edges and corners completely intact.
+    - **Full Interaction Lifecycle**: Live emerald preview mesh (`0x39ff14`), Cancel (`Esc` or `✕ Cancel`), Confirm (`Enter` or `✓ Apply`), and Undo (`Can I undo` restores intact original mesh). Fictional credits ($49.00) are only deducted upon successful confirmation.
+- **Compact Feature Toolbar Layout**:
+  - Replaced toolbar layout with an ultra-compact dense 2-column grid (`grid-template-columns: repeat(2, 30px); grid-auto-rows: 30px; gap: 2px; align-content: start;`).
+  - Minimal 2px spacing between adjacent buttons; eliminates large blank vertical gaps.
+  - Maintains clear Windows 95 beveled boundaries (`box-shadow: inset 1px 1px 0px var(--win95-midlight), inset -1px -1px 0px var(--win95-dark)`).
+  - Preserved button relocation on click (`relocateToolbarIcons`).
+- **Advertisement Shuffle Bag (Non-Replacement Pool)**:
+  - Replaced unrestricted random selection with Fisher-Yates randomized selection without replacement across all 14 registered advertisements in `ASSET_MANIFEST.ads`.
+  - Shows each advertisement exactly once per cycle before repeating any.
+  - Automatically reshuffles when the bag is exhausted, with a boundary non-repeat check (`shuffled[0] !== lastShownAdIndex`).
+  - Unified selection pool: both scheduled 7-command ads and stacked ad clicks (`pushAdLayer`) draw from the same bag.
+  - Ad clicks and close buttons do not count as CAD commands.
+  - Added dedicated Diagnostic HUD view displaying:
+    - Remaining ads in current cycle (`dbg-ads-remaining`).
+    - Shown ads in current cycle (`dbg-ads-shown-count`).
+    - Ordered history of appeared ads in current cycle (`dbg-ads-history`).
+    - Pending queue in current cycle (`dbg-ads-pending`).
+- **Rhino-Style Point-to-Point Move**:
+  - Preserved authentic point-to-point move workflow (`Can I move`), OSNAP corners (`Endpoint (Corner)`) and edge midpoints (`Midpoint`), live ghost preview and rubberband, exact corner coincidence ($0.0000\text{ mm}$ error), Cancel, and Undo.
+
+#### 2. Verification & Visual Artifacts
+- **Automated Test Suite**: Passes **94/94** unit tests (100% passing), including:
+  - Test 48: Insufficient funds popup displays `Finger.jpg`, exact message `"haha broke bitch"`, and deducts $0.00.
+  - Test 49: Advertisement shuffle bag draws all 14 registered ads without replacement and avoids cycle boundary repeats.
+  - Test 50: Single-edge Fillet modifies only chosen edge with rounded geometry and preserves unaffected corners.
+  - Test 51: Single-edge Chamfer modifies only chosen edge with 45-degree flat plane and preserves unaffected corners.
+- **Visual Artifacts Automatically Opened in macOS Preview**:
+  1. `ua_01_insufficient_funds_haha_broke_bitch.png`: Windows 95 dialog displaying `Finger.jpg` with exact text `"haha broke bitch"` and intact credit balance ($5.00).
+  2. `ua_02_features_panel_compact_full_height.png`: Element-clipped full-height screenshot of the Features panel showing the compact 2×9 grid with minimal 2px spacing, classic beveled buttons, and zero vertical dead gaps.
+  3. `ua_03_ad_shuffle_bag_debug_view.png`: Diagnostic HUD display showing 2/14 ads shown, 12/14 remaining in bag, and complete pending queue.
+  4. `ua_04_fillet_01_before_sharp_edge_closeup.png`: Close-up of box before Fillet showing sharp 90° corner.
+  5. `ua_04_fillet_02_single_edge_selected_preview.png`: Close-up during Fillet showing single selected edge in yellow/orange and emerald preview arc.
+  6. `ua_04_fillet_03_completed_rounded_solid_closeup.png`: Close-up after Fillet showing smooth 16-segment rounded curve and unaffected planar faces.
+  7. `ua_05_chamfer_01_before_sharp_edge_closeup.png`: Close-up of box before Chamfer showing sharp 90° corner.
+  8. `ua_05_chamfer_02_single_edge_selected_preview.png`: Close-up during Chamfer showing single selected edge and emerald preview bevel.
+  9. `ua_05_chamfer_03_completed_beveled_solid_closeup.png`: Close-up after Chamfer showing flat 45° bevel plane and unaffected planar faces.
+
 
