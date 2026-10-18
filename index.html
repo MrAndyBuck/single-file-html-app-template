@@ -2308,7 +2308,7 @@ let lastPointerCPlanePos = null;
 let sketchSnapMarker = null;
 
 function renderAllViewports() {
-  // Viewports render continuously via the active requestAnimationFrame loop
+  if (typeof render === "function") render();
 }
 
 function removeSnapMarker() {
@@ -3664,11 +3664,16 @@ function handleGumballDragMove(e, vpId) {
   const delta = currentPt.clone().sub(gumballDragState.startHit);
 
   if (gumballDragState.mode === "free_move") {
-    if (delta.lengthSq() > 0.0001) {
+    // Deliberate slowdown multiplier: 0.04 (4% displacement)
+    const slowMultiplier = 0.04;
+    const slowDelta = delta.clone().multiplyScalar(slowMultiplier);
+
+    if (slowDelta.lengthSq() > 0.000001) {
       gumballDragState.hasMoved = true;
     }
     gumballDragState.initialStates.forEach(item => {
-      item.obj.position.copy(item.pos).add(delta);
+      item.obj.position.copy(item.pos).add(slowDelta);
+      item.obj.updateMatrixWorld(true);
     });
     updateGumball();
     updatePropertiesPanel();
@@ -5258,6 +5263,9 @@ function setupMoveCommand(args = {}) {
   };
 
   function cleanupVisuals() {
+    if (typeof updateSketchSnapMarker === "function") {
+      updateSketchSnapMarker(null);
+    }
     if (state.baseMarker) {
       scene.remove(state.baseMarker);
       state.baseMarker = null;
@@ -5389,7 +5397,8 @@ function setupMoveCommand(args = {}) {
   function enterBasePointStep() {
     state.step = "base";
     const centroid = getSelectionCentroid();
-    prompt.textContent = `MOVE: Specify base point (click in viewport or enter X, Y, Z coords) [Default: centroid (${centroid.x.toFixed(1)}, ${centroid.y.toFixed(1)}, ${centroid.z.toFixed(1)})].`;
+    prompt.textContent = "Point to move from:";
+    status("Point to move from:");
     confirmBtn.disabled = false;
     confirmBtn.textContent = "Next (Use Base) >";
 
@@ -5444,7 +5453,8 @@ function setupMoveCommand(args = {}) {
 
   function enterDestPointStep() {
     state.step = "dest";
-    prompt.textContent = `MOVE: Specify destination point (click in viewport, enter coords, or enter dX, dY, dZ).`;
+    prompt.textContent = "Point to move to:";
+    status("Point to move to:");
     confirmBtn.disabled = false;
     confirmBtn.textContent = "✓ Confirm Move (Enter)";
 
@@ -5553,30 +5563,41 @@ function setupMoveCommand(args = {}) {
     handleSelect(target) {
       if (state.step === "select") {
         selectObject(target, true);
-        this.updateUI();
+        enterBasePointStep();
       }
     },
     handlePointerDown(pt, vpId, e, raycaster) {
+      if (state.step === "select") {
+        if (selectedObjects.length > 0) {
+          enterBasePointStep();
+          return true;
+        }
+        return false;
+      }
       const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
       const targetPt = snap ? snap.point.clone() : pt.clone();
+      if (typeof updateSketchSnapMarker === "function") updateSketchSnapMarker(null);
 
-      if (state.step === "select") {
-        if (selectedObjects.length > 0) enterBasePointStep();
-        return;
-      }
       if (state.step === "base") {
         setBasePoint(targetPt);
-        return;
+        return true;
       }
       if (state.step === "dest") {
         applyMoveToPoint(targetPt);
-        return;
+        return true;
       }
     },
     handlePointerMove(pt, vpId, e, raycaster) {
+      const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
+      const targetPt = snap ? snap.point.clone() : pt.clone();
+
+      if (snap && typeof updateSketchSnapMarker === "function") {
+        updateSketchSnapMarker(snap.point, snap.label);
+      } else if (typeof updateSketchSnapMarker === "function") {
+        updateSketchSnapMarker(null);
+      }
+
       if (state.step === "dest") {
-        const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
-        const targetPt = snap ? snap.point.clone() : pt.clone();
         updateGhostAndRubberband(targetPt);
       }
     },
@@ -6752,8 +6773,8 @@ function handleViewportPointerDown(e, vpId) {
     const plane = getCPlane(vpId);
     const intersectPt = new THREE.Vector3();
     if (raycaster.ray.intersectPlane(plane, intersectPt)) {
-      activeCommand.handlePointerDown(intersectPt, vpId, e, raycaster);
-      return;
+      const handled = activeCommand.handlePointerDown(intersectPt, vpId, e, raycaster);
+      if (handled !== false) return;
     }
   }
 
@@ -8212,10 +8233,12 @@ function runAllTests() {
     selectObject(moveTestBox);
     const origBoxPos = moveTestBox.position.clone();
     startModelingCommand("move");
-    assertTest("Move command initializes in point-to-point base specification step", activeCommand && activeCommand.type === "move" && activeCommand.state.step === "base");
+    const basePromptOk = document.getElementById("command-prompt").textContent === "Point to move from:";
+    assertTest("Move command initializes in point-to-point base specification step", activeCommand && activeCommand.type === "move" && activeCommand.state.step === "base" && basePromptOk);
     // Pick base point
     activeCommand.handlePointerDown(new THREE.Vector3(0, 0, 0), "top");
-    assertTest("Move command registers base point and transitions to dest step with base marker", activeCommand && activeCommand.state.step === "dest" && !!activeCommand.state.baseMarker);
+    const destPromptOk = document.getElementById("command-prompt").textContent === "Point to move to:";
+    assertTest("Move command registers base point and transitions to dest step with base marker", activeCommand && activeCommand.state.step === "dest" && !!activeCommand.state.baseMarker && destPromptOk);
     // Move pointer to destination (12, 0, 18)
     activeCommand.handlePointerMove(new THREE.Vector3(12, 0, 18), "top");
     assertTest("Move command generates live ghost preview and rubberband line", activeCommand && !!activeCommand.state.ghostGroup && !!activeCommand.state.rubberband);
@@ -8537,6 +8560,33 @@ function runAllTests() {
     const restoredFreeBox = sceneObjects[sceneObjects.length - 1];
     assertTest("Can I undo restores object displaced by Free Move to exact pre-move position", restoredFreeBox && Math.abs(restoredFreeBox.position.x - initialPos.x) < 0.01 && Math.abs(restoredFreeBox.position.z - initialPos.z) < 0.01);
 
+    // Test 45h: Gumball Free Move applies deliberate slowdown multiplier of 0.04 (4% displacement)
+    processRequest("Can I gumball?");
+    const slowTestPos = otherBox.position.clone();
+    gumballDragState = {
+      mode: "free_move",
+      vpId: "top",
+      camera: cameras.top,
+      plane: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
+      startHit: new THREE.Vector3(0, 0, 0),
+      startGumballPos: otherBox.position.clone(),
+      startSnapshot: serializeProjectState(),
+      hasMoved: false,
+      initialStates: [{ obj: otherBox, pos: otherBox.position.clone(), rot: otherBox.rotation.clone(), scale: otherBox.scale.clone() }]
+    };
+    const origRayIntersect = raycaster.ray.intersectPlane.bind(raycaster.ray);
+    raycaster.ray.intersectPlane = function(plane, target) {
+      target.set(100, 0, 50);
+      return target;
+    };
+    handleGumballDragMove({ clientX: 50, clientY: 50 }, "top");
+    raycaster.ray.intersectPlane = origRayIntersect;
+    const expectedX = slowTestPos.x + 100 * 0.04; // +4.0
+    const expectedZ = slowTestPos.z + 50 * 0.04;  // +2.0
+    const isSlowAccurate = Math.abs(otherBox.position.x - expectedX) < 0.01 && Math.abs(otherBox.position.z - expectedZ) < 0.01;
+    window.dispatchEvent(new Event("pointerup"));
+    assertTest("Gumball Free Move applies deliberate slowdown multiplier of 0.04 (4% displacement)", isSlowAccurate && gumballGroup.visible === false && isGumballActive === false);
+
     // Test 46: Forward and Back manual navigation buttons are removed from top standard toolbar
     const navUndoBtn = document.getElementById("tb-btn-undo");
     const navRedoBtn = document.getElementById("tb-btn-redo");
@@ -8571,7 +8621,13 @@ function runAllTests() {
     updateEconomyDisplay();
     assertTest("Insufficient funds popup appears on failed paid transaction with Finger.jpg and $0 deducted", popupOpened && zeroDeducted && imgCorrectSrc);
 
-    logTestMsg(`=== TEST SUMMARY: ${window.__TEST_RESULTS__.passed}/${window.__TEST_RESULTS__.total} PASSED, ${window.__TEST_RESULTS__.failed} FAILED ===`);
+    activeLayerId = "default";
+    layers.forEach(l => { if (l.id === "default") l.visible = true; });
+    renderLayersList();
+    modelingCommandCount = 0;
+    const adModal = document.getElementById("modal-advertisement");
+    if (adModal && adModal.open) adModal.close();
+
     window.__TESTS_DONE__ = true;
     window.IS_TESTING = false;
   }

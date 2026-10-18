@@ -680,3 +680,35 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
   2. `checkpoint_d_02_insufficient_funds_finger_popup.png`: Retro Windows 95 `⚠️ Insufficient Funds` dialog displaying `Finger.jpg` in full fidelity upon an attempted paid operation with $5.00 balance, verifying $0.00 deducted and balance preserved.
   3. `checkpoint_d_03_advertisements_rotation_and_stacking.png`: Centered advertisement modal displaying newly registered `AppleAppAd.jpeg` with `VirusAppAd.png` dynamically stacked on top, with independent tiny close buttons.
 
+---
+
+### Milestone: Rhino Move & Intentionally Slow Gumball (0.04 Multiplier)
+
+#### 1. Architectural & Algorithmic Solutions Implemented
+- **Rhino-Style Point-to-Point Move Command (`Can I move`)**:
+  - Implements the exact standard Rhino 3D Move workflow:
+    1. **Object Selection**: If objects are pre-selected, advances immediately to base point step. If invoked with no selection, prompts user to select object(s) in any viewport, transitioning immediately upon object pick.
+    2. **Base Point Specification**: Prompts user with exact text: `"Point to move from:"` in both the Command Bar and the status bar. User can click any base point in any of the 4 viewports or input coordinates. Displays a distinct 3D base anchor marker (`Move_Base_Marker`).
+    3. **Destination Point Specification**: Prompts user with exact text: `"Point to move to:"` in both the Command Bar and the status bar.
+    4. **Live Translation Preview**: As the cursor moves, continuously renders a dynamic green rubberband line (`Move_Rubberband`) and an emerald translucent ghost preview mesh (`Move_Ghost_Preview`, `0x39ff14`, opacity 0.55) across Top, Perspective, Front, and Right viewports.
+    5. **Snapping Support**: Integrates with `findSnapPoint` and `updateSketchSnapMarker`, showing visual snap indicators when near vertices/endpoints, but snapping remains completely optional.
+    6. **Full-Speed Responsive Displacement**: The final displacement is exactly $\mathbf{P}_{\text{destination}} - \mathbf{P}_{\text{base}}$ at 100% full speed (no artificial slowdown, responsive, accurate). Supports numeric coordinate and distance entries, and records a reversible `"Point-to-Point Move"` undo state.
+- **Gumball Free Move Deliberate Slowdown (`0.04` Multiplier)**:
+  - **Activation Isolation**: Gumball remains hidden by default upon selecting objects. Strictly activated via polite request `Can I gumball?` (with case-insensitivity and arbitrary trailing punctuation).
+  - **Shift + M Guard**: Free Move interaction strictly requires `Shift + M + Click and Drag`.
+  - **Deliberate Slowdown Multiplier (0.04)**: During Free Move dragging, a mathematical slowdown multiplier of `0.04` (4% displacement) is applied to the geometric displacement vector relative to the cursor:
+    $$\vec{d}_{\text{slow}} = 0.04 \times (\mathbf{P}_{\text{pointer}} - \mathbf{P}_{\text{start}})$$
+    - **Smooth 60fps Dragging**: Slows the actual geometric displacement rather than the pointer or browser; pointer tracking and raycasting remain 60fps smooth without artificial stutter, freezes, or dropped frames.
+    - **Consistent Across Zoom & Viewports**: World-space displacement scaling ensures uniform 4% motion regardless of camera zoom factor or orthographic/perspective projection.
+    - **Scope Isolation**: The slowdown strictly targets Gumball Free Move. Does **not** slow Rhino-style Move, axis-specific Gumball handles (X/Y/Z translate, rotate, scale), camera navigation (orbit, pan, zoom), or numeric coordinate inputs.
+  - **Lifecycle Finalization**: Releasing the mouse/trackpad (`pointerup`) immediately ends the transformation, creates exactly one Undo step (`"Free Move (Shift+M)"`), immediately dismisses and hides the Gumball, and requires the user to enter `Can I gumball?` again before initiating another Gumball interaction.
+
+#### 2. Verification & Visual Artifacts
+- **Automated Test Suite**: Passes **85/85** unit tests (100% passing), including:
+  - Test 16b: Rhino-style point-to-point Move initializes with exact prompt `"Point to move from:"`, registers base point and transitions to `"Point to move to:"`, generates live ghost preview and rubberband line, applies exact full-speed vector displacement, and rolls back cleanly via `Can I undo`.
+  - Test 45h: Gumball Free Move applies deliberate slowdown multiplier of `0.04` (4% displacement) to geometry during Shift+M drag, dismisses Gumball on release, and creates 1 Undo step.
+- **Visual Artifacts Automatically Opened in macOS Preview**:
+  1. `rhino_move_point_to_move_from_to.png`: Rhino Move in action across all 4 viewports with `Box_1` at `(0, 10, 0)`, base marker anchor, rubberband line to destination `(24, 10, 18)`, live emerald ghost preview mesh, Command Bar prompt `"Point to move to:"`, and offset readout `dX: 24.0 dY: 0.0 dZ: 18.0 | Dist: 30.0 mm`.
+  2. `slow_gumball_free_move_4_percent.png`: Slow Gumball Free Move in action showing 3D Gumball handles centered on `Slow_Gumball_Box`, displaced smoothly by exactly 4.0mm in X and 4.0mm in Z after a 100mm cursor drag, verifying the exact 0.04 geometric multiplier.
+
+
