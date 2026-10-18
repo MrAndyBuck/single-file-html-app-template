@@ -333,13 +333,69 @@ All screenshots captured in real browser sessions under macOS Retina High-DPI (`
 ---
 
 ## 6. Current Git & Deployment Status
-- **Current Branch**: `dev` (ready to merge to `main`)
+- **Current Branch**: `dev`
 - **Modified & Added Files**:
-  - `BRIEF.md` (Roadmap specifications for Pipe & Sweep added in §2.10)
-  - `index.html` (Branding, Terms, Crash Report modal & command, Starting object remove & undo, Gumball free movement `Shift+M+Drag`, 7-command ad stacking cadence, mandatory export distortion, Build `v00000-010`)
-  - `sw.js` (Cache version updated to `cadnt-v00000-010`)
+  - `index.html` (Complete Windows 95 / SolidWorks 95 UI overhaul, authentic 3D beveled styling, navy title bars, menu bar system, standard toolbar, CAD blueprint slate 0x203040 viewports, FeatureManager dock, bottom Request Bar, and status bar)
+  - `screenshots/` (7 visual verification captures for Checkpoint A)
   - `HANDOFF.md` (Updated capability matrix, milestone documentation, and verification artifacts)
 - **Automated Tests**: 57/57 PASSING (0 FAILED)
-- **Visual Verification**: All 11 interaction flows verified in real browser sessions with Retina screenshots.
-- **Git Status**: Changes committed to `dev`, ready for merge and push to `origin/main`.
+- **Visual Verification**: 7 Checkpoint A screenshots captured in real browser sessions.
+
+---
+
+## 7. Retro Interface Redesign (Windows 95 / SolidWorks 95 Aesthetic) — Checkpoint A
+
+### A. Architectural & Aesthetic Changes
+1. **Windows 95 Application Window Framing**:
+   - Classic navy blue gradient title bar (`linear-gradient(90deg, #000080, #1084d0)`), 16x16 retro CADN'T icon, active file descriptor `[Part1.prt : 4 Viewports]`, and standard caption controls (`_`, `□`, `✕`).
+   - Classic Windows 95 menu bar (`File`, `Edit`, `View`, `Insert`, `Tools`, `Window`, `Help`) with keyboard access underlines, cascading dropdown menus, and hotkey indicators.
+2. **Standard Command & Status Toolbars**:
+   - Beveled button row with pixel icons: New Part, Open, Save, Print, Undo, Redo, Import, Export, Sound, Theme, Tutorial, Help, About.
+   - Economy indicator with sunken credit box (`Credits: $249.00`) and beveled `+ Buy More` button.
+   - Bottom status bar with 5 sunken Windows 95 panes: status message, real-time XYZ coordinates readout, navigation key reminder, token counter, and cache-purge chip.
+3. **FeatureManager DesignTree (Left Dock)**:
+   - Sunken tree view displaying `Part1.prt`, reference planes (Front X/Y, Top X/Z, Right Z/Y), Origin (0,0,0), Features & Geometry list with badges, and Layers tree with toggleable visibility/lock states.
+   - Object properties dock with sunken parameter controls.
+4. **4-Viewport Matrix (Center Stage)**:
+   - Sunken 3D viewport frames with classic CAD blueprint slate background (`#203040`) and subtle blueprint grid lines (`#486078`, `#2a3e50`).
+   - Active viewport highlighted with high-contrast yellow border and navy header.
+   - Preserves 4 independent WebGL renderers and cameras (Top orthographic, Front orthographic, Right orthographic, Perspective 3D orbit).
+   - Strict trackpad wheel zoom prevention preserved with user advisory toast.
+5. **Features Dock (Right Dock)**:
+   - 2-column grid of square beveled buttons preserving all 18 CAD commands and icon relocation capability.
+6. **Sunken Request Bar (Bottom)**:
+   - Relocated directly above the status bar with classic sunken text field (`Request:`), `Send` button, and upward-popping `▼ Log` history container.
+7. **Windows 95 Modal Dialogs**:
+   - All modals (Export, Crash Report, Loading hold music, Confirmation, Construction, About, Onboarding, and Advertisements) restyled with 3D beveled borders, navy titlebars, caption close buttons, and beveled action buttons.
+
+### B. Visual Verification Artifacts (Checkpoint A)
+Captured via automated headless Chrome CDP session under macOS Retina High-DPI ($1280 \times 820$):
+
+1. **Workspace Overview**:
+   [checkpoint_a_01_win95_workspace.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_01_win95_workspace.png)
+   - Demonstrates complete Windows 95 / SolidWorks 95 UI with 4 viewports, FeatureManager, right toolbar, Request Bar, and status bar.
+2. **Menu Bar Dropdown**:
+   [checkpoint_a_02_menu_dropdown.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_02_menu_dropdown.png)
+   - Demonstrates open `Insert` dropdown menu with beveled 3D borders, command items, and separators.
+3. **Export Dialog**:
+   [checkpoint_a_03_export_dialog.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_03_export_dialog.png)
+   - Demonstrates Windows 95 styled export dialog with format/scope dropdowns and mandatory distortion notice.
+4. **Sponsored Advertisement Popup**:
+   [checkpoint_a_04_ad_modal.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_04_ad_modal.png)
+   - Demonstrates Windows 95 framed commercial popup with tiny close button and centered layout.
+5. **Layered Ad Stacking**:
+   [checkpoint_a_05_ad_stacked.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_05_ad_stacked.png)
+   - Demonstrates clicking ad cards to stack cascading Windows 95 ad layers with independent close buttons.
+6. **Crash Report Dialog**:
+   [checkpoint_a_06_crash_report_dialog.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_06_crash_report_dialog.png)
+   - Demonstrates retro crash report preparation dialog with prefilled local telemetry and email launcher.
+7. **Loading & Hold Music Dialog**:
+   [checkpoint_a_07_loading_hold_music.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_a_07_loading_hold_music.png)
+   - Demonstrates classic Windows 95 segmented blue progress bar with satirical status messages.
+
+### C. Sequential Checkpoint Roadmap
+- **Checkpoint A**: Complete Retro Interface Redesign (Completed & Ready for Visual Review).
+- **Checkpoint B**: Functional Line Command (Gated pending Checkpoint A acceptance).
+- **Checkpoint C**: Functional Fillet & Chamfer Commands with Geometry Repair (Gated pending Checkpoint B).
+- **Checkpoint D**: Wandering Toolbar Icons & 85% Hold Music Volume (Gated pending Checkpoint C).
 
