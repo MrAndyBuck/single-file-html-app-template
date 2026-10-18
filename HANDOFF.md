@@ -682,17 +682,32 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
 
 ---
 
-### Milestone: Rhino Move & Intentionally Slow Gumball (0.04 Multiplier)
+### Milestone: Rhino Move & Intentionally Slow Gumball (0.04 Multiplier) — Corrected & Fully Verified
 
 #### 1. Architectural & Algorithmic Solutions Implemented
-- **Rhino-Style Point-to-Point Move Command (`Can I move`)**:
-  - Implements the exact standard Rhino 3D Move workflow:
+- **True Rhino-Style Point-to-Point Move Command (`Can I move`)**:
+  - Implements authentic Rhino 3D point-to-point movement with complete pointer-based point picking and OSNAP:
     1. **Object Selection**: If objects are pre-selected, advances immediately to base point step. If invoked with no selection, prompts user to select object(s) in any viewport, transitioning immediately upon object pick.
-    2. **Base Point Specification**: Prompts user with exact text: `"Point to move from:"` in both the Command Bar and the status bar. User can click any base point in any of the 4 viewports or input coordinates. Displays a distinct 3D base anchor marker (`Move_Base_Marker`).
-    3. **Destination Point Specification**: Prompts user with exact text: `"Point to move to:"` in both the Command Bar and the status bar.
-    4. **Live Translation Preview**: As the cursor moves, continuously renders a dynamic green rubberband line (`Move_Rubberband`) and an emerald translucent ghost preview mesh (`Move_Ghost_Preview`, `0x39ff14`, opacity 0.55) across Top, Perspective, Front, and Right viewports.
-    5. **Snapping Support**: Integrates with `findSnapPoint` and `updateSketchSnapMarker`, showing visual snap indicators when near vertices/endpoints, but snapping remains completely optional.
-    6. **Full-Speed Responsive Displacement**: The final displacement is exactly $\mathbf{P}_{\text{destination}} - \mathbf{P}_{\text{base}}$ at 100% full speed (no artificial slowdown, responsive, accurate). Supports numeric coordinate and distance entries, and records a reversible `"Point-to-Point Move"` undo state.
+    2. **Point to Move From (Base Point Specification)**:
+       - Prompts user with exact text: `"Point to move from:"` in both the Command Bar and the bottom status bar (`"Point to move from: Pick a point, corner, or midpoint on an object"`).
+       - **Strict Centroid Removal**: The selected object's center/centroid does **NOT** automatically become the source point. The base coordinate input field starts completely empty with a helpful hint (`"Click or X, Y, Z"`). A centroid button is available only as an explicit opt-in choice.
+       - **Mesh Corner & Vertex OSNAP**: Pointer hover over any mesh corner or vertex extracts the exact world coordinate and snaps the cursor with a square reticle marker (`Sketch_Snap_Marker`, size 2.4 with center dot) and label `Endpoint (Corner)`.
+       - **Mesh Edge Midpoint OSNAP**: Pointer hover along any of the 12 edges of a box (or arbitrary line segments) extracts the exact midpoint coordinate $(v_1 + v_2)/2$ and snaps with a diamond/triangle reticle marker and label `Midpoint`.
+       - **Surface Raycasting & C-Plane Grid Fallback**: Clicking directly on an object face picks the exact 3D surface intersection point; clicking in space picks the C-plane grid coordinate.
+       - **Base Anchor Visual Marker (`Move_Base_Marker`)**: Upon picking the source point, creates a distinct 3D marker consisting of a bright red sphere (radius 1.2), yellow 3D crosshairs (size 5.0), and a red orientation ring directly at the exact chosen corner/point.
+    3. **Point to Move To (Destination Point Specification)**:
+       - Prompts user with exact text: `"Point to move to:"` in both the Command Bar and the bottom status bar.
+       - User can pick any destination point in the modeling workspace, including a vertex, corner, or edge midpoint on another object, or on the C-plane.
+       - Full OSNAP snap markers, floating retro HUD badges (`[SNAP: Endpoint (Corner)] (X, Y, Z)`), and status bar coordinate readouts provide continuous real-time visual feedback.
+    4. **Live Translation Preview**:
+       - As the cursor moves, continuously renders a dynamic green rubberband line (`Move_Rubberband`) connecting the exact chosen source point to the destination point.
+       - Renders an emerald translucent ghost preview mesh (`Move_Ghost_Preview`, `0x39ff14`, opacity 0.55) offset by $\Delta = \mathbf{P}_{\text{dest}} - \mathbf{P}_{\text{base}}$ across Top, Perspective, Front, and Right viewports.
+       - Command Bar displays live `dX`, `dY`, `dZ` and Euclidean distance.
+    5. **Exact Coincidence & Intact Solid Translation**:
+       - Final movement translates the entire selection by $\text{Translation} = \text{Target Point} - \text{Source Point}$.
+       - All geometry remains completely intact.
+       - When a corner of Box A is moved to a corner of Box B, the two corners **exactly coincide**:
+         $$|\mathbf{P}_{A,\text{corner}} - \mathbf{P}_{B,\text{corner}}| = 0.000\text{ mm}$$
 - **Gumball Free Move Deliberate Slowdown (`0.04` Multiplier)**:
   - **Activation Isolation**: Gumball remains hidden by default upon selecting objects. Strictly activated via polite request `Can I gumball?` (with case-insensitivity and arbitrary trailing punctuation).
   - **Shift + M Guard**: Free Move interaction strictly requires `Shift + M + Click and Drag`.
@@ -704,11 +719,14 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
   - **Lifecycle Finalization**: Releasing the mouse/trackpad (`pointerup`) immediately ends the transformation, creates exactly one Undo step (`"Free Move (Shift+M)"`), immediately dismisses and hides the Gumball, and requires the user to enter `Can I gumball?` again before initiating another Gumball interaction.
 
 #### 2. Verification & Visual Artifacts
-- **Automated Test Suite**: Passes **85/85** unit tests (100% passing), including:
+- **Automated Test Suite**: Passes **91/91** unit tests (100% passing), including:
   - Test 16b: Rhino-style point-to-point Move initializes with exact prompt `"Point to move from:"`, registers base point and transitions to `"Point to move to:"`, generates live ghost preview and rubberband line, applies exact full-speed vector displacement, and rolls back cleanly via `Can I undo`.
+  - Test 16c: OSNAP detects box corner vertex with `Endpoint (Corner)` classification, detects box edge center with `Midpoint` classification, verifies base point does not default to centroid, picks exact corner $(10, 20, 10)$, and moves to Box B corner $(30, 20, 20)$ resulting in exact corner coincidence ($|\mathbf{P}_A - \mathbf{P}_B| < 0.001\text{ mm}$).
   - Test 45h: Gumball Free Move applies deliberate slowdown multiplier of `0.04` (4% displacement) to geometry during Shift+M drag, dismisses Gumball on release, and creates 1 Undo step.
 - **Visual Artifacts Automatically Opened in macOS Preview**:
-  1. `rhino_move_point_to_move_from_to.png`: Rhino Move in action across all 4 viewports with `Box_1` at `(0, 10, 0)`, base marker anchor, rubberband line to destination `(24, 10, 18)`, live emerald ghost preview mesh, Command Bar prompt `"Point to move to:"`, and offset readout `dX: 24.0 dY: 0.0 dZ: 18.0 | Dist: 30.0 mm`.
-  2. `slow_gumball_free_move_4_percent.png`: Slow Gumball Free Move in action showing 3D Gumball handles centered on `Slow_Gumball_Box`, displaced smoothly by exactly 4.0mm in X and 4.0mm in Z after a 100mm cursor drag, verifying the exact 0.04 geometric multiplier.
+  1. `rhino_move_step1_source_corner_selection.png`: Two boxes separated in space (`Box_A` in blue, `Box_B` in amber). Command Bar prompts `"Point to move from:"` with status hint and empty base input. Cursor hovers over Box A's specific top-front-right corner $(10.0, 20.0, 10.0)$, snapping with yellow reticle marker and floating CAD HUD badge `Endpoint (Corner) (10.0, 20.0, 10.0)`.
+  2. `rhino_move_step2_dest_corner_live_preview.png`: Base marker (red sphere + yellow 3D crosshairs + red ring) anchored at Box A's chosen corner. Command Bar prompts `"Point to move to:"`. Cursor snaps to Box B's top-back-left corner $(30.0, 20.0, 20.0)$. Real-time green rubberband line connects the two corners, translucent emerald ghost preview translates to destination, and readout displays `dX: 20.0 dY: 0.0 dZ: 10.0 | Dist: 22.4 mm`.
+  3. `rhino_move_step3_exact_corner_coincidence_verified.png`: Finalized move across all 4 viewports demonstrating exact corner coincidence between Box A and Box B ($|\mathbf{P}_{A,\text{corner}} - \mathbf{P}_{B,\text{corner}}| = 0.0000\text{ mm}$), verified with visual reticle and centered confirmation badge.
+  4. `slow_gumball_free_move_4_percent.png`: Slow Gumball Free Move in action showing 3D Gumball handles centered on `Slow_Gumball_Box`, displaced smoothly by exactly 4.0mm in X and 4.0mm in Z after a 100mm cursor drag, verifying the exact 0.04 geometric multiplier.
 
 

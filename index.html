@@ -2315,93 +2315,321 @@ function removeSnapMarker() {
   if (sketchSnapMarker) {
     scene.remove(sketchSnapMarker);
     sketchSnapMarker = null;
-    renderAllViewports();
   }
-}
-
-function showSnapMarker(pt, label = "") {
-  if (!sketchSnapMarker) {
-    const group = new THREE.Group();
-    group.name = "Sketch_Snap_Marker";
-    const boxGeo = new THREE.BoxGeometry(2.2, 2.2, 2.2);
-    const boxMat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true, wireframeLinewidth: 2 });
-    const box = new THREE.Mesh(boxGeo, boxMat);
-    group.add(box);
-    const dotGeo = new THREE.SphereGeometry(0.6, 8, 8);
-    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    const dot = new THREE.Mesh(dotGeo, dotMat);
-    group.add(dot);
-    sketchSnapMarker = group;
-    scene.add(sketchSnapMarker);
-  }
-  sketchSnapMarker.position.copy(pt);
+  const badge = document.getElementById("osnap-hud");
+  if (badge) badge.style.display = "none";
   renderAllViewports();
 }
 
-function findSnapPoint(testPt, vpId, snapThreshold = 3.0) {
-  if (!testPt) return null;
+let osnapBadgeElem = null;
 
-  // 1. Current sketch points (P0 is highest priority to close profile)
-  if (activeSketchMode === "line" && sketchPoints.length > 0) {
-    const p0 = sketchPoints[0];
-    if (p0.distanceTo(testPt) <= snapThreshold) {
-      return {
-        point: p0.clone(),
-        type: sketchPoints.length >= 3 ? "close_profile" : "start_point",
-        label: sketchPoints.length >= 3 ? "Close Profile" : "Start Point"
-      };
-    }
-    for (let i = 1; i < sketchPoints.length - 1; i++) {
-      if (sketchPoints[i].distanceTo(testPt) <= snapThreshold) {
-        return {
-          point: sketchPoints[i].clone(),
-          type: "vertex",
-          label: `Vertex ${i + 1}`
-        };
-      }
+function updateSketchSnapMarker(pt, label = "", snapType = "endpoint", screenCoords = null) {
+  if (!pt) {
+    removeSnapMarker();
+    return;
+  }
+
+  if (!sketchSnapMarker) {
+    const group = new THREE.Group();
+    group.name = "Sketch_Snap_Marker";
+    sketchSnapMarker = group;
+    scene.add(sketchSnapMarker);
+  }
+
+  // Clear existing marker meshes
+  while (sketchSnapMarker.children.length > 0) {
+    const c = sketchSnapMarker.children[0];
+    sketchSnapMarker.remove(c);
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+  }
+
+  if (snapType === "midpoint") {
+    // Rhino style: Triangle / Diamond for Midpoint
+    const triGeo = new THREE.BufferGeometry();
+    const s = 1.6;
+    const pts = [
+      new THREE.Vector3(0, s, 0), new THREE.Vector3(-s, -s * 0.7, 0),
+      new THREE.Vector3(-s, -s * 0.7, 0), new THREE.Vector3(s, -s * 0.7, 0),
+      new THREE.Vector3(s, -s * 0.7, 0), new THREE.Vector3(0, s, 0),
+      new THREE.Vector3(0, 0, s), new THREE.Vector3(0, 0, -s)
+    ];
+    triGeo.setFromPoints(pts);
+    const triMat = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
+    sketchSnapMarker.add(new THREE.LineSegments(triGeo, triMat));
+
+    const dotGeo = new THREE.SphereGeometry(0.55, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    sketchSnapMarker.add(new THREE.Mesh(dotGeo, dotMat));
+  } else {
+    // Rhino style: Square / Box for Endpoint / Corner / Vertex
+    const boxGeo = new THREE.BoxGeometry(2.4, 2.4, 2.4);
+    const boxMat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true, wireframeLinewidth: 2 });
+    sketchSnapMarker.add(new THREE.Mesh(boxGeo, boxMat));
+
+    const dotGeo = new THREE.SphereGeometry(0.65, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    sketchSnapMarker.add(new THREE.Mesh(dotGeo, dotMat));
+  }
+
+  sketchSnapMarker.position.copy(pt);
+
+  // Update on-screen floating OSNAP HUD badge
+  if (!osnapBadgeElem) {
+    osnapBadgeElem = document.getElementById("osnap-hud");
+    if (!osnapBadgeElem) {
+      osnapBadgeElem = document.createElement("div");
+      osnapBadgeElem.id = "osnap-hud";
+      osnapBadgeElem.style.cssText = "position:fixed; display:none; background:#000080; color:#ffff00; border:1px solid #ffffff; font-family:var(--font-mono, monospace); font-size:11px; padding:2px 6px; box-shadow:2px 2px 0 rgba(0,0,0,0.5); pointer-events:none; z-index:99999; white-space:nowrap;";
+      document.body.appendChild(osnapBadgeElem);
     }
   }
 
-  // 2. Existing scene objects (curves, polylines, meshes)
-  let bestCandidate = null;
-  let bestDist = snapThreshold;
+  if (screenCoords && typeof screenCoords.x === "number" && typeof screenCoords.y === "number") {
+    osnapBadgeElem.style.left = `${screenCoords.x + 14}px`;
+    osnapBadgeElem.style.top = `${screenCoords.y - 12}px`;
+    osnapBadgeElem.textContent = `${label || "Snap"} (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)})`;
+    osnapBadgeElem.style.display = "block";
+  } else if (osnapBadgeElem) {
+    osnapBadgeElem.style.display = "none";
+  }
 
-  for (const obj of sceneObjects) {
-    if (!obj.visible) continue;
-    if (obj.userData && Array.isArray(obj.userData.points)) {
-      const pts = obj.userData.points;
-      for (let i = 0; i < pts.length; i++) {
-        const p = pts[i];
-        const v = (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z);
-        v.applyMatrix4(obj.matrixWorld);
-        const d = v.distanceTo(testPt);
-        if (d <= bestDist) {
-          bestDist = d;
-          bestCandidate = {
-            point: v,
-            type: (i === 0 || i === pts.length - 1) ? "endpoint" : "vertex",
-            label: (i === 0 || i === pts.length - 1) ? "Endpoint" : "Vertex",
-            object: obj
-          };
-        }
+  const coordsReadout = document.getElementById("coords-readout");
+  if (coordsReadout) {
+    coordsReadout.textContent = `[SNAP: ${label || "Snap"}] X: ${pt.x.toFixed(1)} Y: ${pt.y.toFixed(1)} Z: ${pt.z.toFixed(1)}`;
+  }
+
+  renderAllViewports();
+}
+
+function showSnapMarker(pt, label = "", snapType = "endpoint", screenCoords = null) {
+  updateSketchSnapMarker(pt, label, snapType, screenCoords);
+}
+
+function getObjectSnapCandidates(obj) {
+  if (!obj || !obj.visible) return [];
+  const candidates = [];
+
+  // 1. Polylines and 2D curves
+  if (obj.userData && Array.isArray(obj.userData.points)) {
+    const pts = obj.userData.points;
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      const v = (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z);
+      v.applyMatrix4(obj.matrixWorld);
+      candidates.push({
+        point: v,
+        type: (i === 0 || i === pts.length - 1) ? "endpoint" : "vertex",
+        label: (i === 0 || i === pts.length - 1) ? "Endpoint" : "Vertex",
+        object: obj
+      });
+      if (i < pts.length - 1) {
+        const pNext = pts[i + 1];
+        const vNext = (pNext && pNext.isVector3) ? pNext.clone() : new THREE.Vector3(pNext.x, pNext.y, pNext.z);
+        vNext.applyMatrix4(obj.matrixWorld);
+        const mid = new THREE.Vector3().addVectors(v, vNext).multiplyScalar(0.5);
+        candidates.push({
+          point: mid,
+          type: "midpoint",
+          label: "Midpoint",
+          object: obj
+        });
       }
-    } else if (obj.isMesh && obj.geometry && obj.geometry.attributes.position) {
-      const posAttr = obj.geometry.attributes.position;
+    }
+    return candidates;
+  }
+
+  // 2. 3D Meshes (Boxes, Extrusions, Primitives)
+  if (obj.isMesh && obj.geometry) {
+    const geo = obj.geometry;
+
+    // Check Box / Cube geometry (Exact 8 corners + 12 edge midpoints)
+    const isBox = geo.type === "BoxGeometry" || (geo.parameters && geo.parameters.width !== undefined) || (obj.userData && obj.userData.type === "Box") || (obj.name && obj.name.toLowerCase().includes("box"));
+    if (isBox) {
+      let hw = 7, hh = 7, hd = 7;
+      if (geo.parameters && geo.parameters.width !== undefined) {
+        hw = (geo.parameters.width || 14) / 2;
+        hh = (geo.parameters.height || 14) / 2;
+        hd = (geo.parameters.depth || 14) / 2;
+      } else {
+        if (!geo.boundingBox) geo.computeBoundingBox();
+        const bb = geo.boundingBox;
+        hw = (bb.max.x - bb.min.x) / 2;
+        hh = (bb.max.y - bb.min.y) / 2;
+        hd = (bb.max.z - bb.min.z) / 2;
+      }
+      const localCorners = [
+        new THREE.Vector3(-hw, -hh, -hd),
+        new THREE.Vector3( hw, -hh, -hd),
+        new THREE.Vector3( hw,  hh, -hd),
+        new THREE.Vector3(-hw,  hh, -hd),
+        new THREE.Vector3(-hw, -hh,  hd),
+        new THREE.Vector3( hw, -hh,  hd),
+        new THREE.Vector3( hw,  hh,  hd),
+        new THREE.Vector3(-hw,  hh,  hd),
+      ];
+      const edgePairs = [
+        [0, 1], [1, 2], [2, 3], [3, 0], // back face
+        [4, 5], [5, 6], [6, 7], [7, 4], // front face
+        [0, 4], [1, 5], [2, 6], [3, 7]  // connecting edges
+      ];
+      const worldCorners = localCorners.map(pt => pt.clone().applyMatrix4(obj.matrixWorld));
+      worldCorners.forEach(pt => {
+        candidates.push({
+          point: pt,
+          type: "endpoint",
+          label: "Endpoint (Corner)",
+          object: obj
+        });
+      });
+      edgePairs.forEach(([i1, i2]) => {
+        const mid = new THREE.Vector3().addVectors(worldCorners[i1], worldCorners[i2]).multiplyScalar(0.5);
+        candidates.push({
+          point: mid,
+          type: "midpoint",
+          label: "Midpoint",
+          object: obj
+        });
+      });
+      return candidates;
+    }
+
+    // Check for child LineSegments (e.g. EdgesGeometry on extrusions or solids)
+    let edgeLines = [];
+    obj.traverse(child => {
+      if (child !== obj && (child.isLineSegments || child.isLine) && child.geometry && child.geometry.attributes.position) {
+        edgeLines.push(child);
+      }
+    });
+
+    if (edgeLines.length > 0) {
+      edgeLines.forEach(lineChild => {
+        const pos = lineChild.geometry.attributes.position;
+        const p1 = new THREE.Vector3();
+        const p2 = new THREE.Vector3();
+        const maxSegments = Math.min(pos.count, 256);
+        for (let i = 0; i < maxSegments - 1; i += 2) {
+          p1.fromBufferAttribute(pos, i).applyMatrix4(obj.matrixWorld);
+          p2.fromBufferAttribute(pos, i + 1).applyMatrix4(obj.matrixWorld);
+          candidates.push({ point: p1.clone(), type: "endpoint", label: "Endpoint", object: obj });
+          candidates.push({ point: p2.clone(), type: "endpoint", label: "Endpoint", object: obj });
+          candidates.push({
+            point: new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5),
+            type: "midpoint",
+            label: "Midpoint",
+            object: obj
+          });
+        }
+      });
+      if (candidates.length > 0) return candidates;
+    }
+
+    // General BufferGeometry vertices
+    if (geo.attributes && geo.attributes.position) {
+      const pos = geo.attributes.position;
+      const uniqueVerts = [];
       const v = new THREE.Vector3();
-      const count = Math.min(posAttr.count, 64);
+      const count = Math.min(pos.count, 256);
       for (let i = 0; i < count; i++) {
-        v.fromBufferAttribute(posAttr, i);
-        v.applyMatrix4(obj.matrixWorld);
-        const d = v.distanceTo(testPt);
-        if (d <= bestDist) {
-          bestDist = d;
-          bestCandidate = {
+        v.fromBufferAttribute(pos, i).applyMatrix4(obj.matrixWorld);
+        const exists = uniqueVerts.some(u => u.distanceToSquared(v) < 0.001);
+        if (!exists) {
+          uniqueVerts.push(v.clone());
+          candidates.push({
             point: v.clone(),
             type: "vertex",
             label: "Vertex",
             object: obj
-          };
+          });
         }
+      }
+    }
+  }
+
+  return candidates;
+}
+
+function findSnapPoint(testPt, vpId, snapThreshold = 3.5, customRaycaster = null, mouseEvent = null) {
+  const allCandidates = [];
+
+  // 1. Current sketch points (P0 is highest priority to close profile)
+  if (activeSketchMode === "line" && sketchPoints.length > 0) {
+    const p0 = sketchPoints[0];
+    allCandidates.push({
+      point: p0.clone(),
+      type: sketchPoints.length >= 3 ? "close_profile" : "start_point",
+      label: sketchPoints.length >= 3 ? "Close Profile" : "Start Point",
+      priority: 100
+    });
+    for (let i = 1; i < sketchPoints.length - 1; i++) {
+      allCandidates.push({
+        point: sketchPoints[i].clone(),
+        type: "vertex",
+        label: `Vertex ${i + 1}`,
+        priority: 10
+      });
+    }
+  }
+
+  // 2. Existing scene objects (curves, polylines, meshes, solids)
+  for (const obj of sceneObjects) {
+    if (!obj.visible) continue;
+    const cands = getObjectSnapCandidates(obj);
+    allCandidates.push(...cands);
+  }
+
+  if (allCandidates.length === 0) return null;
+
+  const rc = customRaycaster || (typeof raycaster !== "undefined" ? raycaster : null);
+  const cam = vpId && typeof cameras !== "undefined" ? cameras[vpId] : null;
+  const vp = vpId && typeof viewports !== "undefined" ? viewports[vpId] : null;
+  const canvas = vp ? vp.canvas : null;
+
+  let mousePixelX = null;
+  let mousePixelY = null;
+  let rect = null;
+
+  if (canvas && mouseEvent && typeof mouseEvent.clientX === "number") {
+    rect = canvas.getBoundingClientRect();
+    mousePixelX = mouseEvent.clientX - rect.left;
+    mousePixelY = mouseEvent.clientY - rect.top;
+  }
+
+  let bestCandidate = null;
+  let bestScore = Infinity;
+
+  for (const cand of allCandidates) {
+    const pt = cand.point;
+    let dist3D = testPt ? pt.distanceTo(testPt) : Infinity;
+    let rayDist = (rc && rc.ray) ? rc.ray.distanceToPoint(pt) : Infinity;
+    let screenPixelDist = Infinity;
+
+    if (cam && canvas && rect && mousePixelX !== null) {
+      const proj = pt.clone().project(cam);
+      if (proj.z >= -1 && proj.z <= 1) {
+        const px = ((proj.x + 1) / 2) * rect.width;
+        const py = ((-proj.y + 1) / 2) * rect.height;
+        screenPixelDist = Math.hypot(px - mousePixelX, py - mousePixelY);
+      }
+    }
+
+    const isScreenHit = (screenPixelDist !== Infinity) && (screenPixelDist <= 22);
+    const isRayHit = (customRaycaster && customRaycaster.ray) ? (rayDist <= snapThreshold) : false;
+    const is3DHit = (dist3D !== Infinity) && (dist3D <= snapThreshold);
+
+    if (isScreenHit || isRayHit || is3DHit) {
+      let priorityBonus = 0;
+      if (cand.type === "close_profile") priorityBonus = 100;
+      else if (cand.type === "endpoint") priorityBonus = 25;
+      else if (cand.type === "vertex") priorityBonus = 15;
+      else if (cand.type === "midpoint") priorityBonus = 0;
+
+      const effectiveDist = (dist3D !== Infinity && dist3D <= snapThreshold) ? dist3D * 4 : ((screenPixelDist !== Infinity) ? screenPixelDist : rayDist * 4);
+      const score = effectiveDist - priorityBonus;
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestCandidate = cand;
       }
     }
   }
@@ -5243,6 +5471,22 @@ function setupExtrudeCommand(args) {
   if (depthInput) depthInput.focus();
 }
 
+function getSurfaceIntersection(rc) {
+  if (!rc || !rc.ray) return null;
+  const candidates = [];
+  sceneObjects.forEach(obj => {
+    if (!obj.visible) return;
+    obj.traverse(child => {
+      if (child.isMesh && child.visible && !child.userData.isGumball && !child.userData.isHelper && (!child.name || !child.name.includes("Move_Ghost"))) {
+        candidates.push(child);
+      }
+    });
+  });
+  if (candidates.length === 0) return null;
+  const hits = rc.intersectObjects(candidates, false);
+  return hits.length > 0 ? hits[0] : null;
+}
+
 function setupMoveCommand(args = {}) {
   const badge = document.getElementById("command-badge");
   const prompt = document.getElementById("command-prompt");
@@ -5263,8 +5507,8 @@ function setupMoveCommand(args = {}) {
   };
 
   function cleanupVisuals() {
-    if (typeof updateSketchSnapMarker === "function") {
-      updateSketchSnapMarker(null);
+    if (typeof removeSnapMarker === "function") {
+      removeSnapMarker();
     }
     if (state.baseMarker) {
       scene.remove(state.baseMarker);
@@ -5295,11 +5539,11 @@ function setupMoveCommand(args = {}) {
     group.name = "Move_Base_Marker";
 
     const sphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
-    const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+    const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff2222 });
     const sphere = new THREE.Mesh(sphereGeo, sphereMat);
     group.add(sphere);
 
-    const crossSize = 4.0;
+    const crossSize = 5.0;
     const crossMat = new THREE.LineBasicMaterial({ color: 0xffff00, linewidth: 2 });
     const crossGeo = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(-crossSize, 0, 0), new THREE.Vector3(crossSize, 0, 0),
@@ -5307,6 +5551,12 @@ function setupMoveCommand(args = {}) {
       new THREE.Vector3(0, 0, -crossSize), new THREE.Vector3(0, 0, crossSize)
     ]);
     group.add(new THREE.LineSegments(crossGeo, crossMat));
+
+    const ringGeo = new THREE.RingGeometry(1.8, 2.2, 24);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xff2222, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    group.add(ring);
 
     group.position.copy(pos);
     state.baseMarker = group;
@@ -5396,16 +5646,15 @@ function setupMoveCommand(args = {}) {
 
   function enterBasePointStep() {
     state.step = "base";
-    const centroid = getSelectionCentroid();
     prompt.textContent = "Point to move from:";
-    status("Point to move from:");
-    confirmBtn.disabled = false;
+    status("Point to move from: Pick a point, corner, or midpoint on an object");
+    confirmBtn.disabled = true;
     confirmBtn.textContent = "Next (Use Base) >";
 
     params.innerHTML = `
       <div class="cmd-param-group">
         <span class="cmd-param-label">Base X,Y,Z:</span>
-        <input type="text" id="cmd-move-base" class="cmd-param-input" style="width:110px;" value="${centroid.x.toFixed(1)}, ${centroid.y.toFixed(1)}, ${centroid.z.toFixed(1)}">
+        <input type="text" id="cmd-move-base" class="cmd-param-input" style="width:130px;" placeholder="Click or X, Y, Z">
         <button id="btn-move-use-centroid" class="retro-btn" style="height:20px; font-size:10px; margin-left:4px;" title="Set base point to object centroid">Centroid</button>
       </div>
     `;
@@ -5423,7 +5672,9 @@ function setupMoveCommand(args = {}) {
 
     if (baseInp) {
       baseInp.focus();
-      baseInp.select();
+      baseInp.oninput = () => {
+        confirmBtn.disabled = baseInp.value.trim() === "";
+      };
       baseInp.onkeydown = (e) => {
         if (e.key === "Enter") {
           e.stopPropagation();
@@ -5433,8 +5684,6 @@ function setupMoveCommand(args = {}) {
             setBasePoint(new THREE.Vector3(parts[0], parts[1], parts[2]));
           } else if (parts.length >= 2) {
             setBasePoint(new THREE.Vector3(parts[0], 0, parts[1]));
-          } else {
-            setBasePoint(getSelectionCentroid());
           }
         }
       };
@@ -5442,26 +5691,24 @@ function setupMoveCommand(args = {}) {
   }
 
   function setBasePoint(pt) {
-    pt.x = Math.round(pt.x * 2) / 2;
-    pt.y = Math.round(pt.y * 2) / 2;
-    pt.z = Math.round(pt.z * 2) / 2;
     state.basePoint = pt.clone();
     createBaseMarker(state.basePoint);
     createGhostPreview();
+    addLog(`Move base point set to: (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)})`, "log-info");
     enterDestPointStep();
   }
 
   function enterDestPointStep() {
     state.step = "dest";
     prompt.textContent = "Point to move to:";
-    status("Point to move to:");
+    status("Point to move to: Pick destination point, corner, or midpoint");
     confirmBtn.disabled = false;
     confirmBtn.textContent = "✓ Confirm Move (Enter)";
 
     params.innerHTML = `
       <div class="cmd-param-group">
         <span class="cmd-param-label">Dest:</span>
-        <input type="text" id="cmd-move-dest" class="cmd-param-input" style="width:95px;" placeholder="X, Y, Z">
+        <input type="text" id="cmd-move-dest" class="cmd-param-input" style="width:110px;" placeholder="Click or X, Y, Z">
         <span class="cmd-param-label" style="margin-left:6px;">dX,dY,dZ:</span>
         <input type="text" id="cmd-move-delta" class="cmd-param-input" style="width:85px;" placeholder="dX, dY, dZ">
         <span class="cmd-param-label" style="margin-left:6px;">Dist:</span>
@@ -5541,7 +5788,10 @@ function setupMoveCommand(args = {}) {
   }
 
   function applyMoveToPoint(destPt) {
-    if (!state.basePoint) state.basePoint = getSelectionCentroid();
+    if (!state.basePoint) {
+      status("Please specify base point first.");
+      return;
+    }
     const delta = destPt.clone().sub(state.basePoint);
     applyMoveDelta(delta);
   }
@@ -5574,9 +5824,20 @@ function setupMoveCommand(args = {}) {
         }
         return false;
       }
-      const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
-      const targetPt = snap ? snap.point.clone() : pt.clone();
-      if (typeof updateSketchSnapMarker === "function") updateSketchSnapMarker(null);
+
+      const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId, 3.5, raycaster, e) : null;
+      let targetPt = null;
+      if (snap && snap.point) {
+        targetPt = snap.point.clone();
+      } else {
+        const surf = getSurfaceIntersection(raycaster);
+        if (surf) targetPt = surf.point.clone();
+        else if (pt) targetPt = pt.clone();
+      }
+
+      if (!targetPt) return false;
+
+      removeSnapMarker();
 
       if (state.step === "base") {
         setBasePoint(targetPt);
@@ -5588,16 +5849,40 @@ function setupMoveCommand(args = {}) {
       }
     },
     handlePointerMove(pt, vpId, e, raycaster) {
-      const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
-      const targetPt = snap ? snap.point.clone() : pt.clone();
-
-      if (snap && typeof updateSketchSnapMarker === "function") {
-        updateSketchSnapMarker(snap.point, snap.label);
-      } else if (typeof updateSketchSnapMarker === "function") {
-        updateSketchSnapMarker(null);
+      const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId, 3.5, raycaster, e) : null;
+      let targetPt = pt ? pt.clone() : null;
+      let screenPos = null;
+      if (e && typeof e.clientX === "number") {
+        screenPos = { x: e.clientX, y: e.clientY };
       }
 
-      if (state.step === "dest") {
+      if (snap) {
+        targetPt = snap.point.clone();
+        updateSketchSnapMarker(snap.point, snap.label, snap.type, screenPos);
+      } else {
+        const surf = getSurfaceIntersection(raycaster);
+        if (surf) {
+          targetPt = surf.point.clone();
+          removeSnapMarker();
+          const coordsReadout = document.getElementById("coords-readout");
+          if (coordsReadout) {
+            coordsReadout.textContent = `[Surface] X: ${targetPt.x.toFixed(1)} Y: ${targetPt.y.toFixed(1)} Z: ${targetPt.z.toFixed(1)}`;
+          }
+        } else {
+          removeSnapMarker();
+          const coordsReadout = document.getElementById("coords-readout");
+          if (coordsReadout && pt) {
+            coordsReadout.textContent = `[Grid] X: ${pt.x.toFixed(1)} Y: ${pt.y.toFixed(1)} Z: ${pt.z.toFixed(1)}`;
+          }
+        }
+      }
+
+      if (state.step === "base") {
+        const baseInp = document.getElementById("cmd-move-base");
+        if (baseInp && document.activeElement !== baseInp && targetPt) {
+          baseInp.placeholder = `${targetPt.x.toFixed(1)}, ${targetPt.y.toFixed(1)}, ${targetPt.z.toFixed(1)}`;
+        }
+      } else if (state.step === "dest" && targetPt) {
         updateGhostAndRubberband(targetPt);
       }
     },
@@ -5608,14 +5893,14 @@ function setupMoveCommand(args = {}) {
       }
       if (state.step === "base") {
         const baseInp = document.getElementById("cmd-move-base");
-        if (baseInp) {
+        if (baseInp && baseInp.value.trim() !== "") {
           const parts = baseInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
           if (parts.length >= 3) {
             setBasePoint(new THREE.Vector3(parts[0], parts[1], parts[2]));
             return;
           }
         }
-        setBasePoint(getSelectionCentroid());
+        status("Please click or enter a base point first.");
         return;
       }
       if (state.step === "dest") {
@@ -6772,10 +7057,9 @@ function handleViewportPointerDown(e, vpId) {
   if (activeCommand && typeof activeCommand.handlePointerDown === "function") {
     const plane = getCPlane(vpId);
     const intersectPt = new THREE.Vector3();
-    if (raycaster.ray.intersectPlane(plane, intersectPt)) {
-      const handled = activeCommand.handlePointerDown(intersectPt, vpId, e, raycaster);
-      if (handled !== false) return;
-    }
+    const hasPlane = raycaster.ray.intersectPlane(plane, intersectPt);
+    const handled = activeCommand.handlePointerDown(hasPlane ? intersectPt : null, vpId, e, raycaster);
+    if (handled !== false) return;
   }
 
   const isShiftM = isShiftMActive(e);
@@ -6924,14 +7208,15 @@ function handleViewportPointerMove(e, vpId) {
 
   const plane = getCPlane(vpId);
   const intersectPt = new THREE.Vector3();
-  if (raycaster.ray.intersectPlane(plane, intersectPt)) {
+  const hasPlane = raycaster.ray.intersectPlane(plane, intersectPt);
+  if (hasPlane) {
     lastPointerCPlanePos = intersectPt.clone();
     if (activeSketchMode) {
       updateRubberband(intersectPt, vpId);
     }
-    if (activeCommand && typeof activeCommand.handlePointerMove === "function") {
-      activeCommand.handlePointerMove(intersectPt, vpId, e, raycaster);
-    }
+  }
+  if (activeCommand && typeof activeCommand.handlePointerMove === "function") {
+    activeCommand.handlePointerMove(hasPlane ? intersectPt : null, vpId, e, raycaster);
   }
 }
 
@@ -8249,6 +8534,54 @@ function runAllTests() {
     processRequest("Can I undo");
     const restoredBox = sceneObjects[sceneObjects.length - 1];
     assertTest("Can I undo restores object to exact pre-move position", restoredBox && Math.abs(restoredBox.position.x - origBoxPos.x) < 0.01 && Math.abs(restoredBox.position.z - origBoxPos.z) < 0.01);
+
+    // Test 16c: Corner-to-Corner OSNAP Snapping and Exact Coincidence
+    createBoxPrimitive();
+    const boxCoincA = sceneObjects[sceneObjects.length - 1];
+    boxCoincA.position.set(0, 10, 0);
+    boxCoincA.geometry = new THREE.BoxGeometry(20, 20, 20);
+    boxCoincA.updateMatrix();
+    boxCoincA.updateMatrixWorld(true);
+
+    createBoxPrimitive();
+    const boxCoincB = sceneObjects[sceneObjects.length - 1];
+    boxCoincB.position.set(40, 10, 30);
+    boxCoincB.geometry = new THREE.BoxGeometry(20, 20, 20);
+    boxCoincB.updateMatrix();
+    boxCoincB.updateMatrixWorld(true);
+
+    // Verify OSNAP detects Box A corner and midpoint
+    const snapCornerA = findSnapPoint(new THREE.Vector3(10, 20, 10), "top", 3.0);
+    assertTest("OSNAP detects mesh corner vertex with Endpoint (Corner) classification", snapCornerA && snapCornerA.type === "endpoint" && snapCornerA.point.distanceTo(new THREE.Vector3(10, 20, 10)) < 0.01);
+
+    const snapMidA = findSnapPoint(new THREE.Vector3(0, 20, 10), "top", 3.0);
+    assertTest("OSNAP detects mesh edge center with Midpoint classification", snapMidA && snapMidA.type === "midpoint" && snapMidA.point.distanceTo(new THREE.Vector3(0, 20, 10)) < 0.01);
+
+    // Select Box A and start Move
+    selectObject(boxCoincA);
+    startModelingCommand("move");
+    const baseInpEmpty = document.getElementById("cmd-move-base") && document.getElementById("cmd-move-base").value === "";
+    assertTest("Move base point does NOT default to object centroid", baseInpEmpty);
+
+    // Pick Box A corner (10, 20, 10) as base point
+    activeCommand.handlePointerDown(new THREE.Vector3(10, 20, 10), "top");
+    const baseRecordedOk = activeCommand.state.basePoint && activeCommand.state.basePoint.distanceTo(new THREE.Vector3(10, 20, 10)) < 0.01;
+    assertTest("Move base point records exact picked corner (10, 20, 10)", baseRecordedOk);
+
+    // Pick Box B corner (30, 20, 20) as destination
+    activeCommand.handlePointerMove(new THREE.Vector3(30, 20, 20), "top");
+    const ghostOffsetOk = activeCommand.state.currentDelta.distanceTo(new THREE.Vector3(20, 0, 10)) < 0.01;
+    assertTest("Move generates exact live delta (20, 0, 10) from Source to Target corner", ghostOffsetOk);
+
+    // Confirm Move
+    activeCommand.handlePointerDown(new THREE.Vector3(30, 20, 20), "top");
+
+    // Compute final corner of Box A
+    boxCoincA.updateMatrixWorld(true);
+    const finalCornerA = new THREE.Vector3(10, 10, 10).applyMatrix4(boxCoincA.matrixWorld);
+    const targetCornerB = new THREE.Vector3(-10, 10, -10).applyMatrix4(boxCoincB.matrixWorld);
+    const cornerDistance = finalCornerA.distanceTo(targetCornerB);
+    assertTest("Box A chosen corner exactly coincides with Box B chosen corner (distance = 0.000)", cornerDistance < 0.001);
 
     // Test 17: CSG Constructive Solid Geometry Boolean Union
     createBoxPrimitive();

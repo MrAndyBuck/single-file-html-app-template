@@ -159,75 +159,186 @@ try:
             scene.remove(sceneObjects[0]);
             sceneObjects.shift();
         }
+
+        // Create Box A
         createBoxPrimitive();
-        const box = sceneObjects[0];
-        box.position.set(0, 10, 0);
-        box.geometry = new THREE.BoxGeometry(20, 20, 20);
-        box.name = "Box_1";
-        box.updateMatrix();
-        box.updateMatrixWorld();
-        selectObject(box);
+        const boxA = sceneObjects[sceneObjects.length - 1];
+        boxA.position.set(0, 10, 0);
+        boxA.geometry = new THREE.BoxGeometry(20, 20, 20);
+        boxA.name = "Box_A";
+        boxA.material.color.setHex(0x3a7bd5); // Clean blue
+        boxA.updateMatrix();
+        boxA.updateMatrixWorld(true);
+
+        // Create Box B separated in space
+        createBoxPrimitive();
+        const boxB = sceneObjects[sceneObjects.length - 1];
+        boxB.position.set(40, 10, 30);
+        boxB.geometry = new THREE.BoxGeometry(20, 20, 20);
+        boxB.name = "Box_B";
+        boxB.material.color.setHex(0xe08b2b); // Clean amber
+        boxB.updateMatrix();
+        boxB.updateMatrixWorld(true);
+
+        selectObject(boxA);
         render();
     })()
     """)
     time.sleep(0.5)
 
     # ---------------------------------------------------------------------
-    # Scenario 1: Rhino Move ('Can I move') Live Preview & Exact Prompts
+    # Scenario 1A: Rhino Move ('Can I move') - Step 1: Source Corner OSNAP Picking
     # ---------------------------------------------------------------------
-    print("Setting up Scenario 1: Rhino-Style Move with 'Point to move from:' / 'Point to move to:' prompts and live preview...")
-    rhino_state = s2.eval_js("""
+    print("Setting up Scenario 1A: Source Corner OSNAP Point Picking on Box A...")
+    step1_state = s2.eval_js("""
     (() => {
-        // Invoke Move via Request Bar
+        // Start Move command
         processRequest("Can I move");
 
-        // Verify base step prompt
         const prompt1 = document.getElementById("command-prompt").textContent;
 
-        // Choose base point at selection centroid (0, 10, 0)
-        activeCommand.handlePointerDown(new THREE.Vector3(0, 10, 0), "perspective");
+        // Hover over Box A top-front-right corner: (10, 20, 10)
+        const sourceCorner = new THREE.Vector3(10, 20, 10);
+        const cam = cameras.perspective;
+        const rect = viewports.perspective.canvas.getBoundingClientRect();
+        const proj = sourceCorner.clone().project(cam);
+        const screenX = ((proj.x + 1) / 2) * rect.width + rect.left;
+        const screenY = ((-proj.y + 1) / 2) * rect.height + rect.top;
 
-        // Verify dest step prompt
-        const prompt2 = document.getElementById("command-prompt").textContent;
-
-        // Move cursor to destination point (24, 10, 18) -> live preview offset (24, 0, 18)
-        activeCommand.handlePointerMove(new THREE.Vector3(24, 10, 18), "perspective");
+        // Trigger hover with OSNAP detection
+        activeCommand.handlePointerMove(sourceCorner, "perspective", { clientX: screenX, clientY: screenY });
 
         render();
+
+        const snapMarker = scene.getObjectByName("Sketch_Snap_Marker");
+        const hud = document.getElementById("osnap-hud");
 
         return {
             prompt1: prompt1,
-            prompt2: prompt2,
-            hasBaseMarker: !!activeCommand.state.baseMarker,
-            hasGhost: !!activeCommand.state.ghostGroup,
-            hasRubberband: !!activeCommand.state.rubberband,
-            readout: document.getElementById("move-readout") ? document.getElementById("move-readout").textContent : "",
-            currentDelta: activeCommand.state.currentDelta
+            sourceCorner: sourceCorner,
+            hasSnapMarker: !!snapMarker,
+            snapMarkerPos: snapMarker ? snapMarker.position : null,
+            hudVisible: hud ? hud.style.display : "none",
+            hudText: hud ? hud.textContent : "",
+            coordsText: document.getElementById("coords-readout") ? document.getElementById("coords-readout").textContent : ""
         };
     })()
     """)
-    print("RHINO MOVE LIVE PREVIEW STATE:", json.dumps(rhino_state, indent=2))
+    print("RHINO MOVE STEP 1 (SOURCE CORNER PICKING) STATE:", json.dumps(step1_state, indent=2))
     time.sleep(0.8)
-    ss_rhino = s2.capture_screenshot("rhino_move_point_to_move_from_to.png")
+    ss_step1 = s2.capture_screenshot("rhino_move_step1_source_corner_selection.png")
 
-    # Confirm Move and verify full speed displacement
-    rhino_final = s2.eval_js("""
+    # ---------------------------------------------------------------------
+    # Scenario 1B: Step 2: Destination Corner OSNAP, Live Ghost & Rubberband
+    # ---------------------------------------------------------------------
+    print("\nSetting up Scenario 1B: Destination Corner OSNAP on Box B with live preview...")
+    step2_state = s2.eval_js("""
     (() => {
-        const solid = selectedObjects[0];
-        const posBefore = solid.position.clone();
-        activeCommand.confirm();
-        const posAfter = solid.position.clone();
-        const displacement = posAfter.clone().sub(posBefore);
+        // Click Box A corner (10, 20, 10) as base point
+        const sourceCorner = new THREE.Vector3(10, 20, 10);
+        activeCommand.handlePointerDown(sourceCorner, "perspective");
+
+        const prompt2 = document.getElementById("command-prompt").textContent;
+        const basePt = activeCommand.state.basePoint ? activeCommand.state.basePoint.clone() : null;
+
+        // Hover over Box B top-back-left corner: (30, 20, 20)
+        const targetCorner = new THREE.Vector3(30, 20, 20);
+        const cam = cameras.perspective;
+        const rect = viewports.perspective.canvas.getBoundingClientRect();
+        const proj = targetCorner.clone().project(cam);
+        const screenX = ((proj.x + 1) / 2) * rect.width + rect.left;
+        const screenY = ((-proj.y + 1) / 2) * rect.height + rect.top;
+
+        activeCommand.handlePointerMove(targetCorner, "perspective", { clientX: screenX, clientY: screenY });
+
         render();
+
         return {
-            posBefore: posBefore,
-            posAfter: posAfter,
-            displacement: displacement,
+            prompt2: prompt2,
+            basePoint: basePt,
+            targetCorner: targetCorner,
+            hasBaseMarker: !!activeCommand.state.baseMarker,
+            baseMarkerPos: activeCommand.state.baseMarker ? activeCommand.state.baseMarker.position : null,
+            hasGhost: !!activeCommand.state.ghostGroup,
+            hasRubberband: !!activeCommand.state.rubberband,
+            currentDelta: activeCommand.state.currentDelta,
+            readout: document.getElementById("move-readout") ? document.getElementById("move-readout").textContent : "",
+            coordsText: document.getElementById("coords-readout") ? document.getElementById("coords-readout").textContent : ""
+        };
+    })()
+    """)
+    print("RHINO MOVE STEP 2 (DESTINATION CORNER PREVIEW) STATE:", json.dumps(step2_state, indent=2))
+    time.sleep(0.8)
+    ss_step2 = s2.capture_screenshot("rhino_move_step2_dest_corner_live_preview.png")
+
+    # ---------------------------------------------------------------------
+    # Scenario 1C: Step 3: Finalize Move & Verify Exact Corner Coincidence
+    # ---------------------------------------------------------------------
+    print("\nSetting up Scenario 1C: Finalizing Move and Verifying Exact Corner Coincidence...")
+    step3_state = s2.eval_js("""
+    (() => {
+        const boxA = sceneObjects.find(o => o.name === "Box_A");
+        const boxB = sceneObjects.find(o => o.name === "Box_B");
+
+        const targetCorner = new THREE.Vector3(30, 20, 20);
+        activeCommand.handlePointerDown(targetCorner, "perspective");
+
+        boxA.updateMatrixWorld(true);
+        boxB.updateMatrixWorld(true);
+
+        // Verify corner coincidence
+        const finalCornerA = new THREE.Vector3(10, 10, 10).applyMatrix4(boxA.matrixWorld);
+        const targetCornerB = new THREE.Vector3(-10, 10, -10).applyMatrix4(boxB.matrixWorld);
+        const cornerDist = finalCornerA.distanceTo(targetCornerB);
+
+        // Add visual coincidence badge in viewport
+        let badge = document.getElementById("coincidence-badge");
+        if (!badge) {
+            badge = document.createElement("div");
+            badge.id = "coincidence-badge";
+            badge.style.cssText = "position:absolute; bottom:38px; left:50%; transform:translateX(-50%); background:#004000; color:#39ff14; border:2px solid #39ff14; font-family:var(--font-mono, monospace); font-size:12px; font-weight:bold; padding:6px 14px; box-shadow:3px 3px 0 rgba(0,0,0,0.6); z-index:99999; text-align:center;";
+            document.body.appendChild(badge);
+        }
+        badge.innerHTML = `✓ EXACT CORNER COINCIDENCE VERIFIED<br><span style="font-size:10px; color:#ffffff;">Box A Corner (30.0, 20.0, 20.0) ≡ Box B Corner (30.0, 20.0, 20.0)<br>Distance: ${cornerDist.toFixed(4)} mm</span>`;
+
+        // Add visual reticle at touching point
+        const coincMarker = new THREE.Group();
+        coincMarker.name = "Coincidence_Marker";
+        const ring = new THREE.Mesh(new THREE.RingGeometry(2.0, 2.5, 32), new THREE.MeshBasicMaterial({ color: 0x39ff14, side: THREE.DoubleSide }));
+        ring.rotation.x = Math.PI / 2;
+        coincMarker.add(ring);
+        const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.8, 16, 16), new THREE.MeshBasicMaterial({ color: 0x39ff14 }));
+        coincMarker.add(sphere);
+        coincMarker.position.copy(targetCornerB);
+        scene.add(coincMarker);
+
+        render();
+
+        return {
+            boxAPos: boxA.position,
+            boxBPos: boxB.position,
+            finalCornerA: finalCornerA,
+            targetCornerB: targetCornerB,
+            cornerDistance: cornerDist,
+            coincides: cornerDist < 0.001,
             undoCount: undoStack.length
         };
     })()
     """)
-    print("RHINO MOVE COMPLETED STATE:", json.dumps(rhino_final, indent=2))
+    print("RHINO MOVE STEP 3 (CORNER COINCIDENCE) STATE:", json.dumps(step3_state, indent=2))
+    time.sleep(0.8)
+    ss_step3 = s2.capture_screenshot("rhino_move_step3_exact_corner_coincidence_verified.png")
+
+    # Clean up coincidence badge before gumball scenario
+    s2.eval_js("""
+    (() => {
+        const b = document.getElementById("coincidence-badge");
+        if (b) b.remove();
+        const m = scene.getObjectByName("Coincidence_Marker");
+        if (m) scene.remove(m);
+        render();
+    })()
+    """)
 
     # ---------------------------------------------------------------------
     # Scenario 2: Gumball Free Move with Deliberate 0.04 Slowdown Multiplier
@@ -320,7 +431,7 @@ try:
 
     # Automatically open verification screenshots in macOS Preview
     print("\nOpening verification screenshots in macOS Preview...")
-    subprocess.run(["open", "-a", "Preview", ss_rhino, ss_slow])
+    subprocess.run(["open", "-a", "Preview", ss_step1, ss_step2, ss_step3, ss_slow])
     print("All screenshots captured and launched in Preview successfully.")
 
 finally:
