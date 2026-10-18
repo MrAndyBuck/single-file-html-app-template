@@ -551,6 +551,36 @@ Captured via automated headless Chrome CDP session under macOS Retina High-DPI (
   1. `checkpoint_a_01_fillet_edge_selection_preview.png`: Fillet Command Bar active with 2 selected edges highlighted yellow, cyan unselected edges, and live emerald green preview mesh.
   2. `checkpoint_a_02_fillet_completed_solid.png`: Completed `Fillet_3` solid with rounded cylindrical corners, FeatureManager registration, Properties panel parameters, and $49 fee deduction.
   3. `checkpoint_a_03_chamfer_selected_edges.png`: Completed `Chamfer_5` solid alongside `Fillet_3`, showing 45-degree flat bevel facets and unmodified planar faces.
+- **User Acceptance**: APPROVED BY USER ("looks sweet. I approve").
+
+---
+
+### Checkpoint B: Rhino-Style Move & Connected Sketch Lines (Completed & Visually Verified)
+
+#### 1. Architectural & Algorithmic Solutions Implemented
+- **Rhino-Style Point-to-Point Move Command (`Can I move`)**:
+  - Two-phase interactive workflow adhering strictly to standard Rhino 3D conventions:
+    1. **Object Selection**: If objects are not selected prior to invocation, prompts user to select target objects in any viewport, with confirmation button advancing to Base Point. If objects are already selected, advances immediately to Base Point.
+    2. **Base Point Specification**: Prompts user to click a base point in any viewport or enter exact coordinates `(X, Y, Z)` in the retro Command Bar. Defaults to the calculated geometric centroid of the selection. Generates a distinct 3D Base Point Marker (`Move_Base_Marker`) composed of a red anchor sphere and yellow 3D crosshair axes.
+    3. **Destination Point & Live Ghost Preview**: On pointer movement in any of the 4 viewports, computes live displacement $\vec{d} = \mathbf{P}_{\text{cursor}} - \mathbf{P}_{\text{base}}$, renders a dynamic green rubberband displacement line, and displays a translucent emerald green ghost preview mesh (`Move_Ghost_Preview`, `0x39ff14`, opacity 0.55) across all 4 viewports showing the exact resulting position of the objects.
+    4. **Coordinate & Numeric Inputs**: Displays real-time offsets `dX, dY, dZ` and straight-line distance `Dist (mm)` in yellow monospace font. Users can click in any viewport canvas or type numeric values into `Dest: [ X, Y, Z ]`, `dX, dY, dZ: [ ... ]`, or `Dist: [ ... ]` inputs and press Enter to commit.
+    5. **Confirmation, Cleanup & Undo**: Modifies object position matrices, cleans up ghost previews and base markers, updates Gumball and Properties inspectors, and records an undo snapshot allowing instant rollback via `Can I undo`.
+- **Connected Sketch Lines & Extrudable Closed Profiles**:
+  - **Multi-Segment Polyline Continuance**: Drawing lines no longer terminates after 2 points. Clicking subsequent points continuously appends segments to `sketchPoints`, rendering committed segments in blueprint cyan (`0x00d4ff`) with vertex anchor dots while extending an active green rubberband segment to the cursor.
+  - **Endpoint Snapping Engine (`findSnapPoint`)**: Searches vertices across current polyline points (especially start point $P_0$) and existing scene objects within a 3.0mm threshold. Displays a dedicated yellow wireframe snap box indicator (`Sketch_Snap_Marker`) and status annotation `[SNAP: Close Profile]` when hovering near candidate snap points.
+  - **Closed Profile Auto-Detection**: When the user clicks back onto start point $P_0$ (or clicks within snap distance of $P_0$ with $\ge 3$ points), the engine detects loop closure, appends the shared closing vertex, constructs a valid 2D `THREE.Shape`, creates a `THREE.LineLoop` with `ClosedProfile` metadata, registers it in the FeatureManager tree as `Profile_N`, and terminates sketch mode.
+  - **3D Solid Extrudability**: The resulting closed profile is immediately recognized by `extrudeSelectedProfile` and `Can I extrude`, extruding the 2D polygon into a true 3D solid (`ExtrudedSolid`) with height, beveled perimeter, and shaded faces across all 4 viewports.
+  - **Open Polyline Support**: Users can terminate an open polyline at any time via `[✓ Finish (Enter)]` or pressing Enter, producing an open `SketchCurve` with exact segment length calculations.
+
+#### 2. Verification & Visual Artifacts
+- **Automated Tests**: Passes **75/75** unit tests (100% passing), including new tests:
+  - Test 12d: Connected sketch lines multi-segment polyline formation, endpoint snap closure to `ClosedProfile`, and 3D solid extrusion into `ExtrudedSolid`.
+  - Test 16b: Rhino-style point-to-point Move base/destination specification, ghost preview generation, exact coordinate displacement, and rollback via `Can I undo`.
+- **Visual Artifacts Automatically Opened in macOS Preview**:
+  1. `checkpoint_b_01_connected_sketch_closing.png`: Connected sketch lines in progress on Top C-Plane showing 4 connected segments, cyan anchor dots, yellow snap box snapping back to $P_0$, and Command Bar showing `CONNECTED LINE` and prompt.
+  2. `checkpoint_b_02_sketch_extruded_solid.png`: Closed profile extruded into true 3D solid `Extrude_2` (height 16mm) with shaded faces, wire edges, FeatureManager registration, and Properties panel readout.
+  3. `checkpoint_b_03_rhino_move_point_to_point.png`: Rhino-style point-to-point Move in progress showing 3D base marker at centroid, rubberband line to destination point `(24, 0, 18)`, live translucent emerald ghost preview mesh across all 4 viewports, and Command Bar offset readout `dX: 24.0 dY: 0.0 dZ: 18.0 | Dist: 30.0 mm`.
+
 
 
 

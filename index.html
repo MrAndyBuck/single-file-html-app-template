@@ -2288,11 +2288,124 @@ function createConePrimitive() {
   registerNewObject(mesh, `Cone_${primitiveCounter++}`, "Cone");
 }
 
-// 4.4 2D Sketching Engine
+// 4.4 2D Sketching Engine & Vertex Snapping
 let activeSketchMode = null; // 'line' | 'rect' | 'circle'
 let sketchPoints = [];
 let rubberbandObj = null;
 let lastPointerCPlanePos = null;
+let sketchSnapMarker = null;
+
+function renderAllViewports() {
+  // Viewports render continuously via the active requestAnimationFrame loop
+}
+
+function removeSnapMarker() {
+  if (sketchSnapMarker) {
+    scene.remove(sketchSnapMarker);
+    sketchSnapMarker = null;
+    renderAllViewports();
+  }
+}
+
+function showSnapMarker(pt, label = "") {
+  if (!sketchSnapMarker) {
+    const group = new THREE.Group();
+    group.name = "Sketch_Snap_Marker";
+    const boxGeo = new THREE.BoxGeometry(2.2, 2.2, 2.2);
+    const boxMat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true, wireframeLinewidth: 2 });
+    const box = new THREE.Mesh(boxGeo, boxMat);
+    group.add(box);
+    const dotGeo = new THREE.SphereGeometry(0.6, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const dot = new THREE.Mesh(dotGeo, dotMat);
+    group.add(dot);
+    sketchSnapMarker = group;
+    scene.add(sketchSnapMarker);
+  }
+  sketchSnapMarker.position.copy(pt);
+  renderAllViewports();
+}
+
+function findSnapPoint(testPt, vpId, snapThreshold = 3.0) {
+  if (!testPt) return null;
+
+  // 1. Current sketch points (P0 is highest priority to close profile)
+  if (activeSketchMode === "line" && sketchPoints.length > 0) {
+    const p0 = sketchPoints[0];
+    if (p0.distanceTo(testPt) <= snapThreshold) {
+      return {
+        point: p0.clone(),
+        type: sketchPoints.length >= 3 ? "close_profile" : "start_point",
+        label: sketchPoints.length >= 3 ? "Close Profile" : "Start Point"
+      };
+    }
+    for (let i = 1; i < sketchPoints.length - 1; i++) {
+      if (sketchPoints[i].distanceTo(testPt) <= snapThreshold) {
+        return {
+          point: sketchPoints[i].clone(),
+          type: "vertex",
+          label: `Vertex ${i + 1}`
+        };
+      }
+    }
+  }
+
+  // 2. Existing scene objects (curves, polylines, meshes)
+  let bestCandidate = null;
+  let bestDist = snapThreshold;
+
+  for (const obj of sceneObjects) {
+    if (!obj.visible) continue;
+    if (obj.userData && Array.isArray(obj.userData.points)) {
+      const pts = obj.userData.points;
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        const v = (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z);
+        v.applyMatrix4(obj.matrixWorld);
+        const d = v.distanceTo(testPt);
+        if (d <= bestDist) {
+          bestDist = d;
+          bestCandidate = {
+            point: v,
+            type: (i === 0 || i === pts.length - 1) ? "endpoint" : "vertex",
+            label: (i === 0 || i === pts.length - 1) ? "Endpoint" : "Vertex",
+            object: obj
+          };
+        }
+      }
+    } else if (obj.isMesh && obj.geometry && obj.geometry.attributes.position) {
+      const posAttr = obj.geometry.attributes.position;
+      const v = new THREE.Vector3();
+      const count = Math.min(posAttr.count, 64);
+      for (let i = 0; i < count; i++) {
+        v.fromBufferAttribute(posAttr, i);
+        v.applyMatrix4(obj.matrixWorld);
+        const d = v.distanceTo(testPt);
+        if (d <= bestDist) {
+          bestDist = d;
+          bestCandidate = {
+            point: v.clone(),
+            type: "vertex",
+            label: "Vertex",
+            object: obj
+          };
+        }
+      }
+    }
+  }
+
+  return bestCandidate;
+}
+
+function computePolylineLength(pts) {
+  let len = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const pA = (pts[i] && pts[i].isVector3) ? pts[i] : new THREE.Vector3(pts[i].x, pts[i].y, pts[i].z);
+    const pB = (pts[i + 1] && pts[i + 1].isVector3) ? pts[i + 1] : new THREE.Vector3(pts[i + 1].x, pts[i + 1].y, pts[i + 1].z);
+    len += pA.distanceTo(pB);
+  }
+  return len;
+}
 
 function getCPlane(vp) {
   if (vp === "top") return new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Y = 0 (XZ)
@@ -2312,7 +2425,7 @@ function setupLineCommand() {
   if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
 
   bar.style.display = "flex";
-  badge.textContent = "LINE";
+  badge.textContent = "CONNECTED LINE";
   prompt.textContent = `Click in active viewport (${activeViewport.toUpperCase()}) to establish Start Point (or enter coordinates).`;
   confirmBtn.disabled = true;
   confirmBtn.textContent = "✓ Finish (Enter)";
@@ -2326,7 +2439,7 @@ function setupLineCommand() {
       <option value="right" ${activeViewport === "right" ? "selected" : ""}>Right (Z/Y)</option>
       <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
     </select>
-    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Start:</span>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Coords:</span>
     <input id="line-param-start" class="prop-input" placeholder="X, Y, Z" style="width:100px; height:20px;">
     <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Length:</span>
     <input id="line-param-len" class="prop-input" placeholder="Length" type="number" step="1" style="width:65px; height:20px;" disabled>
@@ -2364,7 +2477,7 @@ function setupLineCommand() {
         e.preventDefault();
         const l = parseFloat(lenInp.value);
         if (!isNaN(l) && l > 0 && sketchPoints.length >= 1) {
-          const p1 = sketchPoints[0];
+          const p1 = sketchPoints[sketchPoints.length - 1];
           let dir = new THREE.Vector3(1, 0, 0);
           if (lastPointerCPlanePos) {
             dir = lastPointerCPlanePos.clone().sub(p1);
@@ -2380,11 +2493,11 @@ function setupLineCommand() {
 
   confirmBtn.onclick = () => {
     if (sketchPoints.length >= 2) {
-      const p1 = sketchPoints[0];
-      const p2 = sketchPoints[sketchPoints.length - 1];
-      const lineObj = createLineSketch([p1, p2], activeViewport, false);
+      const lineObj = createLineSketch(sketchPoints, activeViewport, false);
       cancelSketch();
       selectObject(lineObj);
+      status(`Line created: '${lineObj.name}' (${sketchPoints.length} vertices, length: ${computePolylineLength(sketchPoints).toFixed(1)} mm).`);
+      addLog(`Created 2D Polyline '${lineObj.name}' (${sketchPoints.length} vertices) on ${activeViewport.toUpperCase()} plane.`, "log-success");
     } else if (sketchPoints.length === 1 && lenInp && parseFloat(lenInp.value) > 0) {
       const l = parseFloat(lenInp.value);
       const p1 = sketchPoints[0];
@@ -2419,6 +2532,7 @@ function cancelSketch() {
   activeSketchMode = null;
   sketchPoints = [];
   lastPointerCPlanePos = null;
+  removeSnapMarker();
   if (rubberbandObj) {
     scene.remove(rubberbandObj);
     rubberbandObj = null;
@@ -2427,43 +2541,75 @@ function cancelSketch() {
   if (bar && !activeCommand) {
     bar.style.display = "none";
   }
+  renderAllViewports();
 }
 
 function updateRubberband(currentPt, vp) {
-  if (!activeSketchMode || sketchPoints.length === 0) return;
-  if (rubberbandObj) {
-    scene.remove(rubberbandObj);
-    rubberbandObj = null;
+  if (!activeSketchMode || sketchPoints.length === 0) {
+    removeSnapMarker();
+    return;
   }
 
   if (activeSketchMode === "line") {
-    const p1 = sketchPoints[sketchPoints.length - 1];
-    const p2 = currentPt;
-    const len = p1.distanceTo(p2);
+    const snap = findSnapPoint(currentPt, vp);
+    const activePt = snap ? snap.point : currentPt;
+
+    if (snap) {
+      showSnapMarker(snap.point, snap.label);
+    } else {
+      removeSnapMarker();
+    }
+
+    if (rubberbandObj) {
+      scene.remove(rubberbandObj);
+      rubberbandObj = null;
+    }
 
     const group = new THREE.Group();
-    const lineMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
-    const lineGeo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
-    const line = new THREE.Line(lineGeo, lineMat);
-    group.add(line);
+    group.name = "Sketch_Rubberband";
 
-    // Endpoint dots
+    // 1. Draw all committed segments
+    if (sketchPoints.length >= 2) {
+      const commGeo = new THREE.BufferGeometry().setFromPoints(sketchPoints);
+      const commMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, linewidth: 2 });
+      group.add(new THREE.Line(commGeo, commMat));
+    }
+
+    // 2. Draw anchor dots at all committed points
     const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
-    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    const dot1 = new THREE.Mesh(dotGeo, dotMat);
-    dot1.position.copy(p1);
-    const dot2 = new THREE.Mesh(dotGeo, dotMat);
-    dot2.position.copy(p2);
-    group.add(dot1);
-    group.add(dot2);
+    const dotMatComm = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+    const dotMatStart = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+
+    sketchPoints.forEach((p, idx) => {
+      const dot = new THREE.Mesh(dotGeo, idx === 0 ? dotMatStart : dotMatComm);
+      dot.position.copy(p);
+      group.add(dot);
+    });
+
+    // 3. Dynamic active rubberband segment from last committed point to activePt
+    const lastPt = sketchPoints[sketchPoints.length - 1];
+    const isClosing = snap && snap.type === "close_profile" && sketchPoints.length >= 3;
+    const activeLineMat = new THREE.LineBasicMaterial({
+      color: isClosing ? 0xffff00 : 0x39ff14,
+      linewidth: 2
+    });
+    const activeLineGeo = new THREE.BufferGeometry().setFromPoints([lastPt, activePt]);
+    group.add(new THREE.Line(activeLineGeo, activeLineMat));
+
+    // Endpoint dot
+    const endDot = new THREE.Mesh(dotGeo, dotMatStart);
+    endDot.position.copy(activePt);
+    group.add(endDot);
 
     rubberbandObj = group;
     scene.add(rubberbandObj);
 
     // Update status readout
+    const len = lastPt.distanceTo(activePt);
     const coordsReadout = document.getElementById("coords-readout");
     if (coordsReadout) {
-      coordsReadout.textContent = `P1: (${p1.x.toFixed(1)}, ${p1.y.toFixed(1)}, ${p1.z.toFixed(1)}) → P2: (${p2.x.toFixed(1)}, ${p2.y.toFixed(1)}, ${p2.z.toFixed(1)}) | Len: ${len.toFixed(1)} mm`;
+      const snapNote = snap ? ` [SNAP: ${snap.label}]` : "";
+      coordsReadout.textContent = `P${sketchPoints.length}: (${lastPt.x.toFixed(1)}, ${lastPt.y.toFixed(1)}, ${lastPt.z.toFixed(1)}) → (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}) | Len: ${len.toFixed(1)} mm${snapNote}`;
     }
 
     const lenInp = document.getElementById("line-param-len");
@@ -2489,6 +2635,8 @@ function updateRubberband(currentPt, vp) {
     rubberbandObj = new THREE.Line(geo, mat);
     scene.add(rubberbandObj);
   }
+
+  renderAllViewports();
 }
 
 function getRectCorners(c1, c2, vp) {
@@ -2537,50 +2685,77 @@ function getCirclePoints(center, radius, vp, segments = 36) {
 }
 
 function handleSketchClick(pt, vp) {
-  pt.x = Math.round(pt.x * 2) / 2;
-  pt.y = Math.round(pt.y * 2) / 2;
-  pt.z = Math.round(pt.z * 2) / 2;
+  // Check snap point
+  const snap = findSnapPoint(pt, vp);
+  let activePt = snap ? snap.point.clone() : pt.clone();
+
+  if (!snap) {
+    activePt.x = Math.round(activePt.x * 2) / 2;
+    activePt.y = Math.round(activePt.y * 2) / 2;
+    activePt.z = Math.round(activePt.z * 2) / 2;
+  }
 
   if (activeSketchMode === "line") {
-    sketchPoints.push(pt.clone());
-    if (sketchPoints.length === 1) {
-      const prompt = document.getElementById("command-prompt");
-      if (prompt) prompt.textContent = `P1 set at (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)}). Move cursor to preview, click End Point (or enter Length/Coords).`;
-      status(`Line: Start point set at (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)}). Move cursor to preview line.`);
+    // If sketch has >= 3 points and clicking on P0 (or snap is close_profile): CLOSE PROFILE!
+    if (sketchPoints.length >= 3) {
+      const p0 = sketchPoints[0];
+      const distToStart = activePt.distanceTo(p0);
+      if (distToStart < 0.001 || (snap && snap.type === "close_profile") || distToStart <= 3.0) {
+        sketchPoints.push(p0.clone());
+        const closedObj = createLineSketch(sketchPoints, vp, true);
+        removeSnapMarker();
+        cancelSketch();
+        selectObject(closedObj);
+        status(`Closed profile created: '${closedObj.name}' (${closedObj.userData.points.length} vertices). Ready for extrusion ('Can I extrude').`);
+        addLog(`Closed profile '${closedObj.name}' formed on ${vp.toUpperCase()} plane. Ready for extrusion.`, "log-success");
+        return;
+      }
+    }
 
-      const startInp = document.getElementById("line-param-start");
-      if (startInp) startInp.value = `${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}, ${pt.z.toFixed(1)}`;
-      const lenInp = document.getElementById("line-param-len");
+    sketchPoints.push(activePt.clone());
+
+    const prompt = document.getElementById("command-prompt");
+    const confirmBtn = document.getElementById("btn-cmd-confirm");
+    const lenInp = document.getElementById("line-param-len");
+    const startInp = document.getElementById("line-param-start");
+
+    if (sketchPoints.length === 1) {
+      if (prompt) prompt.textContent = `P1 set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor to preview, click next point (or enter Length/Coords).`;
+      status(`Line: Start point set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor and click next point.`);
+      if (startInp) startInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
       if (lenInp) {
         lenInp.disabled = false;
         lenInp.focus();
       }
-      const confirmBtn = document.getElementById("btn-cmd-confirm");
       if (confirmBtn) confirmBtn.disabled = false;
-    } else if (sketchPoints.length >= 2) {
-      const p1 = sketchPoints[0];
-      const p2 = sketchPoints[sketchPoints.length - 1];
-      const lineObj = createLineSketch([p1, p2], vp, false);
-      cancelSketch();
-      selectObject(lineObj);
-      status(`Line created: from (${p1.x.toFixed(1)}, ${p1.y.toFixed(1)}, ${p1.z.toFixed(1)}) to (${p2.x.toFixed(1)}, ${p2.y.toFixed(1)}, ${p2.z.toFixed(1)}) [${p1.distanceTo(p2).toFixed(1)} mm].`);
-      addLog(`Created 2D Line '${lineObj.name}' (${p1.distanceTo(p2).toFixed(1)} mm) on ${vp.toUpperCase()} plane.`, "log-success");
-      return;
+    } else {
+      const prevPt = sketchPoints[sketchPoints.length - 2];
+      const segLen = prevPt.distanceTo(activePt);
+      if (prompt) {
+        prompt.textContent = `Point ${sketchPoints.length} added (${segLen.toFixed(1)} mm). Click next point (click P1 to close profile, or press Enter to finish).`;
+      }
+      status(`Line: Added segment to (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}) [${segLen.toFixed(1)} mm]. Total points: ${sketchPoints.length}. Click P1 to close, or [✓ Finish] to complete.`);
+      if (startInp) startInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
+      if (lenInp) {
+        lenInp.value = "";
+        lenInp.focus();
+      }
     }
+    return;
   } else if (activeSketchMode === "rect") {
     if (sketchPoints.length === 0) {
-      sketchPoints.push(pt.clone());
+      sketchPoints.push(activePt.clone());
       status("Corner 1 set. Click opposite corner to complete rectangle.");
     } else {
-      createRectSketch(sketchPoints[0], pt, vp);
+      createRectSketch(sketchPoints[0], activePt, vp);
       cancelSketch();
     }
   } else if (activeSketchMode === "circle") {
     if (sketchPoints.length === 0) {
-      sketchPoints.push(pt.clone());
+      sketchPoints.push(activePt.clone());
       status("Center point set. Click outer radius point to complete circle.");
     } else {
-      const radius = sketchPoints[0].distanceTo(pt);
+      const radius = sketchPoints[0].distanceTo(activePt);
       createCircleSketch(sketchPoints[0], Math.max(1, radius), vp);
       cancelSketch();
     }
@@ -2589,7 +2764,18 @@ function handleSketchClick(pt, vp) {
 
 function createLineSketch(points, planeName, isClosed = false) {
   recordUndoState(isClosed ? "Profile Sketch" : "Line Sketch");
-  const geo = new THREE.BufferGeometry().setFromPoints(points);
+
+  // If closed and has duplicate closing point, strip it for geometric definitions
+  let geomPoints = points.map(p => (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z));
+  if (isClosed && geomPoints.length >= 4) {
+    const first = geomPoints[0];
+    const last = geomPoints[geomPoints.length - 1];
+    if (first.distanceTo(last) < 0.001) {
+      geomPoints.pop();
+    }
+  }
+
+  const geo = new THREE.BufferGeometry().setFromPoints(geomPoints);
   const mat = new THREE.LineBasicMaterial({
     color: isClosed ? 0x00e5ff : 0x00d4ff,
     linewidth: 2
@@ -2597,9 +2783,9 @@ function createLineSketch(points, planeName, isClosed = false) {
   const line = isClosed ? new THREE.LineLoop(geo, mat) : new THREE.Line(geo, mat);
 
   let shape = null;
-  if (isClosed && points.length >= 3) {
+  if (isClosed && geomPoints.length >= 3) {
     shape = new THREE.Shape();
-    const pts2d = points.map(p => {
+    const pts2d = geomPoints.map(p => {
       if (planeName === "top" || planeName === "perspective") return { u: p.x, v: p.z };
       if (planeName === "front") return { u: p.x, v: p.y };
       return { u: p.z, v: p.y };
@@ -2618,7 +2804,7 @@ function createLineSketch(points, planeName, isClosed = false) {
     layer: getActiveLayer().name,
     protected: false,
     closed: isClosed,
-    points: points.map(p => p.clone()),
+    points: geomPoints.map(p => p.clone()),
     plane: planeName,
     shape: shape
   };
@@ -5014,67 +5200,405 @@ function setupExtrudeCommand(args) {
   if (depthInput) depthInput.focus();
 }
 
-function setupMoveCommand(args) {
+function setupMoveCommand(args = {}) {
   const badge = document.getElementById("command-badge");
   const prompt = document.getElementById("command-prompt");
   const params = document.getElementById("command-params");
   const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
 
-  badge.textContent = "MOVE";
+  badge.textContent = "POINT-TO-POINT MOVE";
 
-  const dx = args.dx !== undefined ? args.dx : 10;
-  const dy = args.dy !== undefined ? args.dy : 0;
-  const dz = args.dz !== undefined ? args.dz : 0;
+  const state = {
+    step: selectedObjects.length > 0 ? "base" : "select",
+    basePoint: null,
+    destPoint: null,
+    baseMarker: null,
+    rubberband: null,
+    ghostGroup: null,
+    currentDelta: new THREE.Vector3(0, 0, 0)
+  };
 
-  params.innerHTML = `
-    <div class="cmd-param-group">
-      <span class="cmd-param-label">dX:</span>
-      <input type="number" id="cmd-move-dx" class="cmd-param-input" value="${dx}" step="1">
-      <span class="cmd-param-label">dY:</span>
-      <input type="number" id="cmd-move-dy" class="cmd-param-input" value="${dy}" step="1">
-      <span class="cmd-param-label">dZ:</span>
-      <input type="number" id="cmd-move-dz" class="cmd-param-input" value="${dz}" step="1">
-    </div>
-  `;
+  function cleanupVisuals() {
+    if (state.baseMarker) {
+      scene.remove(state.baseMarker);
+      state.baseMarker = null;
+    }
+    if (state.rubberband) {
+      scene.remove(state.rubberband);
+      state.rubberband = null;
+    }
+    if (state.ghostGroup) {
+      scene.remove(state.ghostGroup);
+      state.ghostGroup = null;
+    }
+    renderAllViewports();
+  }
 
-  const inputs = params.querySelectorAll("input");
-  inputs.forEach(inp => {
-    inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.stopPropagation();
-        if (!confirmBtn.disabled) activeCommand.confirm();
-      }
+  function getSelectionCentroid() {
+    if (selectedObjects.length === 0) return new THREE.Vector3(0, 0, 0);
+    const box = new THREE.Box3();
+    selectedObjects.forEach(o => box.expandByObject(o));
+    if (box.isEmpty()) return selectedObjects[0].position.clone();
+    return box.getCenter(new THREE.Vector3());
+  }
+
+  function createBaseMarker(pos) {
+    if (state.baseMarker) scene.remove(state.baseMarker);
+    const group = new THREE.Group();
+    group.name = "Move_Base_Marker";
+
+    const sphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
+    const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    group.add(sphere);
+
+    const crossSize = 4.0;
+    const crossMat = new THREE.LineBasicMaterial({ color: 0xffff00, linewidth: 2 });
+    const crossGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-crossSize, 0, 0), new THREE.Vector3(crossSize, 0, 0),
+      new THREE.Vector3(0, -crossSize, 0), new THREE.Vector3(0, crossSize, 0),
+      new THREE.Vector3(0, 0, -crossSize), new THREE.Vector3(0, 0, crossSize)
+    ]);
+    group.add(new THREE.LineSegments(crossGeo, crossMat));
+
+    group.position.copy(pos);
+    state.baseMarker = group;
+    scene.add(state.baseMarker);
+    renderAllViewports();
+  }
+
+  function createGhostPreview() {
+    if (state.ghostGroup) scene.remove(state.ghostGroup);
+    const group = new THREE.Group();
+    group.name = "Move_Ghost_Preview";
+
+    selectedObjects.forEach(obj => {
+      const clone = obj.clone(true);
+      clone.traverse(child => {
+        if (child.isMesh && child.geometry) {
+          child.material = new THREE.MeshStandardMaterial({
+            color: 0x39ff14,
+            roughness: 0.3,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 0.55
+          });
+        } else if (child.isLine || child.isLineSegments || child.isLineLoop) {
+          child.material = new THREE.LineBasicMaterial({
+            color: 0x39ff14,
+            linewidth: 2,
+            transparent: true,
+            opacity: 0.8
+          });
+        }
+      });
+      group.add(clone);
     });
-  });
+
+    state.ghostGroup = group;
+    scene.add(state.ghostGroup);
+    return group;
+  }
+
+  function updateGhostAndRubberband(destPt) {
+    if (!state.basePoint) return;
+    const delta = destPt.clone().sub(state.basePoint);
+    state.currentDelta.copy(delta);
+
+    if (state.rubberband) scene.remove(state.rubberband);
+    const lineGroup = new THREE.Group();
+    lineGroup.name = "Move_Rubberband";
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([state.basePoint, destPt]);
+    lineGroup.add(new THREE.Line(lineGeo, lineMat));
+
+    const endGeo = new THREE.SphereGeometry(1.0, 12, 12);
+    const endMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const endMesh = new THREE.Mesh(endGeo, endMat);
+    endMesh.position.copy(destPt);
+    lineGroup.add(endMesh);
+
+    state.rubberband = lineGroup;
+    scene.add(state.rubberband);
+
+    if (!state.ghostGroup) createGhostPreview();
+    if (state.ghostGroup) {
+      state.ghostGroup.position.copy(delta);
+    }
+
+    const dist = delta.length();
+    const readout = document.getElementById("move-readout");
+    if (readout) {
+      readout.textContent = `dX: ${delta.x.toFixed(1)} dY: ${delta.y.toFixed(1)} dZ: ${delta.z.toFixed(1)} | Dist: ${dist.toFixed(1)} mm`;
+    }
+    const destInp = document.getElementById("cmd-move-dest");
+    if (destInp && document.activeElement !== destInp) {
+      destInp.value = `${destPt.x.toFixed(1)}, ${destPt.y.toFixed(1)}, ${destPt.z.toFixed(1)}`;
+    }
+    const deltaInp = document.getElementById("cmd-move-delta");
+    if (deltaInp && document.activeElement !== deltaInp) {
+      deltaInp.value = `${delta.x.toFixed(1)}, ${delta.y.toFixed(1)}, ${delta.z.toFixed(1)}`;
+    }
+    const distInp = document.getElementById("cmd-move-dist");
+    if (distInp && document.activeElement !== distInp) {
+      distInp.value = dist.toFixed(1);
+    }
+
+    renderAllViewports();
+  }
+
+  function enterBasePointStep() {
+    state.step = "base";
+    const centroid = getSelectionCentroid();
+    prompt.textContent = `MOVE: Specify base point (click in viewport or enter X, Y, Z coords) [Default: centroid (${centroid.x.toFixed(1)}, ${centroid.y.toFixed(1)}, ${centroid.z.toFixed(1)})].`;
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Next (Use Base) >";
+
+    params.innerHTML = `
+      <div class="cmd-param-group">
+        <span class="cmd-param-label">Base X,Y,Z:</span>
+        <input type="text" id="cmd-move-base" class="cmd-param-input" style="width:110px;" value="${centroid.x.toFixed(1)}, ${centroid.y.toFixed(1)}, ${centroid.z.toFixed(1)}">
+        <button id="btn-move-use-centroid" class="retro-btn" style="height:20px; font-size:10px; margin-left:4px;" title="Set base point to object centroid">Centroid</button>
+      </div>
+    `;
+
+    const baseInp = document.getElementById("cmd-move-base");
+    const centroidBtn = document.getElementById("btn-move-use-centroid");
+
+    if (centroidBtn) {
+      centroidBtn.onclick = () => {
+        const c = getSelectionCentroid();
+        baseInp.value = `${c.x.toFixed(1)}, ${c.y.toFixed(1)}, ${c.z.toFixed(1)}`;
+        setBasePoint(c);
+      };
+    }
+
+    if (baseInp) {
+      baseInp.focus();
+      baseInp.select();
+      baseInp.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          e.preventDefault();
+          const parts = baseInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+          if (parts.length >= 3) {
+            setBasePoint(new THREE.Vector3(parts[0], parts[1], parts[2]));
+          } else if (parts.length >= 2) {
+            setBasePoint(new THREE.Vector3(parts[0], 0, parts[1]));
+          } else {
+            setBasePoint(getSelectionCentroid());
+          }
+        }
+      };
+    }
+  }
+
+  function setBasePoint(pt) {
+    pt.x = Math.round(pt.x * 2) / 2;
+    pt.y = Math.round(pt.y * 2) / 2;
+    pt.z = Math.round(pt.z * 2) / 2;
+    state.basePoint = pt.clone();
+    createBaseMarker(state.basePoint);
+    createGhostPreview();
+    enterDestPointStep();
+  }
+
+  function enterDestPointStep() {
+    state.step = "dest";
+    prompt.textContent = `MOVE: Specify destination point (click in viewport, enter coords, or enter dX, dY, dZ).`;
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "✓ Confirm Move (Enter)";
+
+    params.innerHTML = `
+      <div class="cmd-param-group">
+        <span class="cmd-param-label">Dest:</span>
+        <input type="text" id="cmd-move-dest" class="cmd-param-input" style="width:95px;" placeholder="X, Y, Z">
+        <span class="cmd-param-label" style="margin-left:6px;">dX,dY,dZ:</span>
+        <input type="text" id="cmd-move-delta" class="cmd-param-input" style="width:85px;" placeholder="dX, dY, dZ">
+        <span class="cmd-param-label" style="margin-left:6px;">Dist:</span>
+        <input type="number" id="cmd-move-dist" class="cmd-param-input" style="width:50px;" placeholder="Dist">
+        <span id="move-readout" style="font-size:10px; color:#ffff00; margin-left:8px; font-family:monospace;">dX: 0.0 dY: 0.0 dZ: 0.0 | 0.0 mm</span>
+      </div>
+    `;
+
+    const destInp = document.getElementById("cmd-move-dest");
+    const deltaInp = document.getElementById("cmd-move-delta");
+    const distInp = document.getElementById("cmd-move-dist");
+
+    if (destInp) {
+      destInp.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          e.preventDefault();
+          const parts = destInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+          if (parts.length >= 3) {
+            applyMoveToPoint(new THREE.Vector3(parts[0], parts[1], parts[2]));
+          } else if (parts.length >= 2) {
+            applyMoveToPoint(new THREE.Vector3(parts[0], state.basePoint.y, parts[1]));
+          }
+        }
+      };
+    }
+
+    if (deltaInp) {
+      deltaInp.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          e.preventDefault();
+          const parts = deltaInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+          if (parts.length >= 3) {
+            applyMoveDelta(new THREE.Vector3(parts[0], parts[1], parts[2]));
+          } else if (parts.length === 1) {
+            applyMoveDelta(new THREE.Vector3(parts[0], 0, 0));
+          }
+        }
+      };
+    }
+
+    if (distInp) {
+      distInp.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.stopPropagation();
+          e.preventDefault();
+          const d = parseFloat(distInp.value);
+          if (!isNaN(d) && d !== 0) {
+            let dir = state.currentDelta.clone();
+            if (dir.lengthSq() < 0.001) dir.set(1, 0, 0);
+            else dir.normalize();
+            applyMoveDelta(dir.multiplyScalar(d));
+          }
+        }
+      };
+    }
+  }
+
+  function applyMoveDelta(delta) {
+    if (selectedObjects.length === 0) return;
+    recordUndoState("Point-to-Point Move");
+    selectedObjects.forEach(obj => {
+      obj.position.add(delta);
+      obj.updateMatrixWorld(true);
+    });
+    const dist = delta.length();
+    addLog(`Moved ${selectedObjects.length} object(s) by (${delta.x.toFixed(1)}, ${delta.y.toFixed(1)}, ${delta.z.toFixed(1)}) [${dist.toFixed(1)} mm].`, "log-success");
+    status(`Move complete: offset (${delta.x.toFixed(1)}, ${delta.y.toFixed(1)}, ${delta.z.toFixed(1)}).`);
+    cleanupVisuals();
+    finishActiveCommand();
+    updateGumball();
+    updatePropertiesPanel();
+    updateObjectsTree();
+    renderAllViewports();
+    recordModelingCommand();
+  }
+
+  function applyMoveToPoint(destPt) {
+    if (!state.basePoint) state.basePoint = getSelectionCentroid();
+    const delta = destPt.clone().sub(state.basePoint);
+    applyMoveDelta(delta);
+  }
 
   activeCommand = {
     type: "move",
+    state: state,
     updateUI() {
-      if (selectedObjects.length > 0) {
-        prompt.textContent = `Move ${selectedObjects.length} object(s). Enter offset and click [✓ Confirm] (or press Enter).`;
-        confirmBtn.disabled = false;
-      } else {
-        prompt.textContent = "Select object(s) to move. Click in any viewport.";
-        confirmBtn.disabled = true;
+      if (state.step === "select") {
+        if (selectedObjects.length > 0) {
+          prompt.textContent = `Selected ${selectedObjects.length} object(s). Click Next or press Enter to specify base point.`;
+          confirmBtn.disabled = false;
+        } else {
+          prompt.textContent = "Select object(s) to move. Click in any viewport.";
+          confirmBtn.disabled = true;
+        }
       }
     },
     handleSelect(target) {
-      selectObject(target, true);
-      this.updateUI();
+      if (state.step === "select") {
+        selectObject(target, true);
+        this.updateUI();
+      }
+    },
+    handlePointerDown(pt, vpId, e, raycaster) {
+      const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
+      const targetPt = snap ? snap.point.clone() : pt.clone();
+
+      if (state.step === "select") {
+        if (selectedObjects.length > 0) enterBasePointStep();
+        return;
+      }
+      if (state.step === "base") {
+        setBasePoint(targetPt);
+        return;
+      }
+      if (state.step === "dest") {
+        applyMoveToPoint(targetPt);
+        return;
+      }
+    },
+    handlePointerMove(pt, vpId, e, raycaster) {
+      if (state.step === "dest") {
+        const snap = typeof findSnapPoint === "function" ? findSnapPoint(pt, vpId) : null;
+        const targetPt = snap ? snap.point.clone() : pt.clone();
+        updateGhostAndRubberband(targetPt);
+      }
     },
     confirm() {
-      if (selectedObjects.length === 0) return;
-      const offX = parseFloat(document.getElementById("cmd-move-dx").value) || 0;
-      const offY = parseFloat(document.getElementById("cmd-move-dy").value) || 0;
-      const offZ = parseFloat(document.getElementById("cmd-move-dz").value) || 0;
-      finishActiveCommand();
-      transformSelected("move", { dx: offX, dy: offY, dz: offZ });
+      if (state.step === "select") {
+        if (selectedObjects.length > 0) enterBasePointStep();
+        return;
+      }
+      if (state.step === "base") {
+        const baseInp = document.getElementById("cmd-move-base");
+        if (baseInp) {
+          const parts = baseInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+          if (parts.length >= 3) {
+            setBasePoint(new THREE.Vector3(parts[0], parts[1], parts[2]));
+            return;
+          }
+        }
+        setBasePoint(getSelectionCentroid());
+        return;
+      }
+      if (state.step === "dest") {
+        const deltaInp = document.getElementById("cmd-move-delta");
+        if (deltaInp && deltaInp.value.trim() !== "") {
+          const parts = deltaInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+          if (parts.length >= 3) {
+            applyMoveDelta(new THREE.Vector3(parts[0], parts[1], parts[2]));
+            return;
+          } else if (parts.length === 1) {
+            applyMoveDelta(new THREE.Vector3(parts[0], 0, 0));
+            return;
+          }
+        }
+        const destInp = document.getElementById("cmd-move-dest");
+        if (destInp && destInp.value.trim() !== "") {
+          const parts = destInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+          if (parts.length >= 3) {
+            applyMoveToPoint(new THREE.Vector3(parts[0], parts[1], parts[2]));
+            return;
+          }
+        }
+        if (state.currentDelta.lengthSq() > 0.0001) {
+          applyMoveDelta(state.currentDelta);
+        } else {
+          const dx = args.dx !== undefined ? args.dx : 10;
+          const dy = args.dy !== undefined ? args.dy : 0;
+          const dz = args.dz !== undefined ? args.dz : 0;
+          applyMoveDelta(new THREE.Vector3(dx, dy, dz));
+        }
+      }
+    },
+    cleanup() {
+      cleanupVisuals();
     }
   };
 
-  activeCommand.updateUI();
-  const firstInp = document.getElementById("cmd-move-dx");
-  if (firstInp) firstInp.focus();
+  if (state.step === "base") {
+    enterBasePointStep();
+  } else {
+    activeCommand.updateUI();
+  }
 }
 
 function setupRotateCommand(args) {
@@ -6158,6 +6682,16 @@ function handleViewportPointerDown(e, vpId) {
     return;
   }
 
+  // Active command pointerdown hook (e.g. Move command base/dest picking)
+  if (activeCommand && typeof activeCommand.handlePointerDown === "function") {
+    const plane = getCPlane(vpId);
+    const intersectPt = new THREE.Vector3();
+    if (raycaster.ray.intersectPlane(plane, intersectPt)) {
+      activeCommand.handlePointerDown(intersectPt, vpId, e, raycaster);
+      return;
+    }
+  }
+
   const isShiftM = isShiftMActive(e);
 
   // 1. If Shift+M is active and objects are selected: check for click on selected objects or gumball
@@ -6334,6 +6868,9 @@ function handleViewportPointerMove(e, vpId) {
     lastPointerCPlanePos = intersectPt.clone();
     if (activeSketchMode) {
       updateRubberband(intersectPt, vpId);
+    }
+    if (activeCommand && typeof activeCommand.handlePointerMove === "function") {
+      activeCommand.handlePointerMove(intersectPt, vpId, e, raycaster);
     }
   }
 }
@@ -7544,6 +8081,22 @@ function runAllTests() {
     assertTest("Raycaster line selection threshold configured for all viewports", raycaster.params.Line && raycaster.params.Line.threshold >= 2.0);
     cancelSketch();
 
+    // Test 12d: Connected Sketch Lines, Endpoint Snapping & Closed Profile Detection
+    startSketch("line");
+    handleSketchClick(new THREE.Vector3(0, 0, 0), "top");
+    handleSketchClick(new THREE.Vector3(20, 0, 0), "top");
+    handleSketchClick(new THREE.Vector3(20, 0, 20), "top");
+    assertTest("Connected sketch lines form multi-segment polyline in progress", sketchPoints.length === 3);
+    // Snap and click back to P0 to close profile
+    handleSketchClick(new THREE.Vector3(0.5, 0, 0.5), "top");
+    const closedSketchProfile = sceneObjects[sceneObjects.length - 1];
+    assertTest("Connected line sketch automatically closes into ClosedProfile upon snapping to start", closedSketchProfile && closedSketchProfile.userData.closed === true && closedSketchProfile.userData.type === "ClosedProfile" && !!closedSketchProfile.userData.shape);
+    // Extrude the closed profile formed by connected sketch lines
+    selectObject(closedSketchProfile);
+    const extrudedFromSketch = extrudeSelectedProfile(15);
+    assertTest("Closed profile formed from connected sketch lines is extrudable into 3D solid", extrudedFromSketch && extrudedFromSketch.userData.type === "ExtrudedSolid" && extrudedFromSketch.geometry.attributes.position.count > 0);
+    cancelSketch();
+
     // Test 13: 2D Closed Rectangle Profile
     const rectObj = createRectSketch(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(10, 0, 10), "top");
     assertTest("2D Rectangle creates ClosedProfile with 2D Shape", rectObj && rectObj.userData.closed === true && !!rectObj.userData.shape);
@@ -7568,6 +8121,27 @@ function runAllTests() {
 
     processRequest("Can I scale 2");
     assertTest("Can I scale resizes object geometry", extrudedMesh.scale.x === 2 && extrudedMesh.scale.y === 2);
+
+    // Test 16b: Rhino-Style Point-to-Point Move Command
+    createBoxPrimitive();
+    const moveTestBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(moveTestBox);
+    const origBoxPos = moveTestBox.position.clone();
+    startModelingCommand("move");
+    assertTest("Move command initializes in point-to-point base specification step", activeCommand && activeCommand.type === "move" && activeCommand.state.step === "base");
+    // Pick base point
+    activeCommand.handlePointerDown(new THREE.Vector3(0, 0, 0), "top");
+    assertTest("Move command registers base point and transitions to dest step with base marker", activeCommand && activeCommand.state.step === "dest" && !!activeCommand.state.baseMarker);
+    // Move pointer to destination (12, 0, 18)
+    activeCommand.handlePointerMove(new THREE.Vector3(12, 0, 18), "top");
+    assertTest("Move command generates live ghost preview and rubberband line", activeCommand && !!activeCommand.state.ghostGroup && !!activeCommand.state.rubberband);
+    // Confirm point-to-point move
+    activeCommand.confirm();
+    assertTest("Point-to-point Move displaces selected object by exact vector displacement", Math.abs(moveTestBox.position.x - (origBoxPos.x + 12)) < 0.01 && Math.abs(moveTestBox.position.z - (origBoxPos.z + 18)) < 0.01);
+    // Verify Undo restores original position
+    processRequest("Can I undo");
+    const restoredBox = sceneObjects[sceneObjects.length - 1];
+    assertTest("Can I undo restores object to exact pre-move position", restoredBox && Math.abs(restoredBox.position.x - origBoxPos.x) < 0.01 && Math.abs(restoredBox.position.z - origBoxPos.z) < 0.01);
 
     // Test 17: CSG Constructive Solid Geometry Boolean Union
     createBoxPrimitive();
