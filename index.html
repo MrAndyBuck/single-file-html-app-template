@@ -6178,7 +6178,175 @@ function getSolidEdges(mesh) {
 }
 const getBoxEdgeSegments = getSolidEdges;
 
+function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
+  if (!mesh || !mesh.geometry) return null;
+  mesh.geometry.computeBoundingBox();
+  const bbox = mesh.geometry.boundingBox;
+  if (!bbox) return null;
+
+  const w = bbox.max.x - bbox.min.x;
+  const h = bbox.max.y - bbox.min.y;
+  const d = bbox.max.z - bbox.min.z;
+  if (w <= 0.001 || h <= 0.001 || d <= 0.001) return null;
+
+  const edges = getSolidEdges(mesh);
+  const indicesToCut = edgeIndices !== null ? edgeIndices : edges.map(e => e.id);
+  if (!indicesToCut || indicesToCut.length === 0) return mesh.geometry.clone();
+
+  const p = Math.max(0.01, Math.min(param, w * 0.48, h * 0.48, d * 0.48));
+  const x_min = bbox.min.x, x_max = bbox.max.x;
+  const y_min = bbox.min.y, y_max = bbox.max.y;
+  const z_min = bbox.min.z, z_max = bbox.max.z;
+
+  const configs = {
+    0: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: +1, sv: +1 },
+    1: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: -1, sv: +1 },
+    2: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: -1, sv: -1 },
+    3: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: +1, sv: -1 },
+
+    4: { s_axis: 0, s_min: x_min, s_max: x_max, u_axis: 1, u_min: y_min, u_max: y_max, v_axis: 2, v_min: z_min, v_max: z_max, su: +1, sv: +1 },
+    5: { s_axis: 0, s_min: x_min, s_max: x_max, u_axis: 1, u_min: y_min, u_max: y_max, v_axis: 2, v_min: z_min, v_max: z_max, su: +1, sv: -1 },
+    6: { s_axis: 0, s_min: x_min, s_max: x_max, u_axis: 1, u_min: y_min, u_max: y_max, v_axis: 2, v_min: z_min, v_max: z_max, su: -1, sv: +1 },
+    7: { s_axis: 0, s_min: x_min, s_max: x_max, u_axis: 1, u_min: y_min, u_max: y_max, v_axis: 2, v_min: z_min, v_max: z_max, su: -1, sv: -1 },
+
+    8: { s_axis: 2, s_min: z_min, s_max: z_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 1, v_min: y_min, v_max: y_max, su: +1, sv: +1 },
+    9: { s_axis: 2, s_min: z_min, s_max: z_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 1, v_min: y_min, v_max: y_max, su: -1, sv: +1 },
+    10: { s_axis: 2, s_min: z_min, s_max: z_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 1, v_min: y_min, v_max: y_max, su: -1, sv: -1 },
+    11: { s_axis: 2, s_min: z_min, s_max: z_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 1, v_min: y_min, v_max: y_max, su: +1, sv: -1 }
+  };
+
+  const firstCfg = configs[indicesToCut[0]];
+  if (!firstCfg) return null;
+  const sweep_axis = firstCfg.s_axis;
+
+  for (let eid of indicesToCut) {
+    if (!configs[eid] || configs[eid].s_axis !== sweep_axis) {
+      return null; // Mixed orientations -> fallback to CSG cutter
+    }
+  }
+
+  const activeCorners = new Set();
+  for (let eid of indicesToCut) {
+    activeCorners.add(`${configs[eid].su}_${configs[eid].sv}`);
+  }
+
+  const is_right_handed = ((firstCfg.u_axis + 1) % 3 === firstCfg.v_axis);
+
+  const corners = [
+    { cu: -1, cv: -1, u: firstCfg.u_min, v: firstCfg.v_min },
+    { cu: +1, cv: -1, u: firstCfg.u_max, v: firstCfg.v_min },
+    { cu: +1, cv: +1, u: firstCfg.u_max, v: firstCfg.v_max },
+    { cu: -1, cv: +1, u: firstCfg.u_min, v: firstCfg.v_max }
+  ];
+
+  const poly = [];
+  for (let c of corners) {
+    const key = `${c.cu}_${c.cv}`;
+    if (activeCorners.has(key)) {
+      let p_in, p_out, center, theta_start, theta_end;
+      if (c.cu === +1 && c.cv === +1) {
+        p_in = [firstCfg.u_max, firstCfg.v_max - p];
+        p_out = [firstCfg.u_max - p, firstCfg.v_max];
+        center = [firstCfg.u_max - p, firstCfg.v_max - p];
+        theta_start = 0.0;
+        theta_end = Math.PI / 2.0;
+      } else if (c.cu === -1 && c.cv === +1) {
+        p_in = [firstCfg.u_min + p, firstCfg.v_max];
+        p_out = [firstCfg.u_min, firstCfg.v_max - p];
+        center = [firstCfg.u_min + p, firstCfg.v_max - p];
+        theta_start = Math.PI / 2.0;
+        theta_end = Math.PI;
+      } else if (c.cu === -1 && c.cv === -1) {
+        p_in = [firstCfg.u_min, firstCfg.v_min + p];
+        p_out = [firstCfg.u_min + p, firstCfg.v_min];
+        center = [firstCfg.u_min + p, firstCfg.v_min + p];
+        theta_start = Math.PI;
+        theta_end = 3.0 * Math.PI / 2.0;
+      } else { // +1, -1
+        p_in = [firstCfg.u_max - p, firstCfg.v_min];
+        p_out = [firstCfg.u_max, firstCfg.v_min + p];
+        center = [firstCfg.u_max - p, firstCfg.v_min + p];
+        theta_start = 3.0 * Math.PI / 2.0;
+        theta_end = 2.0 * Math.PI;
+      }
+
+      if (mode === "chamfer") {
+        poly.push(p_in);
+        poly.push(p_out);
+      } else {
+        const steps = Math.max(8, segs);
+        for (let i = 0; i <= steps; i++) {
+          const t = theta_start + (theta_end - theta_start) * (i / steps);
+          poly.push([center[0] + p * Math.cos(t), center[1] + p * Math.sin(t)]);
+        }
+      }
+    } else {
+      poly.push([c.u, c.v]);
+    }
+  }
+
+  const N = poly.length;
+  if (!is_right_handed) {
+    poly.reverse();
+  }
+
+  function makeVec3(u, v, s) {
+    const v3 = [0, 0, 0];
+    v3[firstCfg.u_axis] = u;
+    v3[firstCfg.v_axis] = v;
+    v3[firstCfg.s_axis] = s;
+    return v3;
+  }
+
+  const verts = [];
+  // Bottom cap
+  for (let pt of poly) verts.push(makeVec3(pt[0], pt[1], firstCfg.s_min));
+  // Top cap
+  for (let pt of poly) verts.push(makeVec3(pt[0], pt[1], firstCfg.s_max));
+
+  const tris = [];
+  // Bottom cap (CW)
+  for (let i = 1; i < N - 1; i++) {
+    tris.push([0, i + 1, i]);
+  }
+  // Top cap (CCW)
+  for (let i = 1; i < N - 1; i++) {
+    tris.push([N, N + i, N + i + 1]);
+  }
+  // Sides
+  for (let i = 0; i < N; i++) {
+    const next_i = (i + 1) % N;
+    const b1 = i, b2 = next_i;
+    const t1 = N + i, t2 = N + next_i;
+    tris.push([b1, b2, t2]);
+    tris.push([b1, t2, t1]);
+  }
+
+  const posArray = new Float32Array(tris.length * 3 * 3);
+  let pIdx = 0;
+  for (let k = 0; k < tris.length; k++) {
+    const [i0, i1, i2] = tris[k];
+    const v0 = verts[i0], v1 = verts[i1], v2 = verts[i2];
+    posArray[pIdx++] = v0[0]; posArray[pIdx++] = v0[1]; posArray[pIdx++] = v0[2];
+    posArray[pIdx++] = v1[0]; posArray[pIdx++] = v1[1]; posArray[pIdx++] = v1[2];
+    posArray[pIdx++] = v2[0]; posArray[pIdx++] = v2[1]; posArray[pIdx++] = v2[2];
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+  geo.computeVertexNormals();
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
 function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
+  // Try exact 2-manifold B-rep generator first for boxes
+  const manifoldGeo = buildBoxManifoldCut(mesh, mode, param, edgeIndices, 16);
+  if (manifoldGeo) {
+    return manifoldGeo;
+  }
+
   mesh.geometry.computeBoundingBox();
   const bbox = mesh.geometry.boundingBox;
   const w = Math.max(0.1, bbox.max.x - bbox.min.x);
@@ -8815,6 +8983,51 @@ function runAllTests() {
     activeCommand.confirm();
     const chamferedSolid = selectedObjects[0];
     assertTest("Chamfer produces real beveled geometry with ChamferedSolid type", chamferedSolid && chamferedSolid.userData.type === "ChamferedSolid" && chamferedSolid.geometry.attributes.position.count > initialBoxVerts);
+
+    // Test 18d & 18e: Geometric Quality, Watertightness and Manifold Verification
+    function verifyMeshManifold(geo) {
+      const pos = geo.attributes.position;
+      const eps = 1e-4;
+      const uVerts = [];
+      const vmap = [];
+      for (let i = 0; i < pos.count; i++) {
+        const vx = pos.getX(i), vy = pos.getY(i), vz = pos.getZ(i);
+        let f = -1;
+        for (let j = 0; j < uVerts.length; j++) {
+          if (Math.abs(uVerts[j].x - vx) < eps && Math.abs(uVerts[j].y - vy) < eps && Math.abs(uVerts[j].z - vz) < eps) {
+            f = j; break;
+          }
+        }
+        if (f === -1) {
+          f = uVerts.length;
+          uVerts.push({ x: vx, y: vy, z: vz });
+        }
+        vmap.push(f);
+      }
+      const edgeMap = new Map();
+      for (let i = 0; i < pos.count; i += 3) {
+        const v0 = vmap[i], v1 = vmap[i+1], v2 = vmap[i+2];
+        const e1 = v0 < v1 ? `${v0}_${v1}` : `${v1}_${v0}`;
+        const e2 = v1 < v2 ? `${v1}_${v2}` : `${v2}_${v1}`;
+        const e3 = v2 < v0 ? `${v2}_${v0}` : `${v0}_${v2}`;
+        edgeMap.set(e1, (edgeMap.get(e1) || 0) + 1);
+        edgeMap.set(e2, (edgeMap.get(e2) || 0) + 1);
+        edgeMap.set(e3, (edgeMap.get(e3) || 0) + 1);
+      }
+      let open = 0, nonM = 0;
+      for (const [k, count] of edgeMap.entries()) {
+        if (count === 1) open++;
+        else if (count > 2) nonM++;
+      }
+      const chi = uVerts.length - edgeMap.size + (pos.count / 3);
+      return { isWatertight: open === 0, isManifold: open === 0 && nonM === 0, chi };
+    }
+
+    const filletTopo = verifyMeshManifold(filletedSolid.geometry);
+    assertTest("Fillet mesh is 100% watertight and manifold (openEdges=0, nonManifold=0, Chi=2)", filletTopo.isWatertight && filletTopo.isManifold && filletTopo.chi === 2);
+
+    const chamferTopo = verifyMeshManifold(chamferedSolid.geometry);
+    assertTest("Chamfer mesh is 100% watertight and manifold (openEdges=0, nonManifold=0, Chi=2)", chamferTopo.isWatertight && chamferTopo.isManifold && chamferTopo.chi === 2);
 
     // Test 19: Layer Management
     const testLayer = addLayer("CAM Toolpaths");
