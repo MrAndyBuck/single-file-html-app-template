@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-010`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-011`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -33,7 +33,7 @@
 | **Service Worker & Cache Freshness** | **YES** | **YES** | **YES** | **YES** | Network-First for HTML/navigation, unconditional `skipWaiting()` and `clients.claim()`, `#chip` click hard-purges SW registrations and cache storage. |
 | **Interactive Command Bar (`#command-bar`)** | **YES** | **YES** | **YES** | *Awaiting Manual Test* | Clear command badge, dynamic instructions, parameter inputs, `[✓ Confirm (Enter)]`, `[✕ Cancel (Esc)]`. |
 | **Functional 2D Line Command (`Can I line`)**| **YES** | **YES** | **YES** | **YES** | Interactive C-plane sketching (Top/Front/Right/Persp); Command Bar with Start coords & dynamic Length; green rubberband preview with yellow endpoint indicator dots; length & coord status readout; raycaster threshold 2.5; `Line_N` FeatureManager registration; Properties panel geometry box (Start, End, Length, Plane); Gumball transform support; native `.cadnt` archive serialization & restore. User accepted. |
-| **Functional Fillet & Chamfer (`Can I fillet` / `Can I chamfer`)** | **YES** | **YES** | **YES** | *Awaiting User Acceptance* | Exact 2-manifold B-Rep polygon extrusion engine (`buildBoxManifoldCut`); 0 open edges, 0 non-manifold edges, Euler characteristic $\chi=2$; single-edge 2.0mm fillet/chamfer on solid boxes with side-by-side validation; screen-space edge picking (24px); live emerald preview mesh; cancel/undo/confirm; full telemetry. |
+| **Functional Fillet & Chamfer (`Can I fillet` / `Can I chamfer`)** | **YES** | **YES** | **YES** | **YES** | Exact 2-manifold B-Rep polygon extrusion engine (`buildBoxManifoldCut`); 0 open edges, 0 non-manifold edges, Euler characteristic $\chi=2$; single-edge 2.0mm fillet/chamfer on solid boxes with side-by-side validation; screen-space edge picking (24px); live emerald preview mesh; cancel/undo/confirm; full telemetry. User accepted. |
 | **Wandering Command Toolbars** | **YES** | **YES** | **YES** | **YES** | Modeling command buttons automatically swap positions with another random button upon use, guaranteeing the tool never lands in the same slot, stimulating neural elasticity. |
 | **Hold Music Integration** | **YES** | **YES** | **YES** | **YES** | Real local audio asset `assets/audio/New Recording 12.m4a` played on long operations (Save, Import, Sweep, Union, Fillet, Chamfer). Non-looping playback, stops cleanly on completion/cancel, respects mute toggle, default volume increased to **85%**. |
 | **Asset Manifest & SW Offline Caching** | **YES** | **YES** | **YES** | **YES** | `assets/manifest.json` maps all real assets; cached in Service Worker (`sw.js`) for offline functionality. |
