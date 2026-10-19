@@ -2740,7 +2740,39 @@ function getCPlane(vp) {
   return new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Perspective Y = 0
 }
 
-function setupLineCommand() {
+function disposeObjectHierarchy(obj) {
+  if (!obj) return;
+  obj.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (Array.isArray(child.material)) {
+        child.material.forEach(m => m.dispose());
+      } else {
+        child.material.dispose();
+      }
+    }
+  });
+}
+
+function clearPreviewObjects() {
+  if (rubberbandObj) {
+    scene.remove(rubberbandObj);
+    disposeObjectHierarchy(rubberbandObj);
+    rubberbandObj = null;
+  }
+  const toRemove = [];
+  scene.children.forEach(c => {
+    if (c.name === "Sketch_Rubberband" || c.name === "Sketch_Preview" || (c.userData && c.userData.isTransientPreview)) {
+      toRemove.push(c);
+    }
+  });
+  toRemove.forEach(c => {
+    scene.remove(c);
+    disposeObjectHierarchy(c);
+  });
+}
+
+function setupLineCommand(isPolyline = false) {
   const bar = document.getElementById("command-bar");
   const badge = document.getElementById("command-badge");
   const prompt = document.getElementById("command-prompt");
@@ -2751,10 +2783,12 @@ function setupLineCommand() {
   if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
 
   bar.style.display = "flex";
-  badge.textContent = "CONNECTED LINE";
-  prompt.textContent = `Click in active viewport (${activeViewport.toUpperCase()}) to establish Start Point (or enter coordinates).`;
+  badge.textContent = isPolyline ? "CONNECTED POLYLINE" : "LINE SEGMENT";
+  prompt.textContent = isPolyline
+    ? `Click in active viewport (${activeViewport.toUpperCase()}) to establish Start Point (or enter coordinates).`
+    : `Click Start Point in active viewport (${activeViewport.toUpperCase()}) (or enter coordinates).`;
   confirmBtn.disabled = true;
-  confirmBtn.textContent = "✓ Finish (Enter)";
+  confirmBtn.textContent = isPolyline ? "✓ Finish (Enter)" : "✓ Commit (Enter)";
   cancelBtn.textContent = "✕ Cancel (Esc)";
 
   params.innerHTML = `
@@ -2840,14 +2874,193 @@ function setupLineCommand() {
   };
 }
 
+function setupRectCommand() {
+  const bar = document.getElementById("command-bar");
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
+
+  bar.style.display = "flex";
+  badge.textContent = "RECTANGLE";
+  prompt.textContent = `Click in active viewport (${activeViewport.toUpperCase()}) to set Corner 1 (or enter coordinates).`;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "✓ Commit (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:2px; font-weight:bold;">Plane:</span>
+    <select id="rect-param-plane" class="prop-input" style="height:20px; font-size:11px; width:95px;">
+      <option value="top" ${activeViewport === "top" ? "selected" : ""}>Top (X/Z)</option>
+      <option value="front" ${activeViewport === "front" ? "selected" : ""}>Front (X/Y)</option>
+      <option value="right" ${activeViewport === "right" ? "selected" : ""}>Right (Z/Y)</option>
+      <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
+    </select>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Corner 1:</span>
+    <input id="rect-param-c1" class="prop-input" placeholder="X, Y, Z" style="width:90px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Corner 2:</span>
+    <input id="rect-param-c2" class="prop-input" placeholder="X, Y, Z" style="width:90px; height:20px;" disabled>
+  `;
+
+  const planeSel = document.getElementById("rect-param-plane");
+  if (planeSel) {
+    planeSel.onchange = () => {
+      setActiveViewport(planeSel.value);
+      focusActiveCanvas();
+      status(`Rectangle: C-Plane switched to ${planeSel.value.toUpperCase()}`);
+    };
+  }
+
+  const c1Inp = document.getElementById("rect-param-c1");
+  const c2Inp = document.getElementById("rect-param-c2");
+
+  if (c1Inp) {
+    c1Inp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const parts = c1Inp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          const pt = new THREE.Vector3(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+          handleSketchClick(pt, activeViewport);
+          if (c2Inp) c2Inp.focus();
+        }
+      }
+    };
+  }
+
+  if (c2Inp) {
+    c2Inp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const parts = c2Inp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          const pt = new THREE.Vector3(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+          handleSketchClick(pt, activeViewport);
+        }
+      }
+    };
+  }
+
+  confirmBtn.onclick = () => {
+    if (sketchPoints.length >= 1 && lastPointerCPlanePos) {
+      createRectSketch(sketchPoints[0], lastPointerCPlanePos, activeViewport);
+      cancelSketch();
+    }
+  };
+
+  cancelBtn.onclick = () => {
+    cancelSketch();
+    status("Rectangle command cancelled.");
+  };
+}
+
+function setupCircleCommand() {
+  const bar = document.getElementById("command-bar");
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
+
+  bar.style.display = "flex";
+  badge.textContent = "CIRCLE";
+  prompt.textContent = `Click in active viewport (${activeViewport.toUpperCase()}) to set Center Point (or enter coordinates).`;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "✓ Commit (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:2px; font-weight:bold;">Plane:</span>
+    <select id="circle-param-plane" class="prop-input" style="height:20px; font-size:11px; width:95px;">
+      <option value="top" ${activeViewport === "top" ? "selected" : ""}>Top (X/Z)</option>
+      <option value="front" ${activeViewport === "front" ? "selected" : ""}>Front (X/Y)</option>
+      <option value="right" ${activeViewport === "right" ? "selected" : ""}>Right (Z/Y)</option>
+      <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
+    </select>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Center:</span>
+    <input id="circle-param-center" class="prop-input" placeholder="X, Y, Z" style="width:90px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Radius:</span>
+    <input id="circle-param-r" class="prop-input" placeholder="Radius" type="number" step="1" style="width:65px; height:20px;" disabled>
+  `;
+
+  const planeSel = document.getElementById("circle-param-plane");
+  if (planeSel) {
+    planeSel.onchange = () => {
+      setActiveViewport(planeSel.value);
+      focusActiveCanvas();
+      status(`Circle: C-Plane switched to ${planeSel.value.toUpperCase()}`);
+    };
+  }
+
+  const centerInp = document.getElementById("circle-param-center");
+  const rInp = document.getElementById("circle-param-r");
+
+  if (centerInp) {
+    centerInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const parts = centerInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          const pt = new THREE.Vector3(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+          handleSketchClick(pt, activeViewport);
+          if (rInp) rInp.focus();
+        }
+      }
+    };
+  }
+
+  if (rInp) {
+    rInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const r = parseFloat(rInp.value);
+        if (!isNaN(r) && r > 0 && sketchPoints.length >= 1) {
+          createCircleSketch(sketchPoints[0], r, activeViewport);
+          cancelSketch();
+        }
+      }
+    };
+  }
+
+  confirmBtn.onclick = () => {
+    if (sketchPoints.length >= 1 && lastPointerCPlanePos) {
+      const r = sketchPoints[0].distanceTo(lastPointerCPlanePos);
+      createCircleSketch(sketchPoints[0], Math.max(1, r), activeViewport);
+      cancelSketch();
+    }
+  };
+
+  cancelBtn.onclick = () => {
+    cancelSketch();
+    status("Circle command cancelled.");
+  };
+}
+
 function startSketch(mode) {
   cancelSketch();
   activeSketchMode = mode;
   sketchPoints = [];
   if (mode === "line") {
-    setupLineCommand();
-    status("Line Sketch: Click to place start point, or enter coordinates. (Esc to cancel)");
+    setupLineCommand(false);
+    status("Line Sketch: Click start point, then click end point. (Esc to cancel)");
     addLog(`Entered LINE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  } else if (mode === "polyline") {
+    setupLineCommand(true);
+    status("Polyline Sketch: Click points to draw connected segments. (Esc to cancel)");
+    addLog(`Entered POLYLINE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  } else if (mode === "rect") {
+    setupRectCommand();
+    status("Rectangle Sketch: Click first corner on C-Plane. (Esc to cancel)");
+    addLog(`Entered RECTANGLE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  } else if (mode === "circle") {
+    setupCircleCommand();
+    status("Circle Sketch: Click center point on C-Plane. (Esc to cancel)");
+    addLog(`Entered CIRCLE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
   } else {
     status(`Sketch ${mode.toUpperCase()}: Click in active viewport on C-Plane. Press Escape to cancel.`);
     addLog(`Entered ${mode.toUpperCase()} sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
@@ -2859,10 +3072,7 @@ function cancelSketch() {
   sketchPoints = [];
   lastPointerCPlanePos = null;
   removeSnapMarker();
-  if (rubberbandObj) {
-    scene.remove(rubberbandObj);
-    rubberbandObj = null;
-  }
+  clearPreviewObjects();
   const bar = document.getElementById("command-bar");
   if (bar && !activeCommand) {
     bar.style.display = "none";
@@ -2873,8 +3083,11 @@ function cancelSketch() {
 function updateRubberband(currentPt, vp) {
   if (!activeSketchMode || sketchPoints.length === 0) {
     removeSnapMarker();
+    clearPreviewObjects();
     return;
   }
+
+  clearPreviewObjects();
 
   if (activeSketchMode === "line") {
     const snap = findSnapPoint(currentPt, vp);
@@ -2886,13 +3099,54 @@ function updateRubberband(currentPt, vp) {
       removeSnapMarker();
     }
 
-    if (rubberbandObj) {
-      scene.remove(rubberbandObj);
-      rubberbandObj = null;
+    const p1 = sketchPoints[0];
+    const group = new THREE.Group();
+    group.name = "Sketch_Rubberband";
+    group.userData = { isTransientPreview: true };
+
+    const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
+    const dotMatStart = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const dotMatEnd = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+
+    const d1 = new THREE.Mesh(dotGeo, dotMatStart);
+    d1.position.copy(p1);
+    group.add(d1);
+
+    const d2 = new THREE.Mesh(dotGeo, dotMatEnd);
+    d2.position.copy(activePt);
+    group.add(d2);
+
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([p1, activePt]);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+    group.add(new THREE.Line(lineGeo, lineMat));
+
+    rubberbandObj = group;
+    scene.add(rubberbandObj);
+
+    const len = p1.distanceTo(activePt);
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      const snapNote = snap ? ` [SNAP: ${snap.label}]` : "";
+      coordsReadout.textContent = `Line: (${p1.x.toFixed(1)}, ${p1.y.toFixed(1)}, ${p1.z.toFixed(1)}) → (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}) | Len: ${len.toFixed(1)} mm${snapNote}`;
+    }
+
+    const lenInp = document.getElementById("line-param-len");
+    if (lenInp && document.activeElement !== lenInp) {
+      lenInp.value = len.toFixed(1);
+    }
+  } else if (activeSketchMode === "polyline") {
+    const snap = findSnapPoint(currentPt, vp);
+    const activePt = snap ? snap.point : currentPt;
+
+    if (snap) {
+      showSnapMarker(snap.point, snap.label);
+    } else {
+      removeSnapMarker();
     }
 
     const group = new THREE.Group();
     group.name = "Sketch_Rubberband";
+    group.userData = { isTransientPreview: true };
 
     // 1. Draw all committed segments
     if (sketchPoints.length >= 2) {
@@ -2945,21 +3199,80 @@ function updateRubberband(currentPt, vp) {
   } else if (activeSketchMode === "rect") {
     const c1 = sketchPoints[0];
     const c2 = currentPt;
-    const pts = getRectCorners(c1, c2, vp);
-    pts.push(pts[0]);
+    const corners = getRectCorners(c1, c2, vp);
+    const pts = corners.map(p => p.clone());
+    pts.push(pts[0].clone()); // Close the preview loop
+
+    const group = new THREE.Group();
+    group.name = "Sketch_Rubberband";
+    group.userData = { isTransientPreview: true };
+
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
-    rubberbandObj = new THREE.Line(geo, mat);
+    group.add(new THREE.Line(geo, mat));
+
+    // Corner indicator dots
+    const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
+    const d1 = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+    d1.position.copy(c1);
+    group.add(d1);
+
+    const d2 = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: 0x00e5ff }));
+    d2.position.copy(c2);
+    group.add(d2);
+
+    rubberbandObj = group;
     scene.add(rubberbandObj);
+
+    // Dimensions status readout
+    let dimStr = "";
+    if (vp === "top" || vp === "perspective") {
+      dimStr = `W: ${Math.abs(c2.x - c1.x).toFixed(1)} mm, D: ${Math.abs(c2.z - c1.z).toFixed(1)} mm`;
+    } else if (vp === "front") {
+      dimStr = `W: ${Math.abs(c2.x - c1.x).toFixed(1)} mm, H: ${Math.abs(c2.y - c1.y).toFixed(1)} mm`;
+    } else {
+      dimStr = `D: ${Math.abs(c2.z - c1.z).toFixed(1)} mm, H: ${Math.abs(c2.y - c1.y).toFixed(1)} mm`;
+    }
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      coordsReadout.textContent = `Rect: (${c1.x.toFixed(1)}, ${c1.y.toFixed(1)}, ${c1.z.toFixed(1)}) → (${c2.x.toFixed(1)}, ${c2.y.toFixed(1)}, ${c2.z.toFixed(1)}) | ${dimStr}`;
+    }
   } else if (activeSketchMode === "circle") {
     const center = sketchPoints[0];
     const radius = center.distanceTo(currentPt);
-    const pts = getCirclePoints(center, radius, vp, 36);
-    pts.push(pts[0]);
+    const pts = getCirclePoints(center, radius, vp, 48);
+    pts.push(pts[0].clone());
+
+    const group = new THREE.Group();
+    group.name = "Sketch_Rubberband";
+    group.userData = { isTransientPreview: true };
+
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
-    rubberbandObj = new THREE.Line(geo, mat);
+    group.add(new THREE.Line(geo, mat));
+
+    // Center and radius dots
+    const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
+    const d1 = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+    d1.position.copy(center);
+    group.add(d1);
+
+    const d2 = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: 0x00e5ff }));
+    d2.position.copy(currentPt);
+    group.add(d2);
+
+    // Radius line
+    const rGeo = new THREE.BufferGeometry().setFromPoints([center, currentPt]);
+    const rMat = new THREE.LineBasicMaterial({ color: 0xffff00, linewidth: 1 });
+    group.add(new THREE.Line(rGeo, rMat));
+
+    rubberbandObj = group;
     scene.add(rubberbandObj);
+
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      coordsReadout.textContent = `Circle: Center (${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}) | R: ${radius.toFixed(1)} mm, D: ${(radius * 2).toFixed(1)} mm`;
+    }
   }
 
   renderAllViewports();
@@ -3022,18 +3335,49 @@ function handleSketchClick(pt, vp) {
   }
 
   if (activeSketchMode === "line") {
+    if (sketchPoints.length === 0) {
+      sketchPoints.push(activePt.clone());
+      const prompt = document.getElementById("command-prompt");
+      if (prompt) prompt.textContent = `Start point set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor to preview, click end point.`;
+      const startInp = document.getElementById("line-param-start");
+      if (startInp) startInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
+      const lenInp = document.getElementById("line-param-len");
+      if (lenInp) {
+        lenInp.disabled = false;
+        lenInp.focus();
+      }
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn) confirmBtn.disabled = false;
+      status(`Line: Start point set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Click end point.`);
+    } else {
+      const p1 = sketchPoints[0];
+      const p2 = activePt;
+      if (p1.distanceTo(p2) < 0.001) {
+        status("End point identical to start point. Click distinct end point.");
+        return;
+      }
+      clearPreviewObjects();
+      const lineObj = createLineSketch([p1, p2], vp, false);
+      cancelSketch();
+      selectObject(lineObj);
+      renderAllViewports();
+    }
+    return;
+  } else if (activeSketchMode === "polyline") {
     // If sketch has >= 3 points and clicking on P0 (or snap is close_profile): CLOSE PROFILE!
     if (sketchPoints.length >= 3) {
       const p0 = sketchPoints[0];
       const distToStart = activePt.distanceTo(p0);
       if (distToStart < 0.001 || (snap && snap.type === "close_profile") || distToStart <= 3.0) {
         sketchPoints.push(p0.clone());
+        clearPreviewObjects();
         const closedObj = createLineSketch(sketchPoints, vp, true);
         removeSnapMarker();
         cancelSketch();
         selectObject(closedObj);
         status(`Closed profile created: '${closedObj.name}' (${closedObj.userData.points.length} vertices). Ready for extrusion ('Can I extrude').`);
         addLog(`Closed profile '${closedObj.name}' formed on ${vp.toUpperCase()} plane. Ready for extrusion.`, "log-success");
+        renderAllViewports();
         return;
       }
     }
@@ -3047,7 +3391,7 @@ function handleSketchClick(pt, vp) {
 
     if (sketchPoints.length === 1) {
       if (prompt) prompt.textContent = `P1 set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor to preview, click next point (or enter Length/Coords).`;
-      status(`Line: Start point set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor and click next point.`);
+      status(`Polyline: Start point set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor and click next point.`);
       if (startInp) startInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
       if (lenInp) {
         lenInp.disabled = false;
@@ -3060,7 +3404,7 @@ function handleSketchClick(pt, vp) {
       if (prompt) {
         prompt.textContent = `Point ${sketchPoints.length} added (${segLen.toFixed(1)} mm). Click next point (click P1 to close profile, or press Enter to finish).`;
       }
-      status(`Line: Added segment to (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}) [${segLen.toFixed(1)} mm]. Total points: ${sketchPoints.length}. Click P1 to close, or [✓ Finish] to complete.`);
+      status(`Polyline: Added segment to (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}) [${segLen.toFixed(1)} mm]. Total points: ${sketchPoints.length}. Click P1 to close, or [✓ Finish] to complete.`);
       if (startInp) startInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
       if (lenInp) {
         lenInp.value = "";
@@ -3071,19 +3415,58 @@ function handleSketchClick(pt, vp) {
   } else if (activeSketchMode === "rect") {
     if (sketchPoints.length === 0) {
       sketchPoints.push(activePt.clone());
-      status("Corner 1 set. Click opposite corner to complete rectangle.");
+      const prompt = document.getElementById("command-prompt");
+      if (prompt) prompt.textContent = `Corner 1 set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor to preview, click opposite corner.`;
+      const c1Inp = document.getElementById("rect-param-c1");
+      if (c1Inp) c1Inp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
+      const c2Inp = document.getElementById("rect-param-c2");
+      if (c2Inp) {
+        c2Inp.disabled = false;
+        c2Inp.focus();
+      }
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn) confirmBtn.disabled = false;
+      status(`Rectangle: Corner 1 set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Click opposite corner.`);
     } else {
-      createRectSketch(sketchPoints[0], activePt, vp);
+      const c1 = sketchPoints[0];
+      const c2 = activePt;
+      if (c1.distanceTo(c2) < 0.001) {
+        status("Corner 2 identical to Corner 1. Click a distinct opposite corner.");
+        return;
+      }
+      clearPreviewObjects();
+      const rectObj = createRectSketch(c1, c2, vp);
       cancelSketch();
+      selectObject(rectObj);
+      renderAllViewports();
     }
   } else if (activeSketchMode === "circle") {
     if (sketchPoints.length === 0) {
       sketchPoints.push(activePt.clone());
-      status("Center point set. Click outer radius point to complete circle.");
+      const prompt = document.getElementById("command-prompt");
+      if (prompt) prompt.textContent = `Center set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor to preview, click outer radius point.`;
+      const centerInp = document.getElementById("circle-param-center");
+      if (centerInp) centerInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
+      const rInp = document.getElementById("circle-param-r");
+      if (rInp) {
+        rInp.disabled = false;
+        rInp.focus();
+      }
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn) confirmBtn.disabled = false;
+      status(`Circle: Center set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Click outer radius point.`);
     } else {
-      const radius = sketchPoints[0].distanceTo(activePt);
-      createCircleSketch(sketchPoints[0], Math.max(1, radius), vp);
+      const center = sketchPoints[0];
+      const radius = center.distanceTo(activePt);
+      if (radius < 0.001) {
+        status("Radius too small. Click a distinct outer radius point.");
+        return;
+      }
+      clearPreviewObjects();
+      const circleObj = createCircleSketch(center, Math.max(1, radius), vp);
       cancelSketch();
+      selectObject(circleObj);
+      renderAllViewports();
     }
   }
 }
@@ -3183,6 +3566,7 @@ function createRectSketch(c1, c2, planeName) {
   selectObject(line);
   addLog(`Created closed rectangle profile ${name}.`, "log-success");
   status(`Created ${name}`);
+  recordModelingCommand();
   return line;
 }
 
@@ -4953,9 +5337,23 @@ function deserializeProjectState(jsonStr) {
         geo.setAttribute("position", new THREE.Float32BufferAttribute(item.positions, 3));
         const color = item.color ? parseInt(item.color.replace("#", ""), 16) : 0x39ff14;
         const mat = new THREE.LineBasicMaterial({ color, linewidth: 2 });
-        const line = new THREE.Line(geo, mat);
+        const isClosed = !!(item.userData && item.userData.closed);
+        const line = isClosed ? new THREE.LineLoop(geo, mat) : new THREE.Line(geo, mat);
         line.name = item.name;
         line.userData = item.userData || {};
+        if (isClosed && line.userData.points && line.userData.points.length >= 3) {
+          const planeName = line.userData.plane || "top";
+          const pts2d = line.userData.points.map(p => {
+            if (planeName === "top" || planeName === "perspective") return { u: p.x, v: p.z };
+            if (planeName === "front") return { u: p.x, v: p.y };
+            return { u: p.z, v: p.y };
+          });
+          const shape = new THREE.Shape();
+          shape.moveTo(pts2d[0].u, pts2d[0].v);
+          for (let i = 1; i < pts2d.length; i++) shape.lineTo(pts2d[i].u, pts2d[i].v);
+          shape.closePath();
+          line.userData.shape = shape;
+        }
         line.position.set(item.position[0], item.position[1], item.position[2]);
         line.rotation.set(item.rotation[0], item.rotation[1], item.rotation[2]);
         line.scale.set(item.scale[0], item.scale[1], item.scale[2]);
@@ -7172,6 +7570,10 @@ function executeCommand(rawCmd) {
       }
       break;
 
+    case "polyline":
+      startSketch("polyline");
+      break;
+
     case "rect":
     case "rectangle":
       if (args.length >= 2) {
@@ -7590,6 +7992,7 @@ function handleViewportPointerDown(e, vpId) {
 
   // If in sketch mode, project onto C-Plane and place vertex
   if (activeSketchMode) {
+    if (e.button !== 0) return;
     const plane = getCPlane(vpId);
     const intersectPt = new THREE.Vector3();
     if (raycaster.ray.intersectPlane(plane, intersectPt)) {
@@ -9084,8 +9487,8 @@ function runAllTests() {
     assertTest("Raycaster line selection threshold configured for all viewports", raycaster.params.Line && raycaster.params.Line.threshold >= 2.0);
     cancelSketch();
 
-    // Test 12d: Connected Sketch Lines, Endpoint Snapping & Closed Profile Detection
-    startSketch("line");
+    // Test 12d: Connected Sketch Lines (Polyline), Endpoint Snapping & Closed Profile Detection
+    startSketch("polyline");
     handleSketchClick(new THREE.Vector3(0, 0, 0), "top");
     handleSketchClick(new THREE.Vector3(20, 0, 0), "top");
     handleSketchClick(new THREE.Vector3(20, 0, 20), "top");
@@ -9100,16 +9503,48 @@ function runAllTests() {
     assertTest("Closed profile formed from connected sketch lines is extrudable into 3D solid", extrudedFromSketch && extrudedFromSketch.userData.type === "ExtrudedSolid" && extrudedFromSketch.geometry.attributes.position.count > 0);
     cancelSketch();
 
-    // Test 13: 2D Closed Rectangle Profile
-    const rectObj = createRectSketch(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(10, 0, 10), "top");
-    assertTest("2D Rectangle creates ClosedProfile with 2D Shape", rectObj && rectObj.userData.closed === true && !!rectObj.userData.shape);
+    // Test 12e: Two-Click Line Segment Workflow
+    const countBeforeLine = sceneObjects.length;
+    startSketch("line");
+    handleSketchClick(new THREE.Vector3(5, 0, 5), "top");
+    assertTest("Line sketch point 1 sets start point without committing", sceneObjects.length === countBeforeLine && sketchPoints.length === 1);
+    handleSketchClick(new THREE.Vector3(25, 0, 5), "top");
+    assertTest("Line sketch point 2 commits exactly one line entity and auto-exits", sceneObjects.length === countBeforeLine + 1 && activeSketchMode === null);
+    const createdTwoClickLine = sceneObjects[sceneObjects.length - 1];
+    assertTest("Two-click Line entity is valid 2-point SketchCurve", createdTwoClickLine && createdTwoClickLine.userData.type === "SketchCurve" && createdTwoClickLine.userData.points.length === 2);
+    // Verify single Undo removes line
+    executeUndo();
+    assertTest("Single Undo removes two-click line entity", sceneObjects.length === countBeforeLine);
 
-    // Test 14: 2D Closed Circle Profile
-    const circleObj = createCircleSketch(new THREE.Vector3(0, 0, 0), 12, "top");
-    assertTest("2D Circle creates ClosedProfile with 2D Shape", circleObj && circleObj.userData.closed === true && !!rectObj.userData.shape);
+    // Test 13: 2D Closed Rectangle Profile & Interactive Workflow
+    const countBeforeRect = sceneObjects.length;
+    startSketch("rect");
+    handleSketchClick(new THREE.Vector3(-15, 0, -10), "top");
+    assertTest("Rect sketch corner 1 sets anchor without committing", sceneObjects.length === countBeforeRect && sketchPoints.length === 1);
+    handleSketchClick(new THREE.Vector3(15, 0, 10), "top");
+    assertTest("Rect sketch corner 2 commits exactly one ClosedProfile and auto-exits", sceneObjects.length === countBeforeRect + 1 && activeSketchMode === null);
+    const rectObj = sceneObjects[sceneObjects.length - 1];
+    assertTest("2D Rectangle contains exactly 4 boundary points and 2D Shape", rectObj && rectObj.userData.closed === true && rectObj.userData.points.length === 4 && !!rectObj.userData.shape);
+    // Verify single Undo removes rectangle
+    executeUndo();
+    assertTest("Single Undo removes complete rectangle entity", sceneObjects.length === countBeforeRect);
+
+    // Test 14: 2D Closed Circle Profile & Interactive Workflow
+    const countBeforeCircle = sceneObjects.length;
+    startSketch("circle");
+    handleSketchClick(new THREE.Vector3(0, 0, 0), "top");
+    assertTest("Circle sketch point 1 sets center without committing", sceneObjects.length === countBeforeCircle && sketchPoints.length === 1);
+    handleSketchClick(new THREE.Vector3(12, 0, 0), "top");
+    assertTest("Circle sketch point 2 commits exactly one ClosedProfile and auto-exits", sceneObjects.length === countBeforeCircle + 1 && activeSketchMode === null);
+    const circleObj = sceneObjects[sceneObjects.length - 1];
+    assertTest("2D Circle creates ClosedProfile with 2D Shape", circleObj && circleObj.userData.closed === true && !!circleObj.userData.shape);
+    // Verify single Undo removes circle
+    executeUndo();
+    assertTest("Single Undo removes complete circle entity", sceneObjects.length === countBeforeCircle);
 
     // Test 15: Extrusion of Closed 2D Profile
-    selectObject(rectObj);
+    const rectForExtrude = createRectSketch(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(10, 0, 10), "top");
+    selectObject(rectForExtrude);
     const extrudedMesh = extrudeSelectedProfile(14);
     assertTest("Extrude creates real 3D solid mesh with geometry", extrudedMesh && extrudedMesh.userData.type === "ExtrudedSolid" && extrudedMesh.geometry.attributes.position.count > 0);
 

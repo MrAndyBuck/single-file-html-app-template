@@ -1002,5 +1002,81 @@ Following the release of build `v00000-011` (`fb95d7e`), all four viewports rend
 - **Live URL**: `https://mrandybuck.github.io/single-file-html-app-template/`
 - **User Approval**: Approved by user for merge to `main`.
 
+---
+
+## 14. Checkpoint A — Critical Sketching Repair (Interactive Sketching Fix)
+
+### 14.1 Root Cause Diagnosis
+1. **Uncleaned Rubberband Previews**:
+   - In `updateRubberband(currentPt, vp)`, `scene.remove(rubberbandObj)` was only called in `line` mode.
+   - For `rect` and `circle`, `rubberbandObj = new THREE.Line(geo, mat); scene.add(rubberbandObj);` was called on **every pointermove event** without removing or disposing the prior preview object from the Three.js scene.
+   - Moving the cursor across the canvas added 20–50+ transient `THREE.Line` preview instances directly to `scene.children`.
+   - On Corner 2 click, `cancelSketch()` only removed the single last line referenced by `rubberbandObj`, leaving all preceding preview lines as permanent zombie outlines visible across all viewports.
+2. **Missing Input Event Button Validation**:
+   - `handleViewportPointerDown(e, vpId)` did not verify `e.button === 0`, permitting non-left or stray button events during navigation/orbiting to trigger sketch points.
+3. **Missing Command Bar Integration & Lifecycle Hooks**:
+   - `startSketch("rect")` and `startSketch("circle")` lacked dedicated command bar setups (`setupRectCommand`, `setupCircleCommand`), leaving the user without plane selection, coordinate inputs, prompt instructions, or cancel button synchronization.
+4. **Disposal & Memory Leaks**:
+   - Transient preview objects lacked GPU buffer disposal (`geometry.dispose()`, `material.dispose()`), leaking memory on each cursor motion.
+
+### 14.2 Architecture of the Solution
+- **Systematic Preview Cleanup (`clearPreviewObjects()`)**:
+  - Implemented `disposeObjectHierarchy(obj)` to recursively dispose geometry and materials.
+  - Implemented `clearPreviewObjects()` which disposes `rubberbandObj` and purges any lingering objects tagged `Sketch_Rubberband`, `Sketch_Preview`, or `userData.isTransientPreview` directly from `scene`.
+  - `updateRubberband()` invokes `clearPreviewObjects()` at the beginning of each frame before generating a single preview group.
+- **Single Transient Group**:
+  - `rect`, `circle`, `line`, and `polyline` each maintain exactly one `THREE.Group` named `"Sketch_Rubberband"` with `userData: { isTransientPreview: true }`, containing boundary preview lines, anchor markers, and dynamic status readouts.
+- **Clean Interactive Workflows**:
+  - **Rectangle**: Toolbar icon / `Can I rectangle` activates `rect` mode. Corner 1 sets anchor point without committing. Pointer movement maintains exactly one preview. Corner 2 commits exactly one `ClosedProfile` (`THREE.LineLoop` with 4 points and `THREE.Shape`), automatically exits command mode, selects the profile, and updates FeatureManager.
+  - **Single Undo**: One `Can I undo` / `executeUndo()` reverts scene objects and removes the complete rectangle profile in a single step.
+  - **3D Solid Extrudability**: The closed profile is immediately recognized by `extrudeSelectedProfile` and `Can I extrude`, creating a true 3D `ExtrudedSolid`.
+  - **Two-Click Line**: Two clicks create exactly one `SketchCurve` segment and automatically exit the command.
+  - **Connected Polyline**: Connected-line mode (`Can I polyline`) chains segments with shared endpoints until closed into a `ClosedProfile` or completed via Enter / `[✓ Finish]`.
+  - **Circle**: Center click + radius click commits exactly one `ClosedProfile` circle with attached `THREE.Shape` and automatically exits.
+
+### 14.3 Automated & Headless Verification
+- **Automated In-App Test Suite**: **113/113 tests passed (100% passing, 0 failures)**.
+  - `Test 12d`: Connected sketch lines (polyline), endpoint snapping to closed profile, and 3D solid extrusion.
+  - `Test 12e`: Two-click line segment creation, auto-exit, and single-step undo removal.
+  - `Test 13`: 2D closed rectangle profile interactive workflow, 4 boundary points, auto-exit, and single-step undo removal.
+  - `Test 14`: 2D closed circle profile interactive workflow, center/radius clicks, auto-exit, and single-step undo removal.
+  - `Test 15`: 3D solid extrusion of closed 2D profiles (`ExtrudedSolid`).
+- **CDP Pointer-Interaction Test (`scripts/verify_sketch_repair.py`)**:
+  - **DPR 1.0 (Standard Display)**:
+    - 25 continuous pointer moves during rectangle drawing: `Preview counts: min=1, max=1` (0 duplicate outlines).
+    - Corner 2 click: `sceneObjects` incremented from 26 to 27 (exactly 1 new object).
+    - Rectangle geometry: exactly 4 corner points `[(-19.5, 0, -16.5), (18.75, 0, -16.5), (18.75, 0, 10), (-19.5, 0, 10)]`, `type: ClosedProfile`, `closed: true`, `isLineLoop: true`, `hasShape: true`.
+    - Clicking elsewhere produced 0 additional objects.
+    - Single Undo reverted `sceneObjects` to 26 (complete removal).
+    - Redo restored rectangle; `extrudeSelectedProfile(18)` produced `Extrude_41` (`ExtrudedSolid`, 132 vertices).
+    - Circle: 1 center + 1 radius click created `Circle_Profile_43` (r=10.5).
+    - Line: 2 clicks created `Line_44` (`SketchCurve`, 2 points).
+  - **DPR 2.0 (Retina Display)**:
+    - `window.devicePixelRatio = 2.0`.
+    - Rectangle created at DPR 2.0: exactly 1 `ClosedProfile` (`Rect_Profile_45`, 4 points).
+    - 0 coordinate conversion or hit-testing offset defect.
+
+### 14.4 Visual Proof Artifacts
+1. **Live Rectangle Preview (Exactly 1 Outline, No Multiples)**:
+   [sketch_01_rect_preview.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/sketch_01_rect_preview.png)
+   - Demonstrates active cursor drag across Top C-Plane showing exactly one green preview outline with yellow/cyan corner anchor dots and dynamic Command Bar coordinates readout.
+2. **Committed Rectangle (Exactly 1 Entity, 4 Edges, Auto-Exit)**:
+   [sketch_02_rect_committed.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/sketch_02_rect_committed.png)
+   - Demonstrates committed rectangle `Rect_Profile_41` with yellow selection highlight across Top, Perspective, Front, and Right viewports. All previews cleanly removed; command bar auto-dismissed.
+3. **Extruded 3D Solid Box from Rectangle Profile**:
+   [sketch_03_rect_extruded.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/sketch_03_rect_extruded.png)
+   - Demonstrates true 3D solid box `Extrude_41` (height 18mm) with shaded faces, wire edges, and FeatureManager registration.
+4. **Circle and Line Workflows**:
+   [sketch_04_circle_and_line.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/sketch_04_circle_and_line.png)
+   - Demonstrates completed circle profile `Circle_Profile_43` (r=10.5) and 2-click line segment `Line_44`.
+5. **Retina DPR 2.0 Verification**:
+   [sketch_05_retina_dpr2_rect.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/sketch_05_retina_dpr2_rect.png)
+   - Full 2880x1800 2x Retina capture demonstrating crisp rendering and accurate coordinate hit-testing of `Rect_Profile_45`.
+
+### 14.5 Checkpoint A Acceptance Gate
+- Checkpoint A is **COMPLETED and VERIFIED** on branch `dev`.
+- Per user instructions: **Stopped for User Acceptance of Checkpoint A before initiating Checkpoints B through F**.
+
+
 
 
