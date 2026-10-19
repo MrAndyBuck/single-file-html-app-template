@@ -75,9 +75,12 @@
   .win95-title-content {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     overflow: hidden;
     white-space: nowrap;
+    width: 420px;
+    min-width: 420px;
+    padding: 0 4px;
   }
   .win95-window-controls {
     display: flex;
@@ -1158,7 +1161,6 @@
         <div class="menu-dropdown-item" id="mitem-view-reset">Reset Camera Views</div>
         <div class="menu-dropdown-separator"></div>
         <div class="menu-dropdown-item" id="mitem-view-sound">Toggle Audio Soundscape</div>
-        <div class="menu-dropdown-item" id="mitem-view-theme">Toggle Theme Mode</div>
         <div class="menu-dropdown-separator"></div>
         <div class="menu-dropdown-item" id="mitem-view-hud">Toggle Diagnostic HUD</div>
       </div>
@@ -1240,7 +1242,6 @@
     <button class="win95-tb-btn text-tb-btn" id="btn-export-mesh" title="Export OBJ or STL file">Export</button>
     <div class="toolbar-sep"></div>
     <button class="win95-tb-btn text-tb-btn" id="btn-audio-mute" title="Toggle Audio Synthesizer & Hold Music">🔊 Sound</button>
-    <button class="win95-tb-btn text-tb-btn" id="btn-theme-toggle" title="Toggle Theme">☀️ Theme</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-tutorial-open" title="Open CADN'T onboarding handbook">Tutorial</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-help-open" title="Search CADN'T help index">Help</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-about-open" title="About CADN'T">About</button>
@@ -1529,6 +1530,46 @@
           <svg viewBox="0 0 24 24"><path d="M4 20h8a8 8 0 0 0 8-8V4"/></svg>
           <span>Fillet</span>
         </button>
+        <button class="tool-btn placeholder-tool" data-cmd="sweep" id="tool-sweep" title="Sweep Profile along Curve (Coming Soon)">
+          <svg viewBox="0 0 24 24"><path d="M4 18c4-8 10-12 16-12" fill="none"/><circle cx="4" cy="18" r="3" fill="none"/><path d="M17 3l4 3-4 3" fill="none"/></svg>
+          <span>Sweep</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="pipe" id="tool-pipe" title="Pipe along 3D Curve (Coming Soon)">
+          <svg viewBox="0 0 24 24"><path d="M4 19c6 0 8-10 16-10" fill="none"/><path d="M4 15c4 0 6-10 16-10" fill="none"/><ellipse cx="4" cy="17" rx="1.5" ry="2" fill="none"/><ellipse cx="20" cy="7" rx="1.5" ry="2" fill="none"/></svg>
+          <span>Pipe</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="loft" id="tool-loft" title="Loft across Cross-Sections (Coming Soon)">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="5" ry="2" fill="none"/><ellipse cx="12" cy="19" rx="9" ry="3" fill="none"/><line x1="7" y1="5" x2="3" y2="19"/><line x1="17" y1="5" x2="21" y2="19"/></svg>
+          <span>Loft</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="shell" id="tool-shell" title="Shell Solid Hollow Body (Coming Soon)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none"/><rect x="7" y="7" width="10" height="10" stroke-dasharray="2 2" fill="none"/></svg>
+          <span>Shell</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="offset" id="tool-offset" title="Offset Curve or Surface (Coming Soon)">
+          <svg viewBox="0 0 24 24"><path d="M4 14c4-6 10-6 16 0" fill="none"/><path d="M4 8c4-6 10-6 16 0" stroke-dasharray="3 3" fill="none"/><line x1="12" y1="5" x2="12" y2="11" stroke-width="1.5"/></svg>
+          <span>Offset</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="mirror" id="tool-mirror" title="Mirror Objects across Plane (Coming Soon)">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="2 2"/><polygon points="9 8 3 14 9 14" fill="none"/><polygon points="15 8 21 14 15 14" fill="none"/></svg>
+          <span>Mirror</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="array" id="tool-array" title="Pattern Array Duplicate (Coming Soon)">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" fill="none"/><rect x="14" y="4" width="6" height="6" fill="none"/><rect x="4" y="14" width="6" height="6" fill="none"/><rect x="14" y="14" width="6" height="6" fill="none"/></svg>
+          <span>Array</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="trim" id="tool-trim" title="Trim Curve or Surface (Coming Soon)">
+          <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3" fill="none"/><circle cx="6" cy="18" r="3" fill="none"/><line x1="8.5" y1="7.5" x2="19" y2="18"/><line x1="8.5" y1="16.5" x2="19" y2="6"/><line x1="16" y1="2" x2="16" y2="22" stroke-dasharray="2 2"/></svg>
+          <span>Trim</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="extend" id="tool-extend" title="Extend Curve to Boundary (Coming Soon)">
+          <svg viewBox="0 0 24 24"><line x1="20" y1="3" x2="20" y2="21"/><line x1="4" y1="12" x2="16" y2="12"/><polyline points="12 8 16 12 12 16" fill="none"/></svg>
+          <span>Extend</span>
+        </button>
+        <button class="tool-btn placeholder-tool" data-cmd="project" id="tool-project" title="Project Curve onto Surface (Coming Soon)">
+          <svg viewBox="0 0 24 24"><path d="M5 6c4-2 10-2 14 0" fill="none"/><path d="M3 18c6-2 12-2 18 0" fill="none"/><line x1="12" y1="6" x2="12" y2="16" stroke-dasharray="2 2"/><polygon points="10 14 12 17 14 14" fill="none"/></svg>
+          <span>Project</span>
+        </button>
       </div>
     </aside>
 
@@ -1613,6 +1654,29 @@
   <p>Please mail a cashier's check or certified money order payable to CADN'T Customer Friction Division.</p>
   <div class="dialog-actions" style="margin-top: 10px; text-align: right;">
     <button class="win95-btn" id="btn-close-construction" onclick="this.closest('dialog').close()">OK</button>
+  </div>
+</dialog>
+
+<!-- Coming Soon Modal for Placeholder Tools -->
+<dialog id="modal-coming-soon">
+  <h2>
+    <span class="win95-dialog-title" id="coming-soon-title">Coming Soon</span>
+    <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
+  </h2>
+  <div style="display:flex; align-items:center; gap:12px; margin:14px 4px 10px 4px;">
+    <svg width="32" height="32" viewBox="0 0 32 32" style="flex-shrink:0;">
+      <rect width="32" height="32" fill="#c0c0c0"/>
+      <polygon points="16,3 30,28 2,28" fill="#ffff00" stroke="#000000" stroke-width="2"/>
+      <rect x="14.5" y="11" width="3" height="8" fill="#000000"/>
+      <circle cx="16" cy="23.5" r="1.6" fill="#000000"/>
+    </svg>
+    <div>
+      <p id="coming-soon-msg" style="font-weight:bold; font-size:12px; margin-bottom:4px;">Feature Coming Soon</p>
+      <p style="font-size:11px; color:#333;">This modeling operation is currently in development for a future version of CADN'T.</p>
+    </div>
+  </div>
+  <div class="dialog-actions" style="margin-top:12px; text-align:right;">
+    <button class="win95-btn" id="btn-close-coming-soon" onclick="this.closest('dialog').close()" style="min-width:64px;">OK</button>
   </div>
 </dialog>
 
@@ -4340,33 +4404,21 @@ const CADNT_AUDIO = {
 };
 
 /* =========================================================================
-   7. THEME MANAGEMENT (DARK / LIGHT)
+   7. THEME MANAGEMENT (FIXED RETRO WINDOWS 95 THEME)
    ========================================================================= */
-let currentTheme = localStorage.getItem("cadnt_theme") || "dark";
+const currentTheme = "dark";
+if (document.body) document.body.classList.remove("light-theme");
 
 function applyTheme(theme) {
-  currentTheme = theme;
-  localStorage.setItem("cadnt_theme", theme);
-  const btn = document.getElementById("btn-theme-toggle");
-  if (theme === "light") {
-    document.body.classList.add("light-theme");
-    if (btn) btn.textContent = "☀️ Light";
-    if (typeof viewports !== "undefined") {
-      Object.values(viewports).forEach(vp => vp.renderer.setClearColor(0xc0c0c0, 1));
-    }
-  } else {
-    document.body.classList.remove("light-theme");
-    if (btn) btn.textContent = "🌙 Dark";
-    if (typeof viewports !== "undefined") {
-      Object.values(viewports).forEach(vp => vp.renderer.setClearColor(0x203040, 1));
-      if (typeof scene !== "undefined") scene.background = new THREE.Color(0x203040);
-    }
+  // Theme switching is disabled; permanently fixed to Windows 95 retro theme.
+  if (typeof viewports !== "undefined") {
+    Object.values(viewports).forEach(vp => vp.renderer.setClearColor(0x203040, 1));
+    if (typeof scene !== "undefined") scene.background = new THREE.Color(0x203040);
   }
-  status(`Theme set to ${theme.toUpperCase()}`);
 }
 
 function toggleTheme() {
-  applyTheme(currentTheme === "dark" ? "light" : "dark");
+  status("Fixed Windows 95 theme active.");
 }
 
 /* =========================================================================
@@ -6198,7 +6250,16 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
   const indicesToCut = edgeIndices !== null ? edgeIndices : edges.map(e => e.id);
   if (!indicesToCut || indicesToCut.length === 0) return mesh.geometry.clone();
 
-  const p = Math.max(0.01, Math.min(param, w * 0.48, h * 0.48, d * 0.48));
+  let val1 = 2.0;
+  let val2 = 2.0;
+  if (typeof param === "number") {
+    val1 = param;
+    val2 = param;
+  } else if (typeof param === "object" && param !== null) {
+    val1 = param.d1 || param.r1 || param.val1 || param.val || param.p1 || 2.0;
+    val2 = param.d2 || param.r2 || param.val2 || param.p2 || val1;
+  }
+
   const x_min = bbox.min.x, x_max = bbox.max.x;
   const y_min = bbox.min.y, y_max = bbox.max.y;
   const z_min = bbox.min.z, z_max = bbox.max.z;
@@ -6223,6 +6284,11 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
   const firstCfg = configs[indicesToCut[0]];
   if (!firstCfg) return null;
   const sweep_axis = firstCfg.s_axis;
+
+  const u_span = firstCfg.u_max - firstCfg.u_min;
+  const v_span = firstCfg.v_max - firstCfg.v_min;
+  const pu = Math.max(0.01, Math.min(val1, u_span * 0.48));
+  const pv = Math.max(0.01, Math.min(val2, v_span * 0.48));
 
   for (let eid of indicesToCut) {
     if (!configs[eid] || configs[eid].s_axis !== sweep_axis) {
@@ -6250,27 +6316,27 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
     if (activeCorners.has(key)) {
       let p_in, p_out, center, theta_start, theta_end;
       if (c.cu === +1 && c.cv === +1) {
-        p_in = [firstCfg.u_max, firstCfg.v_max - p];
-        p_out = [firstCfg.u_max - p, firstCfg.v_max];
-        center = [firstCfg.u_max - p, firstCfg.v_max - p];
+        p_in = [firstCfg.u_max, firstCfg.v_max - pv];
+        p_out = [firstCfg.u_max - pu, firstCfg.v_max];
+        center = [firstCfg.u_max - pu, firstCfg.v_max - pv];
         theta_start = 0.0;
         theta_end = Math.PI / 2.0;
       } else if (c.cu === -1 && c.cv === +1) {
-        p_in = [firstCfg.u_min + p, firstCfg.v_max];
-        p_out = [firstCfg.u_min, firstCfg.v_max - p];
-        center = [firstCfg.u_min + p, firstCfg.v_max - p];
+        p_in = [firstCfg.u_min + pu, firstCfg.v_max];
+        p_out = [firstCfg.u_min, firstCfg.v_max - pv];
+        center = [firstCfg.u_min + pu, firstCfg.v_max - pv];
         theta_start = Math.PI / 2.0;
         theta_end = Math.PI;
       } else if (c.cu === -1 && c.cv === -1) {
-        p_in = [firstCfg.u_min, firstCfg.v_min + p];
-        p_out = [firstCfg.u_min + p, firstCfg.v_min];
-        center = [firstCfg.u_min + p, firstCfg.v_min + p];
+        p_in = [firstCfg.u_min, firstCfg.v_min + pv];
+        p_out = [firstCfg.u_min + pu, firstCfg.v_min];
+        center = [firstCfg.u_min + pu, firstCfg.v_min + pv];
         theta_start = Math.PI;
         theta_end = 3.0 * Math.PI / 2.0;
       } else { // +1, -1
-        p_in = [firstCfg.u_max - p, firstCfg.v_min];
-        p_out = [firstCfg.u_max, firstCfg.v_min + p];
-        center = [firstCfg.u_max - p, firstCfg.v_min + p];
+        p_in = [firstCfg.u_max - pu, firstCfg.v_min];
+        p_out = [firstCfg.u_max, firstCfg.v_min + pv];
+        center = [firstCfg.u_max - pu, firstCfg.v_min + pv];
         theta_start = 3.0 * Math.PI / 2.0;
         theta_end = 2.0 * Math.PI;
       }
@@ -6282,7 +6348,7 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
         const steps = Math.max(8, segs);
         for (let i = 0; i <= steps; i++) {
           const t = theta_start + (theta_end - theta_start) * (i / steps);
-          poly.push([center[0] + p * Math.cos(t), center[1] + p * Math.sin(t)]);
+          poly.push([center[0] + pu * Math.cos(t), center[1] + pv * Math.sin(t)]);
         }
       }
     } else {
@@ -6357,7 +6423,19 @@ function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
   const w = Math.max(0.1, bbox.max.x - bbox.min.x);
   const h = Math.max(0.1, bbox.max.y - bbox.min.y);
   const d = Math.max(0.1, bbox.max.z - bbox.min.z);
-  const p = Math.max(0.1, Math.min(param, (w / 2) * 0.48, (h / 2) * 0.48, (d / 2) * 0.48));
+
+  let val1 = 2.0;
+  let val2 = 2.0;
+  if (typeof param === "number") {
+    val1 = param;
+    val2 = param;
+  } else if (typeof param === "object" && param !== null) {
+    val1 = param.d1 || param.r1 || param.val1 || param.val || param.p1 || 2.0;
+    val2 = param.d2 || param.r2 || param.val2 || param.p2 || val1;
+  }
+
+  const p1 = Math.max(0.1, Math.min(val1, (w / 2) * 0.48, (h / 2) * 0.48, (d / 2) * 0.48));
+  const p2 = Math.max(0.1, Math.min(val2, (w / 2) * 0.48, (h / 2) * 0.48, (d / 2) * 0.48));
 
   // Perform CSG strictly in local mesh coordinates to avoid matrix displacement
   const localMesh = new THREE.Mesh(mesh.geometry, mesh.material);
@@ -6371,11 +6449,11 @@ function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
     const seg = edges.find(e => e.id === edgeId);
     if (!seg) continue;
 
-    const p1 = seg.p1, p2 = seg.p2;
-    const L = p1.distanceTo(p2);
+    const pt1 = seg.p1, pt2 = seg.p2;
+    const L = pt1.distanceTo(pt2);
     if (L < 0.001) continue;
-    const u = new THREE.Vector3().subVectors(p2, p1).normalize();
-    const m = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+    const u = new THREE.Vector3().subVectors(pt2, pt1).normalize();
+    const m = new THREE.Vector3().addVectors(pt1, pt2).multiplyScalar(0.5);
 
     let b1 = seg.nA.clone().normalize();
     let b2 = seg.nB.clone().normalize();
@@ -6389,25 +6467,26 @@ function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
     }
 
     const shape = new THREE.Shape();
-    const M = p + 2.0;
+    const M1 = p1 + 2.0;
+    const M2 = p2 + 2.0;
 
     if (mode === "chamfer") {
-      shape.moveTo(-p, 0);
-      shape.lineTo(0, -p);
-      shape.lineTo(M, -p);
-      shape.lineTo(M, M);
-      shape.lineTo(-p, M);
+      shape.moveTo(-p1, 0);
+      shape.lineTo(0, -p2);
+      shape.lineTo(M1, -p2);
+      shape.lineTo(M1, M2);
+      shape.lineTo(-p1, M2);
       shape.closePath();
     } else {
-      shape.moveTo(-p, 0);
+      shape.moveTo(-p1, 0);
       const segs = 16;
       for (let i = 0; i <= segs; i++) {
         const theta = (Math.PI / 2) * (1 - i / segs);
-        shape.lineTo(-p + p * Math.cos(theta), -p + p * Math.sin(theta));
+        shape.lineTo(-p1 + p1 * Math.cos(theta), -p2 + p2 * Math.sin(theta));
       }
-      shape.lineTo(M, -p);
-      shape.lineTo(M, M);
-      shape.lineTo(-p, M);
+      shape.lineTo(M1, -p2);
+      shape.lineTo(M1, M2);
+      shape.lineTo(-p1, M2);
       shape.closePath();
     }
 
@@ -6453,20 +6532,54 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     selectObject(target);
   }
 
-  const defaultVal = args.val || (mode === "fillet" ? 2.5 : 2.0);
+  let defaultVal1 = 2.0;
+  let defaultVal2 = 4.0;
+  let defaultType = "symmetric";
+
+  if (typeof args === "object" && args !== null) {
+    if (args.val1 !== undefined) defaultVal1 = args.val1;
+    else if (args.d1 !== undefined) defaultVal1 = args.d1;
+    else if (args.r1 !== undefined) defaultVal1 = args.r1;
+    else if (args.val !== undefined) defaultVal1 = args.val;
+    else defaultVal1 = (mode === "fillet" ? 2.5 : 2.0);
+
+    if (args.val2 !== undefined) {
+      defaultVal2 = args.val2;
+      defaultType = "asymmetric";
+    } else if (args.d2 !== undefined) {
+      defaultVal2 = args.d2;
+      defaultType = "asymmetric";
+    } else if (args.r2 !== undefined) {
+      defaultVal2 = args.r2;
+      defaultType = "asymmetric";
+    } else if (args.isAsymmetric) {
+      defaultType = "asymmetric";
+      defaultVal2 = defaultVal1 * 2;
+    }
+  }
 
   params.innerHTML = `
     <span style="font-size:11px; margin-right:2px; font-weight:bold;">Edges:</span>
-    <select id="fillet-param-scope" class="prop-input" style="height:20px; font-size:11px; width:135px;">
+    <select id="fillet-param-scope" class="prop-input" style="height:20px; font-size:11px; width:130px;">
       <option value="selected" selected>Selected Edge(s) (0)</option>
       <option value="all">All Edges (12)</option>
       <option value="vertical">Vertical Edges (4)</option>
       <option value="horizontal">Horizontal Edges (8)</option>
       <option value="clear">Clear Selection (0)</option>
     </select>
-    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">${mode === "fillet" ? "Radius:" : "Distance:"}</span>
-    <input id="fillet-param-val" class="prop-input" type="number" step="0.5" min="0.2" value="${defaultVal}" style="width:55px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Type:</span>
+    <select id="fillet-param-type" class="prop-input" style="height:20px; font-size:11px; width:95px;">
+      <option value="symmetric" ${defaultType === "symmetric" ? "selected" : ""}>Symmetric</option>
+      <option value="asymmetric" ${defaultType === "asymmetric" ? "selected" : ""}>Asymmetric</option>
+    </select>
+    <span id="fillet-lbl-val1" style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">${defaultType === "asymmetric" ? (mode === "fillet" ? "R1:" : "D1:") : (mode === "fillet" ? "Radius:" : "Distance:")}</span>
+    <input id="fillet-param-val" class="prop-input" type="number" step="0.5" min="0.2" value="${defaultVal1}" style="width:48px; height:20px;">
     <span style="font-size:11px; margin-left:2px;">mm</span>
+    <span id="fillet-container-val2" style="display:${defaultType === "asymmetric" ? "inline-flex" : "none"}; align-items:center;">
+      <span id="fillet-lbl-val2" style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">${mode === "fillet" ? "R2:" : "D2:"}</span>
+      <input id="fillet-param-val2" class="prop-input" type="number" step="0.5" min="0.2" value="${defaultVal2}" style="width:48px; height:20px;">
+      <span style="font-size:11px; margin-left:2px;">mm</span>
+    </span>
     <label style="font-size:11px; margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;">
       <input type="checkbox" id="fillet-preview-chk" checked style="margin-right:3px;"> Preview
     </label>
@@ -6480,6 +6593,21 @@ function setupFilletOrChamferCommand(mode, args = {}) {
   target.add(edgeOverlayGroup);
 
   let previewMesh = null;
+
+  function getParamValues() {
+    const typeSel = document.getElementById("fillet-param-type");
+    const isAsym = typeSel && typeSel.value === "asymmetric";
+    const v1Inp = document.getElementById("fillet-param-val");
+    const v2Inp = document.getElementById("fillet-param-val2");
+    const v1 = Math.max(0.2, parseFloat(v1Inp ? v1Inp.value : defaultVal1) || defaultVal1);
+    const v2 = Math.max(0.2, parseFloat(v2Inp ? v2Inp.value : defaultVal2) || defaultVal2);
+    return {
+      isAsymmetric: isAsym,
+      val1: v1,
+      val2: isAsym ? v2 : v1,
+      param: isAsym ? { val1: v1, val2: v2 } : v1
+    };
+  }
 
   function renderEdgeHelpers() {
     while (edgeOverlayGroup.children.length > 0) {
@@ -6547,11 +6675,10 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     const chk = document.getElementById("fillet-preview-chk");
     if (!chk || !chk.checked || selectedEdgeIds.length === 0) return;
 
-    const valInp = document.getElementById("fillet-param-val");
-    const val = Math.max(0.2, parseFloat(valInp ? valInp.value : defaultVal) || defaultVal);
+    const { param } = getParamValues();
 
     try {
-      const pGeo = computeEdgeCutGeometry(target, mode, val, selectedEdgeIds);
+      const pGeo = computeEdgeCutGeometry(target, mode, param, selectedEdgeIds);
       const pMat = new THREE.MeshBasicMaterial({
         color: 0x39ff14,
         wireframe: true,
@@ -6566,15 +6693,17 @@ function setupFilletOrChamferCommand(mode, args = {}) {
   }
 
   function updatePrompt() {
-    const valInp = document.getElementById("fillet-param-val");
-    const val = parseFloat(valInp ? valInp.value : defaultVal) || defaultVal;
+    const { isAsymmetric, val1, val2 } = getParamValues();
     const count = selectedEdgeIds.length;
+    const desc = isAsymmetric
+      ? (mode === "fillet" ? `R1=${val1.toFixed(1)}mm, R2=${val2.toFixed(1)}mm` : `D1=${val1.toFixed(1)}mm, D2=${val2.toFixed(1)}mm`)
+      : `${val1.toFixed(1)} mm`;
     if (count === 0) {
-      prompt.textContent = `${mode.toUpperCase()} on '${target.name}': Select edges in viewport or scope (${val.toFixed(1)} mm).`;
+      prompt.textContent = `${mode.toUpperCase()} on '${target.name}': Select edges in viewport or scope (${desc}).`;
       confirmBtn.disabled = true;
       confirmBtn.style.opacity = "0.5";
     } else {
-      prompt.textContent = `${mode.toUpperCase()} on '${target.name}': ${count} edge(s) selected (${val.toFixed(1)} mm). Click [✓ Apply] (or Enter).`;
+      prompt.textContent = `${mode.toUpperCase()} on '${target.name}': ${count} edge(s) selected (${desc}). Click [✓ Apply] (or Enter).`;
       confirmBtn.disabled = false;
       confirmBtn.style.opacity = "1";
     }
@@ -6603,6 +6732,21 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     };
   }
 
+  const typeSel = document.getElementById("fillet-param-type");
+  const lblVal1 = document.getElementById("fillet-lbl-val1");
+  const cVal2 = document.getElementById("fillet-container-val2");
+  const val2Inp = document.getElementById("fillet-param-val2");
+
+  if (typeSel) {
+    typeSel.onchange = () => {
+      const isAsym = typeSel.value === "asymmetric";
+      if (lblVal1) lblVal1.textContent = isAsym ? (mode === "fillet" ? "R1:" : "D1:") : (mode === "fillet" ? "Radius:" : "Distance:");
+      if (cVal2) cVal2.style.display = isAsym ? "inline-flex" : "none";
+      updatePreview();
+      updatePrompt();
+    };
+  }
+
   const valInp = document.getElementById("fillet-param-val");
   if (valInp) {
     valInp.oninput = () => {
@@ -6610,6 +6754,19 @@ function setupFilletOrChamferCommand(mode, args = {}) {
       updatePrompt();
     };
     valInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!confirmBtn.disabled) activeCommand.confirm();
+      }
+    };
+  }
+
+  if (val2Inp) {
+    val2Inp.oninput = () => {
+      updatePreview();
+      updatePrompt();
+    };
+    val2Inp.onkeydown = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         if (!confirmBtn.disabled) activeCommand.confirm();
@@ -6729,7 +6886,8 @@ function setupFilletOrChamferCommand(mode, args = {}) {
       }
       if (t && t.isMesh && t !== target && !t.userData.protected && !t.userData.locked) {
         this.cleanup();
-        setupFilletOrChamferCommand(mode, { val: parseFloat(valInp.value) || defaultVal });
+        const { isAsymmetric, val1, val2 } = getParamValues();
+        setupFilletOrChamferCommand(mode, { val1, val2, isAsymmetric });
       }
     },
     cleanup() {
@@ -6745,7 +6903,7 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     },
     confirm() {
       if (selectedEdgeIds.length === 0) return;
-      const val = Math.max(0.2, parseFloat(valInp ? valInp.value : defaultVal) || defaultVal);
+      const { isAsymmetric, val1, val2, param } = getParamValues();
       const edgesToCut = [...selectedEdgeIds];
 
       const fee = 49.00;
@@ -6760,10 +6918,14 @@ function setupFilletOrChamferCommand(mode, args = {}) {
       this.cleanup();
       finishActiveCommand();
 
-      triggerArtificialDelay(`Calculating ${mode.toUpperCase()} Topology Edges...`, () => {
-        recordUndoState(mode === "fillet" ? "Fillet Edge(s)" : "Chamfer Edge(s)");
+      const descStr = isAsymmetric
+        ? (mode === "fillet" ? `Asymmetrical Fillet (R1=${val1.toFixed(1)}, R2=${val2.toFixed(1)})` : `Asymmetrical Chamfer (D1=${val1.toFixed(1)}, D2=${val2.toFixed(1)})`)
+        : `${mode.toUpperCase()} (${val1.toFixed(1)} mm)`;
+
+      triggerArtificialDelay(`Calculating ${descStr} Topology Edges...`, () => {
+        recordUndoState(isAsymmetric ? `Asymmetrical ${mode === "fillet" ? "Fillet" : "Chamfer"}` : `${mode === "fillet" ? "Fillet" : "Chamfer"} Edge(s)`);
         try {
-          const newGeo = computeEdgeCutGeometry(target, mode, val, edgesToCut);
+          const newGeo = computeEdgeCutGeometry(target, mode, param, edgesToCut);
           target.geometry.dispose();
           target.geometry = newGeo;
 
@@ -6773,9 +6935,14 @@ function setupFilletOrChamferCommand(mode, args = {}) {
           const newWire = new THREE.LineSegments(new THREE.EdgesGeometry(target.geometry, 20), wireMat);
           target.add(newWire);
 
-          target.name = (mode === "fillet" ? "Fillet_" : "Chamfer_") + (++primitiveCounter);
-          target.userData.type = mode === "fillet" ? "FilletedSolid" : "ChamferedSolid";
-          target.userData.filletParams = { mode, param: val, edges: edgesToCut };
+          const prefix = isAsymmetric
+            ? (mode === "fillet" ? "AsymFillet_" : "AsymChamfer_")
+            : (mode === "fillet" ? "Fillet_" : "Chamfer_");
+          target.name = prefix + (++primitiveCounter);
+          target.userData.type = isAsymmetric
+            ? (mode === "fillet" ? "AsymFilletedSolid" : "AsymChamferedSolid")
+            : (mode === "fillet" ? "FilletedSolid" : "ChamferedSolid");
+          target.userData.filletParams = { mode, param, edges: edgesToCut, isAsymmetric };
 
           creditBalance -= fee;
           updateEconomyDisplay();
@@ -6784,8 +6951,8 @@ function setupFilletOrChamferCommand(mode, args = {}) {
           updateObjectsTree();
           updatePropertiesPanel();
           recordModelingCommand();
-          status(`${mode.toUpperCase()} applied: ${val.toFixed(1)} mm on ${target.name} (${edgesToCut.length} edges).`);
-          addLog(`Applied ${mode.toUpperCase()} (${val.toFixed(1)} mm, ${edgesToCut.length} edges) to '${target.name}'. $${fee.toFixed(2)} deducted.`, "log-success");
+          status(`${descStr} applied on ${target.name} (${edgesToCut.length} edges).`);
+          addLog(`Applied ${descStr} (${edgesToCut.length} edges) to '${target.name}'. $${fee.toFixed(2)} deducted.`, "log-success");
         } catch (err) {
           console.error(`Error computing ${mode}:`, err);
           addLog(`Failed to compute ${mode}: ` + err.message, "log-nope");
@@ -7126,11 +7293,31 @@ function executeCommand(rawCmd) {
       break;
 
     case "fillet":
-      startModelingCommand("fillet", args.length >= 1 && !isNaN(parseFloat(args[0])) ? { val: parseFloat(args[0]) } : {});
+      if (args.length >= 2 && !isNaN(parseFloat(args[0])) && !isNaN(parseFloat(args[1]))) {
+        startModelingCommand("fillet", { val1: parseFloat(args[0]), val2: parseFloat(args[1]), isAsymmetric: true });
+      } else {
+        startModelingCommand("fillet", args.length >= 1 && !isNaN(parseFloat(args[0])) ? { val: parseFloat(args[0]) } : {});
+      }
       break;
 
     case "chamfer":
-      startModelingCommand("chamfer", args.length >= 1 && !isNaN(parseFloat(args[0])) ? { val: parseFloat(args[0]) } : {});
+      if (args.length >= 2 && !isNaN(parseFloat(args[0])) && !isNaN(parseFloat(args[1]))) {
+        startModelingCommand("chamfer", { val1: parseFloat(args[0]), val2: parseFloat(args[1]), isAsymmetric: true });
+      } else {
+        startModelingCommand("chamfer", args.length >= 1 && !isNaN(parseFloat(args[0])) ? { val: parseFloat(args[0]) } : {});
+      }
+      break;
+
+    case "asym":
+    case "asymmetric":
+      if (args[0] === "fillet" || args[0] === "chamfer") {
+        const subMode = args[0];
+        const v1 = args[1] && !isNaN(parseFloat(args[1])) ? parseFloat(args[1]) : (subMode === "fillet" ? 2.5 : 2.0);
+        const v2 = args[2] && !isNaN(parseFloat(args[2])) ? parseFloat(args[2]) : v1 * 2;
+        startModelingCommand(subMode, { val1: v1, val2: v2, isAsymmetric: true });
+      } else {
+        status("Specify 'asym fillet' or 'asym chamfer'.");
+      }
       break;
 
     case "sweep":
@@ -7138,15 +7325,10 @@ function executeCommand(rawCmd) {
       break;
 
     case "theme":
-      toggleTheme();
-      break;
-
     case "light":
-      applyTheme("light");
-      break;
-
     case "dark":
-      applyTheme("dark");
+      status("Fixed Windows 95 theme active.");
+      addLog("Theme switching is removed. The retro Windows 95 interface theme is permanent.", "log-system");
       break;
 
     case "mute":
@@ -7276,7 +7458,20 @@ toolbar.addEventListener("click", (e) => {
   if (!btn) return;
 
   const cmd = btn.dataset.cmd;
-  const name = btn.querySelector("span").textContent;
+  const name = btn.querySelector("span") ? btn.querySelector("span").textContent : "Command";
+
+  if (btn.classList.contains("placeholder-tool")) {
+    const modalComingSoon = document.getElementById("modal-coming-soon");
+    const csTitle = document.getElementById("coming-soon-title");
+    const csMsg = document.getElementById("coming-soon-msg");
+    if (csTitle) csTitle.textContent = `${name} — Coming Soon`;
+    if (csMsg) csMsg.textContent = `The '${name}' modeling command is coming soon in a future version of CADN'T.`;
+    if (modalComingSoon) modalComingSoon.showModal();
+    addLog(`Tool '${name}' is coming soon in a future release.`, "log-system");
+    status(`'${name}' command: Coming Soon.`);
+    relocateToolbarIcons(btn);
+    return;
+  }
 
   const isInteractiveCmd = ["union", "difference", "join", "extrude", "move", "rotate", "scale", "line", "rect", "circle", "spline", "fillet", "chamfer"].includes(cmd);
 
@@ -8184,7 +8379,7 @@ function openCrashReportModal() {
       `WebGL Renderer: ${glInfo}`,
       `Modeling Commands Executed: ${modelingCommandCount}`,
       `Credit Balance: $${creditBalance.toFixed(2)}`,
-      `Theme: ${document.body.classList.contains("light-theme") ? "Light" : "Dark"}`
+      `Theme: Windows 95 Retro (Fixed)`
     ].join("\n");
   }
 
@@ -8649,7 +8844,6 @@ function initWin95MenuBar() {
       status("Camera views reset to origin.");
     },
     "mitem-view-sound": () => CADNT_AUDIO.setMute(!CADNT_AUDIO.mute),
-    "mitem-view-theme": () => toggleTheme(),
     "mitem-view-hud": () => {
       const dbg = document.getElementById("debug-overlay");
       if (dbg) {
@@ -8770,6 +8964,8 @@ window.__TEST_RESULTS__ = { total: 0, passed: 0, failed: 0, details: [] };
 
 function runAllTests() {
   window.IS_TESTING = true;
+  creditBalance = 249.00;
+  if (typeof updateEconomyDisplay === "function") updateEconomyDisplay();
   window.__TEST_RESULTS__ = { total: 0, passed: 0, failed: 0, details: [] };
   let resDiv = document.getElementById("test-results-log");
   if (!resDiv) {
@@ -9106,6 +9302,54 @@ function runAllTests() {
     const chamferTopo = verifyMeshManifold(chamferedSolid.geometry);
     assertTest("Chamfer mesh is 100% watertight and manifold (openEdges=0, nonManifold=0, Chi=2)", chamferTopo.isWatertight && chamferTopo.isManifold && chamferTopo.chi === 2);
 
+    creditBalance += 500;
+    updateEconomyDisplay();
+
+    // Test 18f: Asymmetrical Chamfer
+    createBoxPrimitive();
+    const boxAsymChamfer = sceneObjects[sceneObjects.length - 1];
+    selectObject(boxAsymChamfer);
+    processRequest("Can I chamfer 2 6");
+    const asymChamferScope = document.getElementById("fillet-param-scope");
+    asymChamferScope.value = "vertical";
+    asymChamferScope.onchange();
+    const asymTypeVal = document.getElementById("fillet-param-type").value;
+    assertTest("Asymmetrical chamfer sets type to asymmetric and selects 4 vertical edges", asymTypeVal === "asymmetric" && activeCommand && activeCommand.selectedEdgeCount() === 4);
+    activeCommand.confirm();
+    const asymChamferedSolid = selectedObjects[0];
+    const asymChamferTopo = verifyMeshManifold(asymChamferedSolid.geometry);
+    assertTest("Asymmetrical chamfer produces watertight manifold solid (Chi=2)", asymChamferedSolid && asymChamferedSolid.userData.type === "AsymChamferedSolid" && asymChamferTopo.isWatertight && asymChamferTopo.chi === 2);
+
+    // Test 18g: Asymmetrical Fillet
+    createBoxPrimitive();
+    const boxAsymFillet = sceneObjects[sceneObjects.length - 1];
+    selectObject(boxAsymFillet);
+    processRequest("Can I fillet 2 6");
+    const asymFilletScope = document.getElementById("fillet-param-scope");
+    asymFilletScope.value = "vertical";
+    asymFilletScope.onchange();
+    const asymFilletTypeVal = document.getElementById("fillet-param-type").value;
+    assertTest("Asymmetrical fillet sets type to asymmetric and selects 4 vertical edges", asymFilletTypeVal === "asymmetric" && activeCommand && activeCommand.selectedEdgeCount() === 4);
+    activeCommand.confirm();
+    const asymFilletedSolid = selectedObjects[0];
+    const asymFilletTopo = verifyMeshManifold(asymFilletedSolid.geometry);
+    assertTest("Asymmetrical fillet produces watertight manifold solid (Chi=2)", asymFilletedSolid && asymFilletedSolid.userData.type === "AsymFilletedSolid" && asymFilletTopo.isWatertight && asymFilletTopo.chi === 2);
+
+    // Test 18h: 10 Placeholder Tool Icons & Retro Coming Soon Modal
+    const placeholderTools = ["tool-sweep", "tool-pipe", "tool-loft", "tool-shell", "tool-offset", "tool-mirror", "tool-array", "tool-trim", "tool-extend", "tool-project"];
+    const allPlaceholdersPresent = placeholderTools.every(id => document.getElementById(id) !== null);
+    assertTest("All 10 new side-panel tool icons exist in Features toolbar", allPlaceholdersPresent === true);
+    const sweepBtn = document.getElementById("tool-sweep");
+    if (sweepBtn) sweepBtn.click();
+    const csModal = document.getElementById("modal-coming-soon");
+    assertTest("Clicking placeholder tool opens retro 'Coming Soon' dialog", csModal && (csModal.open || csModal.hasAttribute("open")));
+    if (csModal && csModal.close) csModal.close();
+
+    // Test 18i: Blue Logo / Title Header Width (Roughly 2x wide)
+    const titleContent = document.querySelector(".win95-title-content");
+    const titleW = titleContent ? titleContent.getBoundingClientRect().width : 0;
+    assertTest("Blue header title area is roughly 2x wider (>= 380px)", titleW >= 380);
+
     // Test 19: Layer Management
     const testLayer = addLayer("CAM Toolpaths");
     assertTest("Add Layer creates layer in model", layers.some(l => l.name === "CAM Toolpaths"));
@@ -9179,12 +9423,11 @@ function runAllTests() {
     const remeshedObj = sceneObjects[sceneObjects.length - 1];
     assertTest("Remesh command replaces target mesh with Sphere primitive", remeshedObj && remeshedObj.userData.type === "Sphere");
 
-    // Test 29: Theme toggle
-    const isDarkInitially = !document.body.classList.contains("light-theme");
-    toggleTheme();
-    const isLightAfter = document.body.classList.contains("light-theme");
-    toggleTheme(); // revert
-    assertTest("Theme toggle successfully toggles light-theme class on body", isDarkInitially && isLightAfter && !document.body.classList.contains("light-theme"));
+    // Test 29: Fixed Theme (Light/Dark mode completely removed)
+    const themeBtn = document.getElementById("btn-theme-toggle");
+    const themeMenuItem = document.getElementById("mitem-view-theme");
+    const isFixedTheme = !document.body.classList.contains("light-theme") && themeBtn === null && themeMenuItem === null;
+    assertTest("Light/Dark theme toggle is completely removed and fixed retro theme is active", isFixedTheme === true);
 
     // Test 30: Audio mute toggle
     const initialMute = CADNT_AUDIO.mute;
@@ -9498,6 +9741,7 @@ function runAllTests() {
 
     window.__TESTS_DONE__ = true;
     window.IS_TESTING = false;
+    return window.__TEST_RESULTS__;
   }
 
   window.runAllTests = runAllTests;

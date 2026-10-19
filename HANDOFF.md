@@ -921,5 +921,85 @@ Following the release of build `v00000-011` (`fb95d7e`), all four viewports rend
 - **Live URL**: `https://mrandybuck.github.io/single-file-html-app-template/`
 - **Acceptance Status**: *Awaiting User Acceptance in Safari*. Do NOT mark USER ACCEPTED until user verifies Michigan and newly created geometry render correctly in Safari.
 
+---
+
+## 13. UI & Feature Updates (Development Branch `dev`)
+
+### 13.1 Requirements Addressed
+1. **Remove Light / Dark Mode Completely**:
+   - Removed the `#btn-theme-toggle` button from the Windows 95 standard toolbar.
+   - Removed the `#mitem-view-theme` entry from the View menu and action map.
+   - Removed theme-switching logic and locked the application to a single permanent Windows 95 retro dark-slate theme (`0x203040` background, standard win95-silver chrome).
+   - Preserved all toolbar spacing, layout, and event handlers without runtime errors.
+   - Updated Request Bar handlers (`theme`, `light`, `dark`) and crash diagnostics report to indicate fixed retro theme.
+
+2. **Make Blue Logo / Title Section Roughly Twice as Big**:
+   - Increased the top-left `.win95-title-content` section width from ~195px to `width: 420px; min-width: 420px;` (roughly 2x expansion).
+   - Retained the retro Windows 95 icon, bold typeface, gap spacing (`gap: 8px;`), and flush-right title bar caption controls (Minimize, Maximize, Close) without layout distortion.
+
+3. **10 New Side-Panel Tool Icons with Retro "Coming Soon" Modal**:
+   - Added 10 CAD command icons to the right-side Features toolbar (`.modeling-toolbar-body`):
+     1. **Sweep** (`#tool-sweep`)
+     2. **Pipe** (`#tool-pipe`)
+     3. **Loft** (`#tool-loft`)
+     4. **Shell** (`#tool-shell`)
+     5. **Offset** (`#tool-offset`)
+     6. **Mirror** (`#tool-mirror`)
+     7. **Array** (`#tool-array`)
+     8. **Trim** (`#tool-trim`)
+     9. **Extend** (`#tool-extend`)
+     10. **Project** (`#tool-project`)
+   - Configured compact 24x24 vector SVG icons matching the app's retro mechanical aesthetic.
+   - Built the `<dialog id="modal-coming-soon">` dialog with Windows 95 title bar, close caption button, classic yellow triangle warning graphic, dynamic title (`<Tool> — Coming Soon`), explanatory text, and beveled 3D OK button (`#btn-close-coming-soon`).
+   - Integrated with toolbar click delegator to trigger the dialog, log a system note, and initiate ergonomic icon relocation.
+
+4. **Asymmetrical Chamfer and Asymmetrical Fillet Support**:
+   - **Interpretation & Geometry Engine**:
+     - *Asymmetrical Chamfer*: Two-distance chamfer ($D_1$ along axis $u$, $D_2$ along axis $v$). Connects $(u_{max}, v_{max} - pv)$ to $(u_{max} - pu, v_{max})$ on cut corners.
+     - *Asymmetrical Fillet*: Non-uniform elliptical fillet ($R_1$ along axis $u$, $R_2$ along axis $v$). Evaluated as an exact quadrant ellipse $u(t) = \text{center}_u + pu \cos(t)$, $v(t) = \text{center}_v + pv \sin(t)$, ensuring $G^1$ tangential continuity with adjacent planar faces.
+     - Supports both the exact 2-manifold B-Rep extrusion generator (`buildBoxManifoldCut`) and the CSG polygon cutter fallback (`computeEdgeCutGeometry`).
+     - Mathematically verified as 100% watertight closed 2-manifold meshes with Euler characteristic $\chi = V - E + F = 2$.
+   - **Command Bar UI**:
+     - Added `#fillet-param-type` dropdown with `Symmetric` and `Asymmetric` options.
+     - In Symmetric mode: displays `Radius:` / `Distance:` with single input `#fillet-param-val`.
+     - In Asymmetric mode: displays `R1:` / `D1:` (`#fillet-param-val`) and reveals second input container `#fillet-container-val2` with label `R2:` / `D2:` and input `#fillet-param-val2`.
+     - Live emerald preview (`0x39ff14`) updates dynamically as values change.
+     - Confirmed solids are tagged with `userData.type = "AsymChamferedSolid"` / `"AsymFilletedSolid"` and custom FeatureManager tree names (`AsymChamfer_N`, `AsymFillet_N`).
+   - **Request Bar Command Parser**:
+     - Multi-parameter support: `Can I chamfer <d1> <d2>` (e.g. `Can I chamfer 2 6`) and `Can I fillet <r1> <r2>` (e.g. `Can I fillet 2 6`).
+     - Natural language prefixes: `Can I asym chamfer <d1> <d2>` and `Can I asym fillet <r1> <r2>`.
+
+### 13.2 Automated & Headless Verification
+- **Automated In-App Test Suite**: 103/103 tests passed (0 failures).
+- **New Unit Tests Added**:
+  - `Test 18f`: Asymmetrical Chamfer generates `AsymChamferedSolid` with verified watertight manifold topology ($\chi = 2$).
+  - `Test 18g`: Asymmetrical Fillet generates `AsymFilletedSolid` with verified watertight manifold topology ($\chi = 2$).
+  - `Test 18h`: All 10 placeholder tool icons exist in Features dock and clicking opens `#modal-coming-soon`.
+  - `Test 18i`: Top-left blue logo/title section is roughly 2x wider ($\ge 380\text{px}$).
+  - `Test 29`: Light/Dark theme toggle completely removed and permanent retro theme active.
+
+### 13.3 Visual Proof Artifacts
+1. **10 Placeholder Tools & Retro "Coming Soon" Modal**:
+   [features_01_placeholder_coming_soon.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/features_01_placeholder_coming_soon.png)
+   - Displays all 10 new tool icons in the right-side toolbar, the 2x widened blue header title, and the retro Windows 95 "Coming Soon" warning dialog.
+2. **Asymmetrical Chamfer Solid Rendered**:
+   [features_02_asymmetric_chamfer.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/features_02_asymmetric_chamfer.png)
+   - Displays completed asymmetrical chamfer ($D_1 = 2.0\text{ mm}, D_2 = 6.0\text{ mm}$) on vertical box edges, verified in Top (X/Z) view showing distinct $2\text{mm} \times 6\text{mm}$ bevel cuts, with `AsymChamferedSolid` in the FeatureManager tree.
+3. **Asymmetrical Fillet Solid Rendered**:
+   [features_03_asymmetric_fillet.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/features_03_asymmetric_fillet.png)
+   - Displays completed asymmetrical fillet ($R_1 = 2.0\text{ mm}, R_2 = 6.0\text{ mm}$) with elliptical rounded corner curvature across Top and Perspective viewports, with `AsymFilletedSolid` in the FeatureManager tree.
+4. **Clean Workspace Overview**:
+   [features_04_full_ui_overview.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/features_04_full_ui_overview.png)
+   - Comprehensive full-window UI overview demonstrating the 2x blue header title area, absence of theme switcher, 10 new tool icons, active FeatureManager tree, and 4-viewport matrix rendering Michigan and multiple 3D solids.
+5. **Full Test Suite All 103 Tests Passed**:
+   [features_05_test_results_passed.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/features_05_test_results_passed.png)
+   - Displays in-app test results terminal log confirming 103/103 tests passed with 0 failures.
+
+### 13.4 Branch & Review Status
+- **Current Branch**: `dev`
+- **Main Branch**: Preserved at `0f447a5` (`v00000-012`).
+- **Backup Branch**: `backup-v00000-011` remains preserved at `fb95d7e`.
+- **Status**: Committed on `dev`. **Stopped for user review**. Awaiting explicit approval before merge to `main` or deployment to GitHub Pages.
+
 
 
