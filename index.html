@@ -1639,6 +1639,20 @@
   </div>
 </dialog>
 
+<!-- Checkpoint D: Numeric Easter Egg Modal (Windows 95 Style) -->
+<dialog id="modal-nice-easter-egg" class="win95-dialog" style="width: 220px; padding: 0; border: 2px outset #dfdfdf; background: #c0c0c0; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); z-index: 100005;">
+  <h2 style="margin: 0; background: #000080; color: #fff; padding: 2px 4px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; height: 18px;">
+    <span class="win95-dialog-title" style="color: #fff; font-size: 11px;">Notice</span>
+    <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close" style="background: #c0c0c0; border: 1px outset #fff; font-size: 9px; width: 14px; height: 14px; line-height: 11px; padding: 0; cursor: pointer; text-align: center; color: #000;">✕</button>
+  </h2>
+  <div style="padding: 16px 12px 14px 12px; text-align: center;">
+    <p id="nice-easter-egg-text" style="margin: 0 0 12px 0; font-size: 14px; font-family: 'MS Sans Serif', Tahoma, sans-serif; color: #000;">nice.</p>
+    <div class="dialog-actions" style="margin: 0; display: flex; justify-content: center;">
+      <button class="btn-dialog btn-primary" onclick="this.closest('dialog').close()" style="min-width: 60px; height: 22px; font-size: 11px; padding: 2px 12px; cursor: pointer;">OK</button>
+    </div>
+  </div>
+</dialog>
+
 <!-- Under Construction Modal (Economy) -->
 <dialog id="modal-construction">
   <h2>
@@ -3109,7 +3123,112 @@ function setupSplineCommand() {
   };
 }
 
-function startSketch(mode) {
+function setupPolygonCommand(initialSides) {
+  const bar = document.getElementById("command-bar");
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
+
+  bar.style.display = "flex";
+  badge.textContent = "POLYGON";
+  const defSides = Math.max(3, parseInt(initialSides, 10) || 5);
+  prompt.textContent = `Enter sides (≥ 3), then click center point in ${activeViewport.toUpperCase()} C-Plane.`;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "✓ Create (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:2px; font-weight:bold;">Plane:</span>
+    <select id="poly-param-plane" class="prop-input" style="height:20px; font-size:11px; width:95px;">
+      <option value="top" ${activeViewport === "top" ? "selected" : ""}>Top (X/Z)</option>
+      <option value="front" ${activeViewport === "front" ? "selected" : ""}>Front (X/Y)</option>
+      <option value="right" ${activeViewport === "right" ? "selected" : ""}>Right (Z/Y)</option>
+      <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
+    </select>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Sides:</span>
+    <input id="poly-param-sides" class="prop-input" type="number" min="3" step="1" value="${defSides}" style="width:45px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Center:</span>
+    <input id="poly-param-center" class="prop-input" placeholder="X, Y, Z" style="width:90px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Radius:</span>
+    <input id="poly-param-radius" class="prop-input" placeholder="Radius" type="number" step="1" style="width:65px; height:20px;" disabled>
+  `;
+
+  const planeSel = document.getElementById("poly-param-plane");
+  if (planeSel) {
+    planeSel.onchange = () => {
+      setActiveViewport(planeSel.value);
+      focusActiveCanvas();
+      status(`Polygon: C-Plane switched to ${planeSel.value.toUpperCase()}`);
+    };
+  }
+
+  const sidesInp = document.getElementById("poly-param-sides");
+  const centerInp = document.getElementById("poly-param-center");
+  const rInp = document.getElementById("poly-param-radius");
+
+  if (sidesInp) {
+    sidesInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        checkNumericEasterEgg(sidesInp.value);
+        if (sketchPoints.length === 0 && centerInp) centerInp.focus();
+        else if (rInp) rInp.focus();
+      }
+    };
+    sidesInp.onchange = () => {
+      checkNumericEasterEgg(sidesInp.value);
+    };
+  }
+
+  if (centerInp) {
+    centerInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const parts = centerInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          const pt = new THREE.Vector3(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+          handleSketchClick(pt, activeViewport);
+          if (rInp) rInp.focus();
+        }
+      }
+    };
+  }
+
+  if (rInp) {
+    rInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const r = parseFloat(rInp.value);
+        checkNumericEasterEgg(rInp.value);
+        if (!isNaN(r) && r > 0 && sketchPoints.length >= 1) {
+          const s = sidesInp ? parseInt(sidesInp.value, 10) || 5 : 5;
+          createPolygonSketch(sketchPoints[0], r, s, activeViewport);
+          cancelSketch();
+        }
+      }
+    };
+  }
+
+  confirmBtn.onclick = () => {
+    if (sketchPoints.length >= 1 && lastPointerCPlanePos) {
+      const r = sketchPoints[0].distanceTo(lastPointerCPlanePos);
+      const s = sidesInp ? parseInt(sidesInp.value, 10) || 5 : 5;
+      createPolygonSketch(sketchPoints[0], Math.max(1, r), s, activeViewport);
+      cancelSketch();
+    }
+  };
+
+  cancelBtn.onclick = () => {
+    cancelSketch();
+    status("Polygon command cancelled.");
+  };
+}
+
+function startSketch(mode, param) {
   cancelSketch();
   activeSketchMode = mode;
   sketchPoints = [];
@@ -3133,6 +3252,10 @@ function startSketch(mode) {
     setupSplineCommand();
     status("Spline Sketch: Click control points on C-Plane (min 3). (Esc to cancel, Enter to finish)");
     addLog(`Entered SPLINE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  } else if (mode === "polygon") {
+    setupPolygonCommand(param);
+    status("Polygon Sketch: Enter sides (min 3), click center, then click radius. (Esc to cancel)");
+    addLog(`Entered POLYGON sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
   } else {
     status(`Sketch ${mode.toUpperCase()}: Click in active viewport on C-Plane. Press Escape to cancel.`);
     addLog(`Entered ${mode.toUpperCase()} sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
@@ -3390,6 +3513,47 @@ function updateRubberband(currentPt, vp) {
     if (coordsReadout) {
       coordsReadout.textContent = `Spline CP ${sketchPoints.length + 1}: (${currentPt.x.toFixed(1)}, ${currentPt.y.toFixed(1)}, ${currentPt.z.toFixed(1)}) | Total CPs: ${allPts.length} ${allPts.length >= 3 ? '(Curved preview active)' : '(Need ≥ 3 CPs)'}`;
     }
+  } else if (activeSketchMode === "polygon") {
+    const center = sketchPoints[0];
+    const radius = Math.max(0.5, center.distanceTo(currentPt));
+    const sidesInp = document.getElementById("poly-param-sides");
+    let sides = sidesInp ? parseInt(sidesInp.value, 10) : 5;
+    if (isNaN(sides) || sides < 3) sides = 5;
+
+    const group = new THREE.Group();
+    group.name = "Sketch_Rubberband";
+    group.userData = { isTransientPreview: true };
+
+    const pts = getPolygonPoints(center, radius, vp, sides);
+    const polyGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const polyMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+    group.add(new THREE.LineLoop(polyGeo, polyMat));
+
+    // Center marker
+    const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const centerMesh = new THREE.Mesh(dotGeo, dotMat);
+    centerMesh.position.copy(center);
+    group.add(centerMesh);
+
+    // Dashed radius guide
+    const radGeo = new THREE.BufferGeometry().setFromPoints([center, currentPt]);
+    const radMat = new THREE.LineDashedMaterial({ color: 0x888888, dashSize: 2, gapSize: 1 });
+    const radLine = new THREE.Line(radGeo, radMat);
+    radLine.computeLineDistances();
+    group.add(radLine);
+
+    rubberbandObj = group;
+    scene.add(rubberbandObj);
+
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      coordsReadout.textContent = `Radius: ${radius.toFixed(2)} mm | ${sides}-gon | Center: (${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)})`;
+    }
+    const rInp = document.getElementById("poly-param-radius");
+    if (rInp && document.activeElement !== rInp) {
+      rInp.value = radius.toFixed(1);
+    }
   }
 
   renderAllViewports();
@@ -3435,6 +3599,25 @@ function getCirclePoints(center, radius, vp, segments = 36) {
       pts.push(new THREE.Vector3(center.x + ct, center.y + st, center.z));
     } else {
       pts.push(new THREE.Vector3(center.x, center.y + st, center.z + ct));
+    }
+  }
+  return pts;
+}
+
+function getPolygonPoints(center, radius, vp, sides = 5) {
+  sides = Math.max(3, parseInt(sides, 10) || 5);
+  const pts = [];
+  const angleStep = (Math.PI * 2) / sides;
+  for (let i = 0; i < sides; i++) {
+    const angle = i * angleStep - Math.PI / 2;
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+    if (vp === "top" || vp === "perspective") {
+      pts.push(new THREE.Vector3(center.x + radius * cosA, center.y, center.z + radius * sinA));
+    } else if (vp === "front") {
+      pts.push(new THREE.Vector3(center.x + radius * cosA, center.y + radius * sinA, center.z));
+    } else {
+      pts.push(new THREE.Vector3(center.x, center.y + radius * sinA, center.z + radius * cosA));
     }
   }
   return pts;
@@ -3602,6 +3785,41 @@ function handleSketchClick(pt, vp) {
       status(`Spline: Placed CP ${sketchPoints.length}. Ready! Press Enter or [✓ Finish] when done.`);
     }
     return;
+  } else if (activeSketchMode === "polygon") {
+    if (sketchPoints.length === 0) {
+      sketchPoints.push(activePt.clone());
+      const prompt = document.getElementById("command-prompt");
+      const sidesInp = document.getElementById("poly-param-sides");
+      let sides = sidesInp ? parseInt(sidesInp.value, 10) : 5;
+      if (isNaN(sides) || sides < 3) sides = 5;
+      if (prompt) prompt.textContent = `Center set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Move cursor to preview, click or enter radius to commit ${sides}-sided Polygon.`;
+      const centerInp = document.getElementById("poly-param-center");
+      if (centerInp) centerInp.value = `${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}`;
+      const rInp = document.getElementById("poly-param-radius");
+      if (rInp) {
+        rInp.disabled = false;
+        rInp.focus();
+      }
+      const confirmBtn = document.getElementById("btn-cmd-confirm");
+      if (confirmBtn) confirmBtn.disabled = false;
+      status(`Polygon: Center set at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Click or enter radius.`);
+    } else {
+      const center = sketchPoints[0];
+      const radius = center.distanceTo(activePt);
+      if (radius < 0.001) {
+        status("Radius too small. Click a distinct outer radius point.");
+        return;
+      }
+      const sidesInp = document.getElementById("poly-param-sides");
+      let sides = sidesInp ? parseInt(sidesInp.value, 10) : 5;
+      if (isNaN(sides) || sides < 3) sides = 5;
+      clearPreviewObjects();
+      const polyObj = createPolygonSketch(center, Math.max(0.5, radius), sides, vp);
+      cancelSketch();
+      selectObject(polyObj);
+      renderAllViewports();
+    }
+    return;
   }
 }
 
@@ -3737,6 +3955,71 @@ function createCircleSketch(center, radius, planeName) {
   updateObjectsTree();
   selectObject(line);
   addLog(`Created closed circle profile ${name} (r=${radius.toFixed(1)}).`, "log-success");
+  status(`Created ${name}`);
+  recordModelingCommand();
+  return line;
+}
+
+function createPolygonSketch(center, radius, sides, planeName) {
+  sides = Math.max(3, parseInt(sides, 10) || 5);
+  radius = Math.max(0.1, parseFloat(radius) || 10);
+  recordUndoState("Polygon Sketch");
+
+  const pts = [];
+  const shape = new THREE.Shape();
+
+  let u_c = center.x, v_c = center.z;
+  if (planeName === "front") { u_c = center.x; v_c = center.y; }
+  else if (planeName === "right") { u_c = center.z; v_c = center.y; }
+
+  const angleStep = (Math.PI * 2) / sides;
+  for (let i = 0; i < sides; i++) {
+    const angle = i * angleStep - Math.PI / 2;
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    const u = u_c + radius * cosA;
+    const v = v_c + radius * sinA;
+    if (i === 0) shape.moveTo(u, v);
+    else shape.lineTo(u, v);
+
+    if (planeName === "front") {
+      pts.push(new THREE.Vector3(u, v, center.z));
+    } else if (planeName === "right") {
+      pts.push(new THREE.Vector3(center.x, v, u));
+    } else {
+      pts.push(new THREE.Vector3(u, center.y, v));
+    }
+  }
+  shape.closePath();
+
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 2 });
+  const line = new THREE.LineLoop(geo, mat);
+
+  const name = `Polygon_${sides}S_${++primitiveCounter}`;
+  line.name = name;
+  line.userData = {
+    id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+    isStartingObject: false,
+    type: "ClosedProfile",
+    profileType: "polygon",
+    layer: getActiveLayer().name,
+    protected: false,
+    closed: true,
+    sides: sides,
+    radius: radius,
+    center: center.clone(),
+    points: pts,
+    plane: planeName,
+    shape: shape
+  };
+
+  scene.add(line);
+  sceneObjects.push(line);
+  updateObjectsTree();
+  selectObject(line);
+  addLog(`Created closed regular ${sides}-gon profile ${name} (radius ${radius.toFixed(1)} mm).`, "log-success");
   status(`Created ${name}`);
   recordModelingCommand();
   return line;
@@ -4449,6 +4732,10 @@ raycaster.params.Line = { threshold: 2.5 };
 const mouse = new THREE.Vector2();
 
 function selectObject(obj, multi = false) {
+  if (obj && obj.userData && obj.userData.locked) {
+    status(`'${obj.name}' is locked. Use 'Can I unlock' to unlock.`);
+    return;
+  }
   if (!multi) {
     clearSelection();
   }
@@ -4744,14 +5031,41 @@ function updateObjectsTree() {
   sceneObjects.forEach(obj => {
     const li = document.createElement("li");
     li.className = "object-item" + (selectedObjects.includes(obj) ? " selected" : "");
-    const tag = obj.userData.isStartingObject ? "MICHIGAN" : obj.userData.type || "MESH";
+    const tag = obj.userData.isStartingObject ? "MICHIGAN" : (obj.userData.profileType === "polygon" ? "POLYGON" : (obj.userData.type || "MESH"));
+    const isProtected = !!obj.userData.protected || !!obj.userData.isStartingObject;
+    const isLocked = obj.userData.locked === true;
+    let lockHtml = "";
+    if (isProtected) {
+      lockHtml = `<span title="Protected starting geometry" style="margin-left:4px; opacity:0.8;">🔒</span>`;
+    } else if (isLocked) {
+      lockHtml = `<span class="obj-lock-badge" title="Locked - click to unlock" style="cursor:pointer; margin-left:4px; color:#ffdd00;" data-id="${obj.userData.id}">🔒</span>`;
+    }
     li.innerHTML = `
       <span class="obj-tag">${tag}</span>
       <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${obj.name}</span>
-      ${obj.userData.protected ? "🔒" : ""}
+      ${lockHtml}
     `;
+
+    const lockBadge = li.querySelector(".obj-lock-badge");
+    if (lockBadge) {
+      lockBadge.onclick = (e) => {
+        e.stopPropagation();
+        recordUndoState("Unlock Object");
+        obj.userData.locked = false;
+        updateObjectsTree();
+        updatePropertiesPanel();
+        addLog(`Unlocked object '${obj.name}'.`, "log-success");
+        status(`Unlocked '${obj.name}'`);
+        renderAllViewports();
+      };
+    }
+
     li.onclick = (e) => {
       e.stopPropagation();
+      if (obj.userData.locked) {
+        status(`'${obj.name}' is locked. Click the 🔒 lock icon to unlock.`);
+        return;
+      }
       if (activeCommand && typeof activeCommand.handleSelect === "function") {
         activeCommand.handleSelect(obj);
         return;
@@ -4852,6 +5166,15 @@ function updatePropertiesPanel() {
         <div><b>Edges Cut:</b> ${obj.userData.filletParams.edges.length} edges</div>
       </div>
     </div>` : ""}
+    ${obj.userData.type === "ClosedProfile" && obj.userData.profileType === "polygon" ? `
+    <div class="prop-group">
+      <div class="prop-label">Polygon Profile</div>
+      <div style="font-size:11px; line-height:1.6; background:var(--bg-canvas); padding:4px 6px; border:1px inset #808080;">
+        <div><b>Sides:</b> ${obj.userData.sides || (obj.userData.points ? obj.userData.points.length : 5)}</div>
+        <div><b>Radius:</b> ${(obj.userData.radius || 10).toFixed(2)} mm</div>
+        <div><b>Plane:</b> ${(obj.userData.plane || 'Top').toUpperCase()}</div>
+      </div>
+    </div>` : ""}
     <div class="prop-group">
       <div class="prop-label">Position (X, Y, Z)</div>
       <div class="prop-row">
@@ -4879,7 +5202,7 @@ function updatePropertiesPanel() {
     <div class="prop-group">
       <div class="prop-label">Status</div>
       <div style="font-size:11px; color:${isProtected ? 'var(--alert-pink)' : (obj.userData && obj.userData.isImported ? 'var(--rhino-yellow)' : (isLocked ? 'var(--rhino-yellow)' : 'var(--toxic-green)'))}; font-weight:bold;">
-        ${isProtected ? "🛡️ IMMUNE TO DELETION" : (obj.userData && obj.userData.isImported ? "⚠️ IMPORTED READ-ONLY MESH" : (isLocked ? "🔒 LOCKED LAYER" : "✓ Editable Geometry"))}
+        ${isProtected ? "🛡️ IMMUNE TO DELETION" : (obj.userData && obj.userData.isImported ? "⚠️ IMPORTED READ-ONLY MESH" : (isLocked ? "🔒 LOCKED OBJECT" : "✓ Editable Geometry"))}
       </div>
     </div>
     ${obj.userData.closed ? `
@@ -4915,6 +5238,7 @@ function updatePropertiesPanel() {
     const el = document.getElementById(id);
     if (!el) return;
     el.onchange = () => {
+      checkNumericEasterEgg(el.value);
       const val = parseFloat(el.value);
       if (!isNaN(val)) {
         callback(val);
@@ -8086,6 +8410,12 @@ if (btnCmdCancel) {
   };
 }
 
+document.addEventListener("change", (e) => {
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "SELECT")) {
+    checkNumericEasterEgg(e.target.value);
+  }
+});
+
 function processRequest(raw) {
   const text = raw.trim();
   if (!text) return;
@@ -8112,6 +8442,11 @@ function executeCommand(rawCmd) {
   const verb = tokens[0].toLowerCase();
   const args = tokens.slice(1);
   const normalizedCmd = trimmed.replace(/[?!.,;]+$/, "").trim().toLowerCase();
+
+  // Check for Numeric Easter Egg inputs in tokens / args
+  if (Array.isArray(tokens)) {
+    tokens.forEach(t => checkNumericEasterEgg(t));
+  }
 
   // Gumball Activation Command: "Can I gumball?" (case-insensitive, optional trailing punctuation)
   if (
@@ -8144,13 +8479,22 @@ function executeCommand(rawCmd) {
     return;
   }
 
-  // Michigan Starting Object Removal Command (Supports 'remove starting object' and alias 'delete michigan')
+  // Checkpoint B: Michigan Starting Object Removal Command (Supports 'remove starting object' and 'delete michigan')
   if (
     normalizedCmd === "remove starting object" ||
     normalizedCmd === "delete michigan" ||
-    (verb === "delete" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "michigan")
+    normalizedCmd === "remove michigan" ||
+    normalizedCmd === "delete starting object" ||
+    (verb === "delete" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "michigan") ||
+    (verb === "remove" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "michigan") ||
+    (verb === "remove" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "starting object")
   ) {
-    const targetObj = michiganModel || diagnosticCube;
+    // Locates Michigan starting object directly by its internal identifier; no prior user selection permitted or required
+    const targetObj = sceneObjects.find(o => o.userData && o.userData.id === "starting_michigan")
+      || sceneObjects.find(o => o.userData && o.userData.isStartingObject)
+      || michiganModel
+      || diagnosticCube;
+
     if (!targetObj || !sceneObjects.includes(targetObj)) {
       addLog("Starting object is already gone.", "log-warn");
       status("Starting object does not exist.");
@@ -8158,12 +8502,13 @@ function executeCommand(rawCmd) {
     }
     showConfirmModal(
       "Are you sure you want to remove this?",
-      "Removing the starting geometry will clear it from the workspace. You can restore it using 'Can I undo'.",
+      "Are you sure you want to remove this?",
       () => {
         recordUndoState("Remove Starting Object");
         scene.remove(targetObj);
         const idx = sceneObjects.indexOf(targetObj);
         if (idx !== -1) sceneObjects.splice(idx, 1);
+        // Do not alter unrelated objects
         selectedObjects = selectedObjects.filter(o => o !== targetObj);
         if (targetObj === michiganModel) michiganModel = null;
         if (targetObj === diagnosticCube) diagnosticCube = null;
@@ -8173,6 +8518,7 @@ function executeCommand(rawCmd) {
         addLog("Starting object removed. You can restore it using 'Can I undo'.", "log-success");
         status("Starting object removed.");
         recordModelingCommand();
+        renderAllViewports();
       }
     );
     return;
@@ -8368,6 +8714,41 @@ function executeCommand(rawCmd) {
       }
       break;
 
+    case "polygon":
+    case "poly":
+    case "ngon":
+      let pSides = 5;
+      let pRad = null;
+      if (args.length >= 1) {
+        const parsedS = parseInt(args[0], 10);
+        if (!isNaN(parsedS) && parsedS >= 3) {
+          pSides = parsedS;
+        }
+      }
+      if (args.length >= 2) {
+        const parsedR = parseFloat(args[1]);
+        if (!isNaN(parsedR) && parsedR > 0) {
+          pRad = parsedR;
+        }
+      }
+      if (pRad !== null) {
+        const center = new THREE.Vector3(0, 0, 0);
+        const poly = createPolygonSketch(center, pRad, pSides, activeViewport);
+        selectObject(poly);
+        renderAllViewports();
+      } else {
+        startSketch("polygon", pSides);
+      }
+      break;
+
+    case "lock":
+      handleLockCommand();
+      break;
+
+    case "unlock":
+      handleUnlockCommand();
+      break;
+
     case "delete":
       handleDelete();
       break;
@@ -8497,10 +8878,18 @@ function handleDelete() {
     return;
   }
 
-  const protectedHits = selectedObjects.filter(o => o.userData.protected);
+  const protectedHits = selectedObjects.filter(o => o.userData.protected || o.userData.isStartingObject);
   if (protectedHits.length > 0) {
     addLog("The starting object resists deletion. Standard delete has no power here.", "log-nope");
     status("Deletion failed: Starting object is protected.");
+    shakeRequestBar();
+    return;
+  }
+
+  const lockedHits = selectedObjects.filter(o => o.userData.locked);
+  if (lockedHits.length > 0) {
+    addLog("Cannot delete locked object(s). Use 'Can I unlock' first.", "log-warn");
+    status("Cannot delete locked object(s).");
     shakeRequestBar();
     return;
   }
@@ -8519,6 +8908,127 @@ function handleDelete() {
   addLog(`Deleted ${toRemove.length} object(s).`, "log-success");
   status(`Deleted ${toRemove.length} object(s).`);
   recordModelingCommand();
+}
+
+function handleLockCommand() {
+  if (selectedObjects.length === 0) {
+    addLog("No objects selected to lock. Select one or more objects first.", "log-warn");
+    status("No objects selected to lock.");
+    shakeRequestBar();
+    return;
+  }
+
+  const lockable = selectedObjects.filter(o => !o.userData.protected && !o.userData.isStartingObject);
+  if (lockable.length === 0) {
+    addLog("Starting object is system-protected and cannot be ordinary locked.", "log-warn");
+    status("Starting object is system-protected.");
+    return;
+  }
+
+  recordUndoState("Lock Objects");
+  lockable.forEach(obj => {
+    obj.userData.locked = true;
+    highlightObject(obj, false);
+  });
+
+  selectedObjects = [];
+  hideSplineHandles();
+  updateGumball();
+  updateObjectsTree();
+  updatePropertiesPanel();
+  addLog(`Locked ${lockable.length} object(s). Locked objects remain visible but are unavailable for selection or transforms.`, "log-success");
+  status(`Locked ${lockable.length} object(s).`);
+  renderAllViewports();
+}
+
+function handleUnlockCommand() {
+  const lockedObjs = sceneObjects.filter(o => o.userData && o.userData.locked === true && !o.userData.protected && !o.userData.isStartingObject);
+  if (lockedObjs.length === 0) {
+    addLog("No locked objects found in workspace.", "log-info");
+    status("No locked objects to unlock.");
+    return;
+  }
+
+  recordUndoState("Unlock Objects");
+  lockedObjs.forEach(obj => {
+    obj.userData.locked = false;
+  });
+
+  updateObjectsTree();
+  updatePropertiesPanel();
+  addLog(`Unlocked ${lockedObjs.length} object(s).`, "log-success");
+  status(`Unlocked ${lockedObjs.length} object(s).`);
+  renderAllViewports();
+}
+
+function showNiceEasterEggModal() {
+  const modal = document.getElementById("modal-nice-easter-egg");
+  if (modal) {
+    if (modal.open) modal.close();
+    modal.showModal();
+  }
+}
+
+function checkNumericEasterEgg(val) {
+  if (val === null || val === undefined) return false;
+  const s = String(val).trim();
+  // Exact numeric matches only: 67, 69, 420 (do not trigger on substrings like 167 or 4200)
+  if (/^(67|69|420)(\.0+)?$/.test(s)) {
+    showNiceEasterEggModal();
+    return true;
+  }
+  return false;
+}
+
+let lastSphereEscapeTime = performance.now();
+
+function updateEscapingSpheres(dtOverride) {
+  const now = performance.now();
+  const dt = typeof dtOverride === "number" ? dtOverride : Math.min(Math.max(0, (now - lastSphereEscapeTime) / 1000), 0.5);
+  lastSphereEscapeTime = now;
+
+  if (dt <= 0) return;
+
+  const speed = 0.05; // 0.05 model units per second (mm/s)
+
+  for (let i = 0; i < sceneObjects.length; i++) {
+    const obj = sceneObjects[i];
+    // Rule: Eligible when it is an independent sphere primitive, unlocked, and not protected
+    if (!obj || !obj.userData || obj.userData.type !== "Sphere") continue;
+    if (obj.userData.locked || obj.userData.protected || obj.userData.isStartingObject) continue;
+
+    // Avoid moving objects during an active user transform
+    if (selectedObjects.includes(obj) && (gumballDragState || (activeCommand && ["move", "rotate", "scale"].includes(activeCommand.type)))) {
+      continue;
+    }
+
+    if (!obj.userData.escapeDir) {
+      const seed = ((obj.id ? obj.id * 1.618 : (i + 1) * 2.399) % 1);
+      const angle = seed * Math.PI * 2;
+      obj.userData.escapeDir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)).normalize();
+    }
+
+    const dir = obj.userData.escapeDir;
+    const dist = speed * dt;
+
+    obj.position.x += dir.x * dist;
+    obj.position.z += dir.z * dist;
+
+    // Subtle visual rotation consistent with rolling direction
+    const radius = (obj.geometry && obj.geometry.parameters && obj.geometry.parameters.radius) || 8;
+    const dTheta = dist / radius;
+    const rollAxis = new THREE.Vector3(dir.z, 0, -dir.x).normalize();
+    obj.rotateOnWorldAxis(rollAxis, dTheta);
+
+    obj.updateMatrix();
+    obj.updateMatrixWorld();
+
+    if (selectedObjects.length === 1 && selectedObjects[0] === obj && !gumballDragState) {
+      if (typeof gumballGroup !== "undefined" && gumballGroup.visible) {
+        gumballGroup.position.copy(obj.position);
+      }
+    }
+  }
 }
 
 // Request Bar Events
@@ -8635,6 +9145,9 @@ function executeToolbarCommand(cmd) {
     case "rect": startSketch("rect"); break;
     case "circle": startSketch("circle"); break;
     case "spline": startSketch("spline"); break;
+    case "polygon": startSketch("polygon"); break;
+    case "lock": handleLockCommand(); break;
+    case "unlock": handleUnlockCommand(); break;
     case "extrude": startModelingCommand("extrude"); break;
     case "union": startModelingCommand("union"); break;
     case "difference": startModelingCommand("difference"); break;
@@ -8866,6 +9379,7 @@ function handleViewportPointerDown(e, vpId) {
     const isSelected = selectedObjects.includes(obj);
     const layer = layers.find(l => l.name === obj.userData.layer);
     if (layer && layer.locked && !isSelected) return;
+    if (obj.userData && obj.userData.locked && !isSelected) return;
     obj.traverse(child => {
       if (child.isMesh || child.isLine || child.isLineLoop) candidates.push(child);
     });
@@ -9423,7 +9937,10 @@ const HELP_INDEX = [
   { title: "Sphere Primitive", body: "Type 'Can I sphere' or click Sphere.", control: "#tool-sphere", keys: "Can I sphere" },
   { title: "Cylinder Primitive", body: "Type 'Can I cylinder'.", control: "#tool-cylinder", keys: "Can I cylinder" },
   { title: "Cone Primitive", body: "Type 'Can I cone'.", control: "#tool-cone", keys: "Can I cone" },
-  { title: "Remove Starting Object", body: "The secret command to remove the Michigan geometry.", control: "#request-input", keys: "Can I remove starting object" },
+  { title: "Polygon Sketch", body: "Draw regular polygon with N sides. Type 'Can I polygon [sides]'.", control: "#request-input", keys: "Can I polygon" },
+  { title: "Lock Objects", body: "Lock selected objects to prevent editing and deletion. Type 'Can I lock'.", control: "#request-input", keys: "Can I lock" },
+  { title: "Unlock Objects", body: "Unlock previously locked objects. Type 'Can I unlock'.", control: "#request-input", keys: "Can I unlock" },
+  { title: "Remove Starting Object", body: "The secret command to remove the Michigan geometry ('Can I remove starting object' or 'Can I delete michigan').", control: "#request-input", keys: "Can I remove starting object / Can I delete michigan" },
   { title: "Orbit Perspective", body: "Orbit viewport camera vertically and horizontally.", control: "#cad-canvas", keys: "W / S / A / D" },
   { title: "Pan Viewport", body: "Pan camera plane.", control: "#cad-canvas", keys: "Arrow Keys" },
   { title: "Zoom Viewport", body: "Zoom in and out.", control: "#cad-canvas", keys: "Shift + Up/Down" },
@@ -9772,6 +10289,7 @@ function resizeRenderer() {
 function render() {
   requestAnimationFrame(render);
   updateContinuousNavigation();
+  updateEscapingSpheres();
   resizeRenderer();
 
   // 1. TOP VIEWPORT (Top-Left: XZ Orthographic)
@@ -11065,6 +11583,186 @@ function runAllTests() {
       }
     }
     assertTest("Single-edge Chamfer modifies only chosen edge with 45-degree flat plane and preserves unaffected corners", !hasCutCornerInChamfer && hasUnaffectedCornerChamfer);
+
+    // Test 52: Checkpoint B - Michigan Starting Object Direct Deletion without Prior Selection
+    let michiganTarget = sceneObjects.find(o => o.userData && o.userData.id === "starting_michigan") || michiganModel;
+    if (!michiganTarget) {
+      michiganModel = createMichiganModel();
+      michiganTarget = michiganModel;
+    }
+    createBoxPrimitive();
+    const unrelatedBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(unrelatedBox);
+    assertTest("Unrelated object is selected prior to Michigan deletion", selectedObjects.includes(unrelatedBox) && !selectedObjects.includes(michiganTarget));
+
+    let confirmPromptShown = "";
+    const origConfirmModal = showConfirmModal;
+    showConfirmModal = (title, body, cb) => {
+      confirmPromptShown = title;
+      cb();
+    };
+    processRequest("Can I delete michigan");
+    showConfirmModal = origConfirmModal;
+
+    const michiganDeletedDirectly = !sceneObjects.includes(michiganTarget) && michiganModel === null;
+    const promptExactMatch = confirmPromptShown === "Are you sure you want to remove this?";
+    const unrelatedIntact = sceneObjects.includes(unrelatedBox) && selectedObjects.includes(unrelatedBox);
+    assertTest("Checkpoint B: 'Can I delete michigan' removes both Michigan peninsulas without prior selection and leaves unrelated objects selected", michiganDeletedDirectly && promptExactMatch && unrelatedIntact);
+
+    // Test 52b: Checkpoint B - Undo restores Michigan starting object with protection
+    processRequest("Can I undo");
+    const restoredMichigan = sceneObjects.find(o => o.userData && o.userData.id === "starting_michigan") || michiganModel;
+    const restoredProtected = restoredMichigan && restoredMichigan.userData.protected === true;
+    assertTest("Checkpoint B: Undo restores Michigan starting object with protected status", restoredProtected === true);
+
+    // Test 52c: Checkpoint B - 'Can I remove starting object' also removes Michigan without selection
+    showConfirmModal = (title, body, cb) => cb();
+    processRequest("Can I remove starting object");
+    showConfirmModal = origConfirmModal;
+    const removeStartingDirectOk = !sceneObjects.some(o => o.userData && o.userData.id === "starting_michigan");
+    processRequest("Can I undo"); // restore for subsequent tests
+    assertTest("Checkpoint B: 'Can I remove starting object' removes Michigan starting object without prior selection", removeStartingDirectOk === true);
+
+    // Test 53: Checkpoint C - Polygon Command Interactive Workflow (Sides, Center, Radius)
+    startSketch("polygon", 5);
+    assertTest("Checkpoint C: Polygon command enters sketch mode with Sides parameter input", activeSketchMode === "polygon");
+    const sidesInp = document.getElementById("poly-param-sides");
+    if (sidesInp) sidesInp.value = "5";
+    handleSketchClick(new THREE.Vector3(0, 0, 0), "top");
+    assertTest("Checkpoint C: Polygon center click sets center anchor and updates prompt", sketchPoints.length === 1);
+    handleSketchClick(new THREE.Vector3(12, 0, 0), "top");
+    assertTest("Checkpoint C: Polygon radius click commits profile and auto-exits command", activeSketchMode === null);
+    const pentagonObj = sceneObjects[sceneObjects.length - 1];
+    assertTest("Checkpoint C: Polygon creates closed profile with 5 vertices", pentagonObj && pentagonObj.userData.closed === true && pentagonObj.userData.sides === 5 && pentagonObj.userData.points.length === 5);
+
+    // Test 53b: Checkpoint C - Polygon Extrusion into 3D Solid
+    selectObject(pentagonObj);
+    const extrudedPoly = extrudeSelectedProfile(15);
+    assertTest("Checkpoint C: Polygon closed profile is extrudable into 3D solid", extrudedPoly && extrudedPoly.userData.type === "ExtrudedSolid" && extrudedPoly.geometry.attributes.position.count > 0);
+
+    // Test 53c: Checkpoint C - Polygon Regular N-Gon Variants (3=Triangle, 4=Square, 6=Hexagon)
+    const tri = createPolygonSketch(new THREE.Vector3(10, 0, 0), 8, 3, "top");
+    const hex = createPolygonSketch(new THREE.Vector3(30, 0, 0), 8, 6, "top");
+    assertTest("Checkpoint C: Regular polygons created for triangle (3 sides) and hexagon (6 sides)", tri.userData.sides === 3 && hex.userData.sides === 6);
+
+    // Test 53d: Checkpoint C - Single Undo removes polygon
+    const countBeforePolyUndo = sceneObjects.length;
+    createPolygonSketch(new THREE.Vector3(0, 0, 0), 10, 5, "top");
+    executeUndo();
+    assertTest("Checkpoint C: Single Undo cleanly removes polygon sketch", sceneObjects.length === countBeforePolyUndo);
+
+    // Test 54: Checkpoint D - Numeric Easter Eggs (67, 69, 420)
+    const easterEggModal = document.getElementById("modal-nice-easter-egg");
+    if (easterEggModal && easterEggModal.open) easterEggModal.close();
+
+    // Test 69 trigger
+    checkNumericEasterEgg("69");
+    const egg69Open = easterEggModal && easterEggModal.open;
+    const eggTextEl = document.getElementById("nice-easter-egg-text");
+    const exactNiceText = eggTextEl && eggTextEl.textContent.trim() === "nice.";
+    if (easterEggModal && easterEggModal.open) easterEggModal.close();
+
+    // Test 67 and 420
+    checkNumericEasterEgg("67");
+    const egg67Open = easterEggModal && easterEggModal.open;
+    if (easterEggModal && easterEggModal.open) easterEggModal.close();
+
+    checkNumericEasterEgg("420");
+    const egg420Open = easterEggModal && easterEggModal.open;
+    if (easterEggModal && easterEggModal.open) easterEggModal.close();
+
+    // Substrings must NOT trigger
+    checkNumericEasterEgg("167");
+    const sub167Triggered = easterEggModal && easterEggModal.open;
+    checkNumericEasterEgg("4200");
+    const sub4200Triggered = easterEggModal && easterEggModal.open;
+    checkNumericEasterEgg("690");
+    const sub690Triggered = easterEggModal && easterEggModal.open;
+
+    assertTest("Checkpoint D: Exact numbers 67, 69, 420 trigger popup with 'nice.' and substrings do not", egg69Open && exactNiceText && egg67Open && egg420Open && !sub167Triggered && !sub4200Triggered && !sub690Triggered);
+
+    // Test 54b: Checkpoint D - Command execution with easter egg preserves intended modeling operation
+    const sceneLenBeforeEggCmd = sceneObjects.length;
+    processRequest("Can I box 69");
+    const eggCmdBox = sceneObjects[sceneObjects.length - 1];
+    const eggBoxCreated = sceneObjects.length === sceneLenBeforeEggCmd + 1 && eggCmdBox.userData.type === "Box";
+    if (easterEggModal && easterEggModal.open) easterEggModal.close();
+    assertTest("Checkpoint D: Command containing easter egg value preserves modeling operation and creates geometry", eggBoxCreated === true);
+
+    // Test 55: Checkpoint E - Rhino-Style Lock & Unlock
+    createBoxPrimitive();
+    const lockTarget = sceneObjects[sceneObjects.length - 1];
+    selectObject(lockTarget);
+    processRequest("Can I lock");
+    assertTest("Checkpoint E: 'Can I lock' locks selected object (userData.locked = true)", lockTarget.userData.locked === true);
+    assertTest("Checkpoint E: Locked object is cleared from active selection", !selectedObjects.includes(lockTarget));
+
+    // Try selecting locked object directly
+    selectObject(lockTarget);
+    assertTest("Checkpoint E: Direct selection of locked object is refused", !selectedObjects.includes(lockTarget));
+
+    // Try deleting locked object
+    selectedObjects = [lockTarget];
+    const lenBeforeDeleteLocked = sceneObjects.length;
+    handleDelete();
+    assertTest("Checkpoint E: Locked object is protected from deletion", sceneObjects.length === lenBeforeDeleteLocked && sceneObjects.includes(lockTarget));
+    selectedObjects = [];
+
+    // Checkpoint E: FeatureManager shows lock icon
+    updateObjectsTree();
+    const lockBadgeEl = document.querySelector(`.obj-lock-badge[data-id="${lockTarget.userData.id}"]`);
+    assertTest("Checkpoint E: FeatureManager renders clickable 🔒 lock indicator for locked object", !!lockBadgeEl);
+
+    // Unlock via 'Can I unlock'
+    processRequest("Can I unlock");
+    assertTest("Checkpoint E: 'Can I unlock' unlocks object (userData.locked = false)", lockTarget.userData.locked === false);
+
+    // Lock again and unlock via FeatureManager click
+    selectObject(lockTarget);
+    processRequest("Can I lock");
+    updateObjectsTree();
+    const lockBadgeEl2 = document.querySelector(`.obj-lock-badge[data-id="${lockTarget.userData.id}"]`);
+    if (lockBadgeEl2) lockBadgeEl2.click();
+    assertTest("Checkpoint E: Clicking lock icon in FeatureManager unlocks specific object", lockTarget.userData.locked === false);
+
+    // Checkpoint E: Lock preserved across serialization
+    selectObject(lockTarget);
+    processRequest("Can I lock");
+    const serializedWithLock = JSON.parse(serializeProjectState());
+    const serializedLockEntry = serializedWithLock.objects.find(o => o.name === lockTarget.name);
+    assertTest("Checkpoint E: Object lock state is preserved in project serialization", serializedLockEntry && serializedLockEntry.userData && serializedLockEntry.userData.locked === true);
+    processRequest("Can I unlock");
+
+    // Test 56: Checkpoint F - Slowly Escaping Spheres
+    createSpherePrimitive();
+    const escapingSphere = sceneObjects[sceneObjects.length - 1];
+    escapingSphere.position.set(0, 8, 0);
+    const startSpherePos = escapingSphere.position.clone();
+    updateEscapingSpheres(1.0); // simulate 1.0 second elapsed
+    const movedDist = escapingSphere.position.distanceTo(startSpherePos);
+    assertTest("Checkpoint F: Eligible sphere moves over time at approximately 0.05 units/sec", movedDist >= 0.04 && movedDist <= 0.06);
+
+    // Test 56b: Checkpoint F - Locking sphere immediately halts movement
+    selectObject(escapingSphere);
+    processRequest("Can I lock");
+    const posWhenLocked = escapingSphere.position.clone();
+    updateEscapingSpheres(1.0);
+    const movedWhenLocked = escapingSphere.position.distanceTo(posWhenLocked);
+    assertTest("Checkpoint F: Locking the sphere immediately stops escape movement", movedWhenLocked === 0.0);
+
+    // Test 56c: Checkpoint F - Unlocking resumes movement
+    processRequest("Can I unlock");
+    updateEscapingSpheres(1.0);
+    const movedWhenUnlocked = escapingSphere.position.distanceTo(posWhenLocked);
+    assertTest("Checkpoint F: Unlocking the sphere resumes escape movement", movedWhenUnlocked >= 0.04);
+
+    // Test 56d: Checkpoint F - Non-spherical objects do not move
+    createBoxPrimitive();
+    const testStaticBox = sceneObjects[sceneObjects.length - 1];
+    testStaticBox.position.set(20, 7, 20);
+    const startBoxPos = testStaticBox.position.clone();
+    updateEscapingSpheres(1.0);
+    assertTest("Checkpoint F: Non-spherical objects do not move over time", testStaticBox.position.distanceTo(startBoxPos) === 0.0);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
