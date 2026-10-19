@@ -2382,7 +2382,7 @@ function createConePrimitive() {
 }
 
 // 4.4 2D Sketching Engine & Vertex Snapping
-let activeSketchMode = null; // 'line' | 'rect' | 'circle'
+let activeSketchMode = null; // 'line' | 'polyline' | 'rect' | 'circle' | 'spline'
 let sketchPoints = [];
 let rubberbandObj = null;
 let lastPointerCPlanePos = null;
@@ -2634,7 +2634,7 @@ function findSnapPoint(testPt, vpId, snapThreshold = 3.5, customRaycaster = null
   const allCandidates = [];
 
   // 1. Current sketch points (P0 is highest priority to close profile)
-  if (activeSketchMode === "line" && sketchPoints.length > 0) {
+  if ((activeSketchMode === "line" || activeSketchMode === "polyline" || activeSketchMode === "spline") && sketchPoints.length > 0) {
     const p0 = sketchPoints[0];
     allCandidates.push({
       point: p0.clone(),
@@ -3036,6 +3036,79 @@ function setupCircleCommand() {
   };
 }
 
+function setupSplineCommand() {
+  const bar = document.getElementById("command-bar");
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  if (!bar || !badge || !prompt || !params || !confirmBtn || !cancelBtn) return;
+
+  bar.style.display = "flex";
+  badge.textContent = "SPLINE";
+  prompt.textContent = `Click in active viewport (${activeViewport.toUpperCase()}) to place Control Point 1 (need ≥ 3 points).`;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "✓ Finish (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:2px; font-weight:bold;">Plane:</span>
+    <select id="spline-param-plane" class="prop-input" style="height:20px; font-size:11px; width:95px;">
+      <option value="top" ${activeViewport === "top" ? "selected" : ""}>Top (X/Z)</option>
+      <option value="front" ${activeViewport === "front" ? "selected" : ""}>Front (X/Y)</option>
+      <option value="right" ${activeViewport === "right" ? "selected" : ""}>Right (Z/Y)</option>
+      <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
+    </select>
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Points:</span>
+    <input id="spline-param-count" class="prop-input" value="0 points (min 3)" readonly style="width:95px; height:20px;">
+    <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Next CP:</span>
+    <input id="spline-param-coords" class="prop-input" placeholder="X, Y, Z" style="width:90px; height:20px;">
+  `;
+
+  const planeSel = document.getElementById("spline-param-plane");
+  if (planeSel) {
+    planeSel.onchange = () => {
+      setActiveViewport(planeSel.value);
+      focusActiveCanvas();
+      status(`Spline: C-Plane switched to ${planeSel.value.toUpperCase()}`);
+    };
+  }
+
+  const coordsInp = document.getElementById("spline-param-coords");
+  if (coordsInp) {
+    coordsInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const parts = coordsInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          const pt = new THREE.Vector3(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+          handleSketchClick(pt, activeViewport);
+          coordsInp.value = "";
+        }
+      }
+    };
+  }
+
+  confirmBtn.onclick = () => {
+    if (sketchPoints.length >= 3) {
+      clearPreviewObjects();
+      const splineObj = createSplineSketch(sketchPoints, activeViewport);
+      cancelSketch();
+      selectObject(splineObj);
+      renderAllViewports();
+    } else {
+      status("Spline requires at least 3 control points.");
+    }
+  };
+
+  cancelBtn.onclick = () => {
+    cancelSketch();
+    status("Spline command cancelled.");
+  };
+}
+
 function startSketch(mode) {
   cancelSketch();
   activeSketchMode = mode;
@@ -3056,6 +3129,10 @@ function startSketch(mode) {
     setupCircleCommand();
     status("Circle Sketch: Click center point on C-Plane. (Esc to cancel)");
     addLog(`Entered CIRCLE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
+  } else if (mode === "spline") {
+    setupSplineCommand();
+    status("Spline Sketch: Click control points on C-Plane (min 3). (Esc to cancel, Enter to finish)");
+    addLog(`Entered SPLINE sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
   } else {
     status(`Sketch ${mode.toUpperCase()}: Click in active viewport on C-Plane. Press Escape to cancel.`);
     addLog(`Entered ${mode.toUpperCase()} sketch mode on ${activeViewport.toUpperCase()} C-Plane.`, "log-info");
@@ -3268,6 +3345,51 @@ function updateRubberband(currentPt, vp) {
     if (coordsReadout) {
       coordsReadout.textContent = `Circle: Center (${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}) | R: ${radius.toFixed(1)} mm, D: ${(radius * 2).toFixed(1)} mm`;
     }
+  } else if (activeSketchMode === "spline") {
+    const allPts = [...sketchPoints, currentPt];
+    const group = new THREE.Group();
+    group.name = "Sketch_Rubberband";
+    group.userData = { isTransientPreview: true };
+
+    const dotGeo = new THREE.SphereGeometry(0.8, 12, 12);
+    const dotMatComm = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+    const dotMatStart = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+
+    sketchPoints.forEach((p, idx) => {
+      const dot = new THREE.Mesh(dotGeo, idx === 0 ? dotMatStart : dotMatComm);
+      dot.position.copy(p);
+      group.add(dot);
+    });
+
+    const activeDot = new THREE.Mesh(dotGeo, dotMatStart);
+    activeDot.position.copy(currentPt);
+    group.add(activeDot);
+
+    // Faint control polygon
+    const polyGeo = new THREE.BufferGeometry().setFromPoints(allPts);
+    const polyMat = new THREE.LineBasicMaterial({ color: 0x808080, transparent: true, opacity: 0.5, linewidth: 1 });
+    group.add(new THREE.Line(polyGeo, polyMat));
+
+    // Live curved preview
+    if (allPts.length >= 3) {
+      const curve = new THREE.CatmullRomCurve3(allPts, false, "catmullrom", 0.5);
+      const curvePts = curve.getPoints(Math.max(50, (allPts.length - 1) * 20));
+      const curveGeo = new THREE.BufferGeometry().setFromPoints(curvePts);
+      const curveMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+      group.add(new THREE.Line(curveGeo, curveMat));
+    } else if (allPts.length === 2) {
+      const segGeo = new THREE.BufferGeometry().setFromPoints(allPts);
+      const segMat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+      group.add(new THREE.Line(segGeo, segMat));
+    }
+
+    rubberbandObj = group;
+    scene.add(rubberbandObj);
+
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      coordsReadout.textContent = `Spline CP ${sketchPoints.length + 1}: (${currentPt.x.toFixed(1)}, ${currentPt.y.toFixed(1)}, ${currentPt.z.toFixed(1)}) | Total CPs: ${allPts.length} ${allPts.length >= 3 ? '(Curved preview active)' : '(Need ≥ 3 CPs)'}`;
+    }
   }
 
   renderAllViewports();
@@ -3463,6 +3585,23 @@ function handleSketchClick(pt, vp) {
       selectObject(circleObj);
       renderAllViewports();
     }
+  } else if (activeSketchMode === "spline") {
+    sketchPoints.push(activePt.clone());
+    const countInp = document.getElementById("spline-param-count");
+    if (countInp) countInp.value = `${sketchPoints.length} point${sketchPoints.length === 1 ? '' : 's'}`;
+    const prompt = document.getElementById("command-prompt");
+    const confirmBtn = document.getElementById("btn-cmd-confirm");
+
+    if (sketchPoints.length < 3) {
+      if (prompt) prompt.textContent = `CP ${sketchPoints.length} placed at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Need ${3 - sketchPoints.length} more point(s) to form curve.`;
+      if (confirmBtn) confirmBtn.disabled = true;
+      status(`Spline: Placed CP ${sketchPoints.length} at (${activePt.x.toFixed(1)}, ${activePt.y.toFixed(1)}, ${activePt.z.toFixed(1)}). Click next point (need at least 3).`);
+    } else {
+      if (prompt) prompt.textContent = `CP ${sketchPoints.length} placed. Ready! Click next point, or click [✓ Finish (Enter)] to complete spline.`;
+      if (confirmBtn) confirmBtn.disabled = false;
+      status(`Spline: Placed CP ${sketchPoints.length}. Ready! Press Enter or [✓ Finish] when done.`);
+    }
+    return;
   }
 }
 
@@ -3601,6 +3740,157 @@ function createCircleSketch(center, radius, planeName) {
   status(`Created ${name}`);
   recordModelingCommand();
   return line;
+}
+
+function createSplineSketch(points, planeName) {
+  recordUndoState("Spline Sketch");
+  const controlPoints = points.map(p => (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z));
+  const curve = new THREE.CatmullRomCurve3(controlPoints, false, "catmullrom", 0.5);
+  const sampledPoints = curve.getPoints(Math.max(50, (controlPoints.length - 1) * 20));
+  const geo = new THREE.BufferGeometry().setFromPoints(sampledPoints);
+  const mat = new THREE.LineBasicMaterial({
+    color: 0x00e5ff,
+    linewidth: 2
+  });
+  const line = new THREE.Line(geo, mat);
+
+  const name = "Spline_" + (++primitiveCounter);
+  line.name = name;
+  line.userData = {
+    id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+    isStartingObject: false,
+    type: "SplineCurve",
+    layer: getActiveLayer().name,
+    protected: false,
+    closed: false,
+    controlPoints: controlPoints,
+    points: sampledPoints,
+    plane: planeName,
+    curveType: "catmullrom",
+    tension: 0.5,
+    selectedControlPointIndex: 0
+  };
+
+  scene.add(line);
+  sceneObjects.push(line);
+  updateObjectsTree();
+  selectObject(line);
+  addLog(`Created Spline curve ${name} (${controlPoints.length} control points).`, "log-success");
+  status(`Created ${name}`);
+  recordModelingCommand();
+  return line;
+}
+
+function rebuildSplineGeometry(splineObj) {
+  if (!splineObj || !splineObj.userData || !splineObj.userData.controlPoints) return;
+  const cps = splineObj.userData.controlPoints;
+  if (cps.length < 2) return;
+  const curveType = splineObj.userData.curveType || "catmullrom";
+  const tension = splineObj.userData.tension !== undefined ? splineObj.userData.tension : 0.5;
+  const curve = new THREE.CatmullRomCurve3(cps, false, curveType, tension);
+  const sampledPoints = curve.getPoints(Math.max(50, (cps.length - 1) * 20));
+
+  splineObj.geometry.dispose();
+  splineObj.geometry = new THREE.BufferGeometry().setFromPoints(sampledPoints);
+  splineObj.userData.points = sampledPoints;
+
+  updateSplineHandles(splineObj);
+  renderAllViewports();
+}
+
+let splineHandlesGroup = null;
+let splineDragState = null;
+
+function initSplineHandles() {
+  if (splineHandlesGroup) return;
+  splineHandlesGroup = new THREE.Group();
+  splineHandlesGroup.name = "Spline_Handles_Group";
+  splineHandlesGroup.renderOrder = 9998;
+  splineHandlesGroup.visible = false;
+  scene.add(splineHandlesGroup);
+}
+
+function updateSplineHandles(splineObj) {
+  if (!splineHandlesGroup) initSplineHandles();
+  while (splineHandlesGroup.children.length > 0) {
+    const c = splineHandlesGroup.children.pop();
+    if (c.geometry) c.geometry.dispose();
+  }
+
+  if (!splineObj || !splineObj.userData || splineObj.userData.type !== "SplineCurve") {
+    splineHandlesGroup.visible = false;
+    return;
+  }
+
+  const cps = splineObj.userData.controlPoints || [];
+  if (cps.length === 0) {
+    splineHandlesGroup.visible = false;
+    return;
+  }
+
+  splineHandlesGroup.visible = true;
+  splineObj.updateMatrixWorld(true);
+  const worldCPs = cps.map(cp => cp.clone().applyMatrix4(splineObj.matrixWorld));
+
+  const polyGeo = new THREE.BufferGeometry().setFromPoints(worldCPs);
+  const polyMat = new THREE.LineBasicMaterial({ color: 0x808080, transparent: true, opacity: 0.5, linewidth: 1 });
+  const polyLine = new THREE.Line(polyGeo, polyMat);
+  polyLine.userData = { isSplineControlPolygon: true };
+  splineHandlesGroup.add(polyLine);
+
+  const activeIndex = splineObj.userData.selectedControlPointIndex || 0;
+  const sphereGeo = new THREE.SphereGeometry(1.2, 12, 12);
+  const matActive = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+  const matInactive = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+
+  worldCPs.forEach((wcp, idx) => {
+    const handleMesh = new THREE.Mesh(sphereGeo, idx === activeIndex ? matActive : matInactive);
+    handleMesh.position.copy(wcp);
+    handleMesh.userData = {
+      isSplineHandle: true,
+      splineObj: splineObj,
+      controlPointIndex: idx
+    };
+    splineHandlesGroup.add(handleMesh);
+  });
+}
+
+function hideSplineHandles() {
+  if (splineHandlesGroup) {
+    splineHandlesGroup.visible = false;
+    while (splineHandlesGroup.children.length > 0) {
+      const c = splineHandlesGroup.children.pop();
+      if (c.geometry) c.geometry.dispose();
+    }
+  }
+}
+
+function handleSplineDragMove(e, vpId) {
+  if (!splineDragState) return;
+  const vp = viewports[vpId];
+  if (!vp || !vp.canvas) return;
+  const rect = vp.canvas.getBoundingClientRect();
+  const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const ndcY = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+  const cam = cameras[vpId];
+  raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), cam);
+  const plane = splineDragState.plane;
+  const intersectPt = new THREE.Vector3();
+  if (raycaster.ray.intersectPlane(plane, intersectPt)) {
+    intersectPt.x = Math.round(intersectPt.x * 2) / 2;
+    intersectPt.y = Math.round(intersectPt.y * 2) / 2;
+    intersectPt.z = Math.round(intersectPt.z * 2) / 2;
+    const splineObj = splineDragState.splineObj;
+    splineObj.updateMatrixWorld(true);
+    const invMat = new THREE.Matrix4().copy(splineObj.matrixWorld).invert();
+    const localPt = intersectPt.clone().applyMatrix4(invMat);
+    splineObj.userData.controlPoints[splineDragState.cpIndex].copy(localPt);
+    rebuildSplineGeometry(splineObj);
+    const coordsReadout = document.getElementById("coords-readout");
+    if (coordsReadout) {
+      coordsReadout.textContent = `CP #${splineDragState.cpIndex + 1}: (${localPt.x.toFixed(1)}, ${localPt.y.toFixed(1)}, ${localPt.z.toFixed(1)})`;
+    }
+  }
 }
 
 // 4.5 Extrusion Engine
@@ -4179,6 +4469,12 @@ function selectObject(obj, multi = false) {
     if (selectedObjects.length === 0) isGumballActive = false;
   }
 
+  if (selectedObjects.length === 1 && selectedObjects[0].userData && selectedObjects[0].userData.type === "SplineCurve") {
+    updateSplineHandles(selectedObjects[0]);
+  } else {
+    hideSplineHandles();
+  }
+
   updatePropertiesPanel();
   updateObjectsTree();
   updateGumball();
@@ -4193,6 +4489,7 @@ function clearSelection() {
   selectedObjects.forEach(o => highlightObject(o, false));
   selectedObjects = [];
   isGumballActive = false;
+  hideSplineHandles();
   updatePropertiesPanel();
   updateObjectsTree();
   updateGumball();
@@ -4411,8 +4708,9 @@ function handleGumballDragMove(e, vpId) {
   }
 }
 
-// Instantiate Gumball on scene
+// Instantiate Gumball and Spline Handles on scene
 initGumball();
+initSplineHandles();
 
 function highlightObject(obj, active) {
   obj.traverse(child => {
@@ -4513,6 +4811,38 @@ function updatePropertiesPanel() {
         </div>
       </div>`;
     })() : ""}
+    ${obj.userData.type === "SplineCurve" && obj.userData.controlPoints && obj.userData.controlPoints.length >= 2 ? (() => {
+      const cps = obj.userData.controlPoints;
+      const activeIdx = Math.min(Math.max(0, obj.userData.selectedControlPointIndex || 0), cps.length - 1);
+      const activeCP = cps[activeIdx];
+      const curveLen = computePolylineLength(obj.userData.points || cps);
+      return `
+      <div class="prop-group">
+        <div class="prop-label">Spline Curve</div>
+        <div style="font-size:11px; line-height:1.6; background:var(--bg-canvas); padding:4px 6px; border:1px inset #808080;">
+          <div><b>Control Points:</b> ${cps.length} CPs</div>
+          <div><b>Sampled Length:</b> ~${curveLen.toFixed(1)} mm</div>
+          <div><b>Curve Type:</b> Catmull-Rom</div>
+          <div><b>Plane:</b> ${(obj.userData.plane || 'Top').toUpperCase()}</div>
+        </div>
+      </div>
+      <div class="prop-group">
+        <div class="prop-label">Active Control Point</div>
+        <div class="prop-row">
+          <select class="prop-input" id="prop-spline-cp-select" style="flex:1;">
+            ${cps.map((cp, idx) => `<option value="${idx}" ${idx === activeIdx ? "selected" : ""}>CP #${idx + 1} (${cp.x.toFixed(1)}, ${cp.y.toFixed(1)}, ${cp.z.toFixed(1)})</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="prop-group">
+        <div class="prop-label">CP Position (X, Y, Z)</div>
+        <div class="prop-row">
+          <input class="prop-input" id="prop-spline-cp-x" type="number" step="1" value="${activeCP.x.toFixed(1)}">
+          <input class="prop-input" id="prop-spline-cp-y" type="number" step="1" value="${activeCP.y.toFixed(1)}">
+          <input class="prop-input" id="prop-spline-cp-z" type="number" step="1" value="${activeCP.z.toFixed(1)}">
+        </div>
+      </div>`;
+    })() : ""}
     ${(obj.userData.type === "FilletedSolid" || obj.userData.type === "ChamferedSolid") && obj.userData.filletParams ? `
     <div class="prop-group">
       <div class="prop-label">${obj.userData.type === "FilletedSolid" ? "Fillet Parameters" : "Chamfer Parameters"}</div>
@@ -4589,6 +4919,9 @@ function updatePropertiesPanel() {
       if (!isNaN(val)) {
         callback(val);
         obj.updateMatrixWorld(true);
+        if (obj.userData && obj.userData.type === "SplineCurve") {
+          updateSplineHandles(obj);
+        }
       }
     };
   }
@@ -4604,6 +4937,44 @@ function updatePropertiesPanel() {
   bindInput("prop-scale-x", v => obj.scale.x = Math.max(0.01, v));
   bindInput("prop-scale-y", v => obj.scale.y = Math.max(0.01, v));
   bindInput("prop-scale-z", v => obj.scale.z = Math.max(0.01, v));
+
+  const cpSel = document.getElementById("prop-spline-cp-select");
+  if (cpSel) {
+    cpSel.onchange = () => {
+      obj.userData.selectedControlPointIndex = parseInt(cpSel.value);
+      updateSplineHandles(obj);
+      updatePropertiesPanel();
+      renderAllViewports();
+    };
+  }
+
+  const cpX = document.getElementById("prop-spline-cp-x");
+  const cpY = document.getElementById("prop-spline-cp-y");
+  const cpZ = document.getElementById("prop-spline-cp-z");
+  const handleCpCoordChange = () => {
+    const activeIdx = obj.userData.selectedControlPointIndex || 0;
+    const nx = parseFloat(cpX.value);
+    const ny = parseFloat(cpY.value);
+    const nz = parseFloat(cpZ.value);
+    if (!isNaN(nx) && !isNaN(ny) && !isNaN(nz)) {
+      recordUndoState("Move Spline Control Point");
+      obj.userData.controlPoints[activeIdx].set(nx, ny, nz);
+      rebuildSplineGeometry(obj);
+      updatePropertiesPanel();
+      status(`Spline CP #${activeIdx + 1} moved to (${nx.toFixed(1)}, ${ny.toFixed(1)}, ${nz.toFixed(1)}).`);
+    }
+  };
+  if (cpX && cpY && cpZ) {
+    [cpX, cpY, cpZ].forEach(inp => {
+      inp.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleCpCoordChange();
+        }
+      };
+      inp.onchange = handleCpCoordChange;
+    });
+  }
 
   const extrudeBtn = document.getElementById("btn-prop-extrude");
   if (extrudeBtn) {
@@ -5291,6 +5662,7 @@ function deserializeProjectState(jsonStr) {
   sceneObjects.length = 0;
   selectedObjects = [];
   michiganModel = null;
+  hideSplineHandles();
 
   // Restore economy
   if (typeof data.creditBalance === "number") {
@@ -5336,7 +5708,12 @@ function deserializeProjectState(jsonStr) {
         const line = isClosed ? new THREE.LineLoop(geo, mat) : new THREE.Line(geo, mat);
         line.name = item.name;
         line.userData = item.userData || {};
-        if (isClosed && line.userData.points && line.userData.points.length >= 3) {
+        if (line.userData.type === "SplineCurve" && line.userData.controlPoints) {
+          line.userData.controlPoints = line.userData.controlPoints.map(p =>
+            (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z)
+          );
+          rebuildSplineGeometry(line);
+        } else if (isClosed && line.userData.points && line.userData.points.length >= 3) {
           const planeName = line.userData.plane || "top";
           const pts2d = line.userData.points.map(p => {
             if (planeName === "top" || planeName === "perspective") return { u: p.x, v: p.z };
@@ -5540,7 +5917,7 @@ function exportProjectGeometry(format = "stl", applyDistortion = true, onlySelec
 
   targets.forEach(obj => {
     obj.traverse(child => {
-      if (child.isMesh && !child.isLineSegments && child.geometry) {
+      if (child.isMesh && !child.isLineSegments && child.geometry && !child.userData.isSplineHandle && !child.userData.isTransientPreview) {
         const clone = child.clone();
         clone.applyMatrix4(child.matrixWorld);
         if (applyDistortion) {
@@ -7925,6 +8302,20 @@ function executeCommand(rawCmd) {
       }
       break;
 
+    case "spline":
+      if (args.length >= 3 && args[0].includes(",")) {
+        const pts = args.map(arg => {
+          const coords = arg.split(",").map(Number);
+          return new THREE.Vector3(coords[0] || 0, coords[1] || 0, coords[2] || 0);
+        });
+        if (pts.length >= 3) {
+          createSplineSketch(pts, activeViewport);
+          break;
+        }
+      }
+      startSketch("spline");
+      break;
+
     case "extrude":
       if (args.length >= 1 && selectedObjects.some(o => o.userData && o.userData.closed && o.userData.shape)) {
         const depth = parseFloat(args[0]);
@@ -8122,6 +8513,7 @@ function handleDelete() {
     if (idx !== -1) sceneObjects.splice(idx, 1);
   });
   selectedObjects = [];
+  hideSplineHandles();
   updateObjectsTree();
   updatePropertiesPanel();
   addLog(`Deleted ${toRemove.length} object(s).`, "log-success");
@@ -8242,7 +8634,7 @@ function executeToolbarCommand(cmd) {
     case "line": startSketch("line"); break;
     case "rect": startSketch("rect"); break;
     case "circle": startSketch("circle"); break;
-    case "spline": startSketch("line"); break;
+    case "spline": startSketch("spline"); break;
     case "extrude": startModelingCommand("extrude"); break;
     case "union": startModelingCommand("union"); break;
     case "difference": startModelingCommand("difference"); break;
@@ -8436,6 +8828,33 @@ function handleViewportPointerDown(e, vpId) {
         };
         recordUndoState(`Gumball ${action.toUpperCase()} ${axis.toUpperCase()}`);
         status(`Gumball: Dragging ${axis.toUpperCase()} ${action}...`);
+        return;
+      }
+    }
+  }
+
+  // 2b. Spline Handle direct dragging & selection
+  if (splineHandlesGroup && splineHandlesGroup.visible && e.button === 0) {
+    const handleHits = raycaster.intersectObjects(splineHandlesGroup.children, true);
+    if (handleHits.length > 0) {
+      const hitHandle = handleHits.find(h => h.object.userData && h.object.userData.isSplineHandle);
+      if (hitHandle) {
+        const handle = hitHandle.object;
+        const splineObj = handle.userData.splineObj;
+        const cpIndex = handle.userData.controlPointIndex;
+        splineObj.userData.selectedControlPointIndex = cpIndex;
+        updateSplineHandles(splineObj);
+        updatePropertiesPanel();
+
+        const plane = getCPlane(vpId);
+        splineDragState = {
+          splineObj: splineObj,
+          cpIndex: cpIndex,
+          vpId: vpId,
+          plane: plane,
+          startSnapshot: serializeProjectState()
+        };
+        status(`Spline: Dragging control point ${cpIndex + 1}...`);
         return;
       }
     }
@@ -8774,6 +9193,20 @@ window.addEventListener("keydown", (e) => {
 
   if (activeSketchMode) {
     if (e.key === "Enter") {
+      if (activeSketchMode === "spline") {
+        if (sketchPoints.length >= 3) {
+          clearPreviewObjects();
+          const splineObj = createSplineSketch(sketchPoints, activeViewport);
+          cancelSketch();
+          selectObject(splineObj);
+          renderAllViewports();
+        } else {
+          status("Spline requires at least 3 control points.");
+        }
+        e.preventDefault();
+        debugTelemetry.defaultPrevented = true;
+        return;
+      }
       if (activeSketchMode === "line" && sketchPoints.length >= 3) {
         createLineSketch(sketchPoints, activeViewport, true);
         cancelSketch();
@@ -8879,11 +9312,27 @@ window.addEventListener("pointerup", () => {
       recordModelingCommand();
     }
   }
+
+  if (splineDragState) {
+    if (splineDragState.startSnapshot) {
+      undoStack.push({ desc: "Move Spline Control Point", snapshot: splineDragState.startSnapshot });
+      if (undoStack.length > 30) undoStack.shift();
+      redoStack.length = 0;
+    }
+    splineDragState = null;
+    updatePropertiesPanel();
+    updateObjectsTree();
+    status("Spline control point updated.");
+    renderAllViewports();
+  }
 });
 
 window.addEventListener("pointermove", (e) => {
   if (gumballDragState) {
     handleGumballDragMove(e, gumballDragState.vpId);
+  }
+  if (splineDragState) {
+    handleSplineDragMove(e, splineDragState.vpId);
   }
 });
 
@@ -9887,6 +10336,67 @@ function runAllTests() {
     // Verify single Undo removes circle
     executeUndo();
     assertTest("Single Undo removes complete circle entity", sceneObjects.length === countBeforeCircle);
+
+    // Test 14b: Spline Interactive Sketch Workflow & Control Point Accumulation
+    const countBeforeSpline = sceneObjects.length;
+    startSketch("spline");
+    assertTest("Spline command enters spline sketch mode on active C-Plane", activeSketchMode === "spline");
+    const splineConfirmBtn = document.getElementById("btn-cmd-confirm");
+    handleSketchClick(new THREE.Vector3(-20, 0, 0), "top");
+    assertTest("Spline CP 1 sets first control point without committing (Finish disabled)", sceneObjects.length === countBeforeSpline && sketchPoints.length === 1 && splineConfirmBtn.disabled === true);
+    handleSketchClick(new THREE.Vector3(0, 0, 25), "top");
+    assertTest("Spline CP 2 sets second control point without committing (Finish disabled)", sceneObjects.length === countBeforeSpline && sketchPoints.length === 2 && splineConfirmBtn.disabled === true);
+    handleSketchClick(new THREE.Vector3(20, 0, 0), "top");
+    assertTest("Spline CP 3 enables Finish control (>= 3 points available)", sceneObjects.length === countBeforeSpline && sketchPoints.length === 3 && splineConfirmBtn.disabled === false);
+
+    // Test 14c: Spline Finish Commits Exactly One Editable Spline Entity
+    splineConfirmBtn.click();
+    assertTest("Spline Finish commits exactly one SplineCurve entity and auto-exits sketch mode", sceneObjects.length === countBeforeSpline + 1 && activeSketchMode === null);
+    const createdSpline = sceneObjects[sceneObjects.length - 1];
+    assertTest("Created spline has SplineCurve type and preserves 3 control points", createdSpline && createdSpline.userData.type === "SplineCurve" && createdSpline.userData.controlPoints.length === 3);
+
+    // Test 14d: Smooth Curvature Verification (Three.js CatmullRomCurve3 vs Straight Chord)
+    const splinePosAttr = createdSpline.geometry.attributes.position;
+    const vertexCount = splinePosAttr ? splinePosAttr.count : 0;
+    assertTest("Spline geometry contains >= 50 sampled curve vertices (smooth curve representation)", vertexCount >= 50);
+
+    // Sample intermediate points to prove genuine curvature (not a straight line)
+    let maxZ = -Infinity;
+    let intermediateHasCurve = false;
+    for (let i = 0; i < vertexCount; i++) {
+      const vx = splinePosAttr.getX(i);
+      const vz = splinePosAttr.getZ(i);
+      if (vz > maxZ) maxZ = vz;
+      // Midpoint between -20 and 0 has X ~ -10. On straight chord Z would be 0. On 3-pt curve Z should be ~14.
+      if (Math.abs(vx - (-10)) < 2.0 && vz > 10.0) {
+        intermediateHasCurve = true;
+      }
+    }
+    assertTest("Spline exhibits genuine continuous curvature (peak Z=25, intermediate Z>10, non-zero chord deviation)", maxZ >= 24.5 && intermediateHasCurve === true);
+
+    // Test 14e: Control Point Selection and Dynamic Modification
+    selectObject(createdSpline);
+    assertTest("Selecting Spline activates interactive 3D control point handles group", splineHandlesGroup && splineHandlesGroup.visible === true);
+    // Modify CP #2 apex to Z=40
+    createdSpline.userData.controlPoints[1].set(0, 0, 40);
+    rebuildSplineGeometry(createdSpline);
+    let newMaxZ = -Infinity;
+    for (let i = 0; i < createdSpline.geometry.attributes.position.count; i++) {
+      const vz = createdSpline.geometry.attributes.position.getZ(i);
+      if (vz > newMaxZ) newMaxZ = vz;
+    }
+    assertTest("Modifying spline control point dynamically rebuilds curved geometry to new apex (Z=40)", newMaxZ >= 39.5);
+
+    // Test 14f: Spline Project Serialization and Reopening
+    const splineJson = serializeProjectState();
+    assertTest("serializeProjectState serializes SplineCurve with controlPoints", splineJson.includes("SplineCurve") && splineJson.includes("controlPoints"));
+    deserializeProjectState(splineJson);
+    const reloadedSpline = sceneObjects.find(o => o.userData && o.userData.type === "SplineCurve");
+    assertTest("deserializeProjectState fully rehydrates SplineCurve with editable controlPoints", reloadedSpline && reloadedSpline.userData.controlPoints && reloadedSpline.userData.controlPoints.length === 3);
+
+    // Test 14g: Single Undo Removes Spline
+    executeUndo();
+    assertTest("Single Undo removes complete spline entity", sceneObjects.length === countBeforeSpline);
 
     // Test 15: Extrusion of Closed 2D Profile
     const rectForExtrude = createRectSketch(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(10, 0, 10), "top");

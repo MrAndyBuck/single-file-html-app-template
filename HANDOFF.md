@@ -25,6 +25,7 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. |
 | **Checkpoint A: Sketching Repair** | **YES** | **YES** | **YES** | **YES** | Rubberband preview duplication eliminated. 1 transient preview group, 1 committed entity, 4 boundary edges on rectangle, auto-exit, single-step undo removal, extrudable to 3D solid. Tested at DPR 1.0 & 2.0. **User Accepted via Safari hands-on testing.** |
 | **Checkpoint B: Header Redesign** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Blue title bar height doubled to 44px (from 22px), fixed width removed, `[Part1.prt : 4 Viewports]` removed, clean bold `CADN'T` branding and scaled retro caption buttons. |
 | **Checkpoint C: Functional Pipe Command** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `Can I pipe` & `#tool-pipe`. Command Bar with Radius/Diameter selector & live preview. Generates 100% watertight 2-manifold solid ($\chi=2$, open=0) with capped planar ends along straight lines and L-shaped polylines. Registered in FeatureManager (`PipeSolid`), 1 Undo step. Unsupported paths (e.g. solid box) reported with disabled Apply button. |
@@ -89,6 +90,34 @@
    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
    window.location.href = window.location.pathname + "?t=" + Date.now();
    ```
+
+---
+
+## 1.1 Checkpoint A: Spline Repair & Curvature Verification (Build v00000-015)
+
+### Problem & Diagnosis
+- Spline command previously called `startSketch("line")` in `executeToolbarCommand(cmd)`.
+- `executeCommand` lacked `case "spline":` handling.
+- No live Catmull-Rom curve preview, no control point accumulation, no interactive handles.
+
+### Solution Implemented
+1. **Interactive Spline Workflow**:
+   - `startSketch("spline")` configures `#command-bar` with `SPLINE` badge, prompt, plane selector, point counter, coordinate input, `[✓ Finish (Enter)]` (enabled when $\ge 3$ points), and `[✕ Cancel (Esc)]`.
+   - `updateRubberband`: Generates a live `THREE.CatmullRomCurve3` preview arc sampled with $\ge 50$ points in green, with faint control polygon connecting points.
+   - `createSplineSketch`: Commits single contiguous `SplineCurve` entity with `userData.controlPoints` and 51 sampled vertices.
+2. **Interactive 3D Handles & Properties Panel**:
+   - Helper group `splineHandlesGroup` attaches interactive 3D handles at control points with active selection highlight.
+   - Viewport handle dragging updates control points directly on the active C-plane.
+   - Object Properties panel exposes CP selector, direct numeric $(X, Y, Z)$ inputs, and triggers live `rebuildSplineGeometry`.
+3. **Curvature Proof & Non-Collinear Testing**:
+   - Tested at $P_0=(-20, 0, 0)$, $P_1=(0, 0, 25)$, $P_2=(20, 0, 0)$ on Top C-plane.
+   - Verified 51 vertices with continuous tangent variation and non-zero chord deviation ($Z \approx 15.0$ at $X \approx \pm 10.4$, vs $Z=0$ for straight chord).
+4. **Undo & Project Persistence**:
+   - Multi-level undo reverts CP moves and removes the spline in one step.
+   - `deserializeProjectState` rehydrates `controlPoints` as `THREE.Vector3` instances and rebuilds curve geometry.
+5. **Retina DPR 2.0 Testing**:
+   - Verified sharp rendering on emulated DPR 2.0 Retina display.
+   - All 7 screenshots captured and saved to `/Users/andybuck/Desktop/CADNT_Screenshots/`.
 
 ---
 
