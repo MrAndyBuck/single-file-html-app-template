@@ -1,5 +1,5 @@
 const APP_ID = "cadnt";
-const VERSION = "v00000-014";
+const VERSION = "v00000-015";
 const CACHE = APP_ID + "-" + VERSION;
 const FILES = [
   "./",

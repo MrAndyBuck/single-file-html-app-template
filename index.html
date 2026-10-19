@@ -63,13 +63,13 @@
     align-items: center;
     background: var(--win95-title-grad);
     color: #ffffff;
-    padding: 2px 3px 2px 4px;
-    height: 22px;
+    padding: 2px 4px;
+    height: 44px;
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     user-select: none;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     flex-shrink: 0;
   }
   .win95-title-content {
@@ -78,8 +78,6 @@
     gap: 8px;
     overflow: hidden;
     white-space: nowrap;
-    width: 420px;
-    min-width: 420px;
     padding: 0 4px;
   }
   .win95-window-controls {
@@ -87,11 +85,11 @@
     gap: 2px;
   }
   .win95-btn-caption {
-    width: 16px;
-    height: 14px;
-    font-size: 9px;
+    width: 22px;
+    height: 20px;
+    font-size: 11px;
     font-weight: bold;
-    line-height: 12px;
+    line-height: 18px;
     text-align: center;
     padding: 0;
     background: var(--win95-bg);
@@ -1109,14 +1107,14 @@
   <!-- 1. Classic Windows 95 Title Bar -->
   <div id="win95-title-bar" class="win95-title-bar">
     <div class="win95-title-content">
-      <svg class="win95-app-icon" viewBox="0 0 16 16" width="16" height="16">
+      <svg class="win95-app-icon" viewBox="0 0 16 16" width="24" height="24">
         <rect width="16" height="16" fill="#000080" />
         <polygon points="8,2 14,5 8,8 2,5" fill="#00ffff" />
         <polygon points="2,5 8,8 8,14 2,11" fill="#0000ff" />
         <polygon points="8,8 14,5 14,11 8,14" fill="#0080ff" />
         <line x1="2" y1="14" x2="14" y2="2" stroke="#ffff00" stroke-width="1.5" />
       </svg>
-      <span class="win95-title-text">CADN'T - [Part1.prt : 4 Viewports]</span>
+      <span class="win95-title-text" style="font-size: 14px; font-weight: bold; letter-spacing: 0.5px;">CADN'T</span>
     </div>
     <div class="win95-window-controls">
       <button class="win95-btn-caption" id="btn-win-min" title="Minimize">_</button>
@@ -1159,8 +1157,6 @@
       <div class="menu-dropdown">
         <div class="menu-dropdown-item" id="mitem-view-4">4-Viewport Matrix (Active)</div>
         <div class="menu-dropdown-item" id="mitem-view-reset">Reset Camera Views</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-view-sound">Toggle Audio Soundscape</div>
         <div class="menu-dropdown-separator"></div>
         <div class="menu-dropdown-item" id="mitem-view-hud">Toggle Diagnostic HUD</div>
       </div>
@@ -1241,7 +1237,6 @@
     <button class="win95-tb-btn text-tb-btn" id="btn-import-mesh" title="Import external STL or OBJ mesh ($10.00 fee)">Import</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-export-mesh" title="Export OBJ or STL file">Export</button>
     <div class="toolbar-sep"></div>
-    <button class="win95-tb-btn text-tb-btn" id="btn-audio-mute" title="Toggle Audio Synthesizer & Hold Music">🔊 Sound</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-tutorial-open" title="Open CADN'T onboarding handbook">Tutorial</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-help-open" title="Search CADN'T help index">Help</button>
     <button class="win95-tb-btn text-tb-btn" id="btn-about-open" title="About CADN'T">About</button>
@@ -1359,7 +1354,7 @@
       <div id="debug-overlay">
         <div class="debug-hud-header" id="debug-hud-toggle">
           <span class="debug-hud-title">🔍 DIAGNOSTIC HUD</span>
-          <span id="debug-hud-version" class="debug-badge">v00000-014</span>
+          <span id="debug-hud-version" class="debug-badge">v00000-015</span>
           <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
         </div>
         <div id="debug-hud-body" class="debug-hud-body">
@@ -1534,7 +1529,7 @@
           <svg viewBox="0 0 24 24"><path d="M4 18c4-8 10-12 16-12" fill="none"/><circle cx="4" cy="18" r="3" fill="none"/><path d="M17 3l4 3-4 3" fill="none"/></svg>
           <span>Sweep</span>
         </button>
-        <button class="tool-btn placeholder-tool" data-cmd="pipe" id="tool-pipe" title="Pipe along 3D Curve (Coming Soon)">
+        <button class="tool-btn" data-cmd="pipe" id="tool-pipe" title="Pipe: Create tubular 3D solid along curve">
           <svg viewBox="0 0 24 24"><path d="M4 19c6 0 8-10 16-10" fill="none"/><path d="M4 15c4 0 6-10 16-10" fill="none"/><ellipse cx="4" cy="17" rx="1.5" ry="2" fill="none"/><ellipse cx="20" cy="7" rx="1.5" ry="2" fill="none"/></svg>
           <span>Pipe</span>
         </button>
@@ -1605,7 +1600,7 @@
     <div id="coords-readout" class="status-panel">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div class="nav-hint status-panel">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
     <div class="status-panel status-credit" id="status-credit-panel">Tokens: $249.00</div>
-    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-014 ↻</button>
+    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-015 ↻</button>
   </footer>
 </div>
 
@@ -1721,7 +1716,7 @@
     <span class="win95-dialog-title">About CADN'T</span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-014</span></p>
+  <p><strong>Version</strong>: <span id="about-version">v00000-015</span></p>
   <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
   <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
   <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
@@ -1837,7 +1832,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-014",
+  version: "v00000-015",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -4362,8 +4357,8 @@ function handleGumballDragMove(e, vpId) {
   const delta = currentPt.clone().sub(gumballDragState.startHit);
 
   if (gumballDragState.mode === "free_move") {
-    // Deliberate slowdown multiplier: 0.04 (4% displacement)
-    const slowMultiplier = 0.04;
+    // Deliberate slowdown multiplier: 0.01 (1% displacement)
+    const slowMultiplier = 0.01;
     const slowDelta = delta.clone().multiplyScalar(slowMultiplier);
 
     if (slowDelta.lengthSq() > 0.000001) {
@@ -4671,11 +4666,11 @@ loadAssetManifest();
 
 const CADNT_AUDIO = {
   ctx: null,
-  mute: localStorage.getItem("cadnt_audio_mute") === "true",
+  mute: false,
   droneOsc: null,
   droneGain: null,
   holdMusicAudio: null,
-  volume: 0.85,
+  volume: 1.0,
 
   init() {
     if (!this.ctx && typeof AudioContext !== "undefined") {
@@ -5748,6 +5743,9 @@ function startModelingCommand(type, initialArgs = {}) {
       break;
     case "chamfer":
       setupFilletOrChamferCommand("chamfer", initialArgs);
+      break;
+    case "pipe":
+      setupPipeCommand(initialArgs);
       break;
     default:
       bar.style.display = "none";
@@ -7370,6 +7368,330 @@ function executeDirectEdgeCut(mode, param = 2.5) {
   startModelingCommand(mode, { val: param });
 }
 
+// 4.7 Functional Pipe Command & Capped Tubular Solid Generator
+function buildPipeSolidGeometry(points, radius, tubSeg = 32, radSeg = 16) {
+  if (!points || points.length < 2) return null;
+  const cleanPts = [];
+  for (let i = 0; i < points.length; i++) {
+    const pt = (points[i] && points[i].isVector3) ? points[i].clone() : new THREE.Vector3(points[i].x, points[i].y, points[i].z);
+    if (cleanPts.length === 0 || cleanPts[cleanPts.length - 1].distanceTo(pt) > 0.0001) {
+      cleanPts.push(pt);
+    }
+  }
+  if (cleanPts.length < 2) return null;
+
+  let curve;
+  if (cleanPts.length === 2) {
+    curve = new THREE.LineCurve3(cleanPts[0], cleanPts[1]);
+  } else {
+    const cp = new THREE.CurvePath();
+    for (let i = 0; i < cleanPts.length - 1; i++) {
+      cp.add(new THREE.LineCurve3(cleanPts[i], cleanPts[i + 1]));
+    }
+    curve = cp;
+  }
+
+  const isClosed = cleanPts.length > 2 && cleanPts[0].distanceTo(cleanPts[cleanPts.length - 1]) < 0.0001;
+  const tube = new THREE.TubeGeometry(curve, tubSeg, radius, radSeg, isClosed);
+  if (isClosed) return tube;
+
+  const posAttr = tube.attributes.position;
+  const normAttr = tube.attributes.normal;
+  const uvAttr = tube.attributes.uv;
+  const origIndices = Array.from(tube.index.array);
+
+  const positions = Array.from(posAttr.array);
+  const normals = Array.from(normAttr.array);
+  const uvs = Array.from(uvAttr.array);
+  const indices = [...origIndices];
+
+  const pStart = curve.getPoint(0);
+  const pEnd = curve.getPoint(1);
+  const tanStart = curve.getTangent(0).normalize().negate(); // pointing outward
+  const tanEnd = curve.getTangent(1).normalize(); // pointing outward
+
+  // Start cap center
+  const startCenterIdx = positions.length / 3;
+  positions.push(pStart.x, pStart.y, pStart.z);
+  normals.push(tanStart.x, tanStart.y, tanStart.z);
+  uvs.push(0.5, 0.5);
+
+  for (let j = 0; j < radSeg; j++) {
+    const v0 = j;
+    const v1 = j + 1;
+    indices.push(startCenterIdx, v1, v0);
+  }
+
+  // End cap center
+  const endCenterIdx = positions.length / 3;
+  positions.push(pEnd.x, pEnd.y, pEnd.z);
+  normals.push(tanEnd.x, tanEnd.y, tanEnd.z);
+  uvs.push(0.5, 0.5);
+
+  const lastRingOffset = tubSeg * (radSeg + 1);
+  for (let j = 0; j < radSeg; j++) {
+    const v0 = lastRingOffset + j;
+    const v1 = lastRingOffset + j + 1;
+    indices.push(endCenterIdx, v0, v1);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function getCurvePathPoints(target) {
+  if (!target) return null;
+  target.updateMatrixWorld(true);
+
+  // 1. Check userData.points
+  if (target.userData && Array.isArray(target.userData.points) && target.userData.points.length >= 2) {
+    return target.userData.points.map(p => {
+      const v = (p && p.isVector3) ? p.clone() : new THREE.Vector3(p.x, p.y, p.z);
+      return v.applyMatrix4(target.matrixWorld);
+    });
+  }
+
+  // 2. Check Line / LineLoop geometry attributes
+  if (target.isLine || target.isLineLoop || (target.userData && (target.userData.type === "SketchCurve" || target.userData.type === "ClosedProfile"))) {
+    if (target.geometry && target.geometry.attributes && target.geometry.attributes.position) {
+      const pos = target.geometry.attributes.position;
+      const pts = [];
+      for (let i = 0; i < pos.count; i++) {
+        const v = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
+        v.applyMatrix4(target.matrixWorld);
+        if (pts.length === 0 || pts[pts.length - 1].distanceTo(v) > 0.0001) {
+          pts.push(v);
+        }
+      }
+      if (pts.length >= 2) return pts;
+    }
+  }
+
+  return null;
+}
+
+function clearPipePreview() {
+  const p = scene.getObjectByName("Pipe_Preview");
+  if (p) {
+    scene.remove(p);
+    if (typeof disposeObjectHierarchy === "function") disposeObjectHierarchy(p);
+  }
+}
+
+function setupPipeCommand(initialArgs = {}) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  badge.textContent = "PIPE ALONG CURVE";
+  confirmBtn.textContent = "✓ Apply (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  let targetCurve = null;
+  if (selectedObjects.length > 0) {
+    if (getCurvePathPoints(selectedObjects[0]) !== null) {
+      targetCurve = selectedObjects[0];
+    }
+  } else {
+    targetCurve = sceneObjects.find(o => !o.userData.protected && getCurvePathPoints(o) !== null);
+    if (targetCurve) selectObject(targetCurve);
+  }
+
+  let defaultMode = (initialArgs && initialArgs.mode === "diameter") ? "diameter" : "radius";
+  let defaultVal = 2.0;
+  if (initialArgs && initialArgs.val !== undefined && !isNaN(parseFloat(initialArgs.val))) {
+    defaultVal = parseFloat(initialArgs.val);
+  } else if (initialArgs && initialArgs.radius !== undefined && !isNaN(parseFloat(initialArgs.radius))) {
+    defaultVal = parseFloat(initialArgs.radius);
+    defaultMode = "radius";
+  } else if (initialArgs && initialArgs.diameter !== undefined && !isNaN(parseFloat(initialArgs.diameter))) {
+    defaultVal = parseFloat(initialArgs.diameter);
+    defaultMode = "diameter";
+  }
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:3px; font-weight:bold;">Dimension:</span>
+    <select id="pipe-param-mode" class="prop-input" style="height:20px; font-size:11px; width:80px;">
+      <option value="radius" ${defaultMode === "radius" ? "selected" : ""}>Radius</option>
+      <option value="diameter" ${defaultMode === "diameter" ? "selected" : ""}>Diameter</option>
+    </select>
+    <input id="pipe-param-val" class="prop-input" type="number" step="0.5" min="0.1" value="${defaultVal}" style="width:50px; height:20px; margin-left:4px;">
+    <span style="font-size:11px; margin-left:2px;">mm</span>
+    <label style="font-size:11px; margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;">
+      <input type="checkbox" id="pipe-preview-chk" checked style="margin-right:3px;"> Preview
+    </label>
+  `;
+
+  function getCurrentRadius() {
+    const modeSel = document.getElementById("pipe-param-mode");
+    const valInp = document.getElementById("pipe-param-val");
+    const isDiam = modeSel && modeSel.value === "diameter";
+    const raw = Math.max(0.1, parseFloat(valInp ? valInp.value : defaultVal) || defaultVal);
+    return isDiam ? (raw / 2) : raw;
+  }
+
+  function updatePrompt() {
+    if (!targetCurve) {
+      if (selectedObjects.length > 0 && getCurvePathPoints(selectedObjects[0]) === null) {
+        prompt.textContent = `PIPE: '${selectedObjects[0].name}' is not a curve. Select a line or polyline.`;
+      } else {
+        prompt.textContent = "PIPE: Select an existing line or polyline curve in the viewport.";
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = "0.5";
+    } else {
+      const pts = getCurvePathPoints(targetCurve);
+      if (!pts || pts.length < 2) {
+        prompt.textContent = `PIPE: '${targetCurve.name}' is not a valid curve. Select a line or polyline.`;
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = "0.5";
+      } else {
+        const r = getCurrentRadius();
+        prompt.textContent = `PIPE on '${targetCurve.name}': Radius ${r.toFixed(2)}mm (${pts.length} vertices). Click [✓ Apply] (or Enter).`;
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = "1";
+      }
+    }
+  }
+
+  function updatePreview() {
+    clearPipePreview();
+    if (!targetCurve) return;
+    const chk = document.getElementById("pipe-preview-chk");
+    if (chk && !chk.checked) return;
+    const pts = getCurvePathPoints(targetCurve);
+    if (!pts || pts.length < 2) return;
+    const r = getCurrentRadius();
+    const geo = buildPipeSolidGeometry(pts, r, 32, 16);
+    if (!geo) return;
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x39ff14,
+      roughness: 0.3,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.75,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1
+    });
+    const previewObj = new THREE.Mesh(geo, mat);
+    previewObj.name = "Pipe_Preview";
+    previewObj.userData = { isTransientPreview: true };
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x00ffaa, linewidth: 2 });
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), wireMat);
+    previewObj.add(edges);
+    scene.add(previewObj);
+  }
+
+  function confirmPipe() {
+    if (!targetCurve) {
+      addLog("Pipe requires an existing line or curve path.", "log-warn");
+      status("Select a curve path.");
+      return;
+    }
+    const pts = getCurvePathPoints(targetCurve);
+    if (!pts || pts.length < 2) {
+      addLog("Unsupported path: Path must contain at least 2 points.", "log-warn");
+      status("Invalid path points.");
+      return;
+    }
+    const r = getCurrentRadius();
+    clearPipePreview();
+    recordUndoState("Pipe Solid");
+
+    const geo = buildPipeSolidGeometry(pts, r, 32, 16);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x2b808a,
+      roughness: 0.4,
+      metalness: 0.2,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.name = "Pipe_" + (++primitiveCounter);
+    mesh.userData = {
+      type: "PipeSolid",
+      radius: r,
+      pathPoints: pts.map(p => p.clone())
+    };
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x111111, linewidth: 1 });
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), wireMat);
+    mesh.add(edges);
+
+    registerNewObject(mesh, mesh.name, "PipeSolid");
+    selectObject(mesh);
+    cancelActiveCommand();
+    addLog(`Generated 3D pipe solid '${mesh.name}' (radius: ${r.toFixed(2)}mm) along curve '${targetCurve.name}'.`, "log-success");
+    status(`Generated 3D pipe solid: ${mesh.name}`);
+    recordModelingCommand();
+    CADNT_AUDIO.playSuccess();
+  }
+
+  const modeSel = document.getElementById("pipe-param-mode");
+  if (modeSel) {
+    modeSel.onchange = () => {
+      updatePrompt();
+      updatePreview();
+    };
+  }
+
+  const valInp = document.getElementById("pipe-param-val");
+  if (valInp) {
+    valInp.oninput = () => {
+      updatePrompt();
+      updatePreview();
+    };
+    valInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        confirmPipe();
+      }
+    };
+  }
+
+  const chk = document.getElementById("pipe-preview-chk");
+  if (chk) {
+    chk.onchange = () => updatePreview();
+  }
+
+  activeCommand = {
+    type: "pipe",
+    handleSelect(obj) {
+      const pts = getCurvePathPoints(obj);
+      if (!pts || pts.length < 2) {
+        addLog("Unsupported path type: Pipe requires a 2D or 3D line or polyline curve.", "log-warn");
+        status("Unsupported path type: Select a curve.");
+        return;
+      }
+      targetCurve = obj;
+      selectObject(obj);
+      updatePrompt();
+      updatePreview();
+    },
+    confirm() {
+      confirmPipe();
+    },
+    cleanup() {
+      clearPipePreview();
+    }
+  };
+
+  updatePrompt();
+  updatePreview();
+  if (valInp) valInp.focus();
+}
+
 // Wire Command Bar buttons
 const btnCmdConfirm = document.getElementById("btn-cmd-confirm");
 if (btnCmdConfirm) {
@@ -7445,8 +7767,12 @@ function executeCommand(rawCmd) {
     return;
   }
 
-  // Michigan Starting Object Removal Command
-  if (normalizedCmd === "remove starting object") {
+  // Michigan Starting Object Removal Command (Supports 'remove starting object' and alias 'delete michigan')
+  if (
+    normalizedCmd === "remove starting object" ||
+    normalizedCmd === "delete michigan" ||
+    (verb === "delete" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "michigan")
+  ) {
     const targetObj = michiganModel || diagnosticCube;
     if (!targetObj || !sceneObjects.includes(targetObj)) {
       addLog("Starting object is already gone.", "log-warn");
@@ -7722,6 +8048,20 @@ function executeCommand(rawCmd) {
       }
       break;
 
+    case "pipe":
+      let pipeArgs = {};
+      if (args.length >= 1) {
+        if (args[0] === "radius" && args[1] && !isNaN(parseFloat(args[1]))) {
+          pipeArgs = { val: parseFloat(args[1]), mode: "radius" };
+        } else if (args[0] === "diameter" && args[1] && !isNaN(parseFloat(args[1]))) {
+          pipeArgs = { val: parseFloat(args[1]), mode: "diameter" };
+        } else if (!isNaN(parseFloat(args[0]))) {
+          pipeArgs = { val: parseFloat(args[0]), mode: "radius" };
+        }
+      }
+      startModelingCommand("pipe", pipeArgs);
+      break;
+
     case "sweep":
       attemptPaidOperation("sweep", 49.00);
       break;
@@ -7875,7 +8215,7 @@ toolbar.addEventListener("click", (e) => {
     return;
   }
 
-  const isInteractiveCmd = ["union", "difference", "join", "extrude", "move", "rotate", "scale", "line", "rect", "circle", "spline", "fillet", "chamfer"].includes(cmd);
+  const isInteractiveCmd = ["union", "difference", "join", "extrude", "move", "rotate", "scale", "line", "rect", "circle", "spline", "fillet", "chamfer", "pipe"].includes(cmd);
 
   if (DEBUG || isInteractiveCmd) {
     executeToolbarCommand(cmd);
@@ -7915,6 +8255,7 @@ function executeToolbarCommand(cmd) {
       break;
     case "chamfer":
     case "fillet":
+    case "pipe":
       startModelingCommand(cmd);
       break;
     case "sweep":
@@ -9246,7 +9587,6 @@ function initWin95MenuBar() {
       resetCameraOrientation();
       status("Camera views reset to origin.");
     },
-    "mitem-view-sound": () => CADNT_AUDIO.setMute(!CADNT_AUDIO.mute),
     "mitem-view-hud": () => {
       const dbg = document.getElementById("debug-overlay");
       if (dbg) {
@@ -9437,12 +9777,18 @@ function runAllTests() {
     handleDelete();
     assertTest("Starting object cannot be deleted via standard delete", sceneObjects.includes(startingObj));
 
-    // Test 7: Secret Starting Object Deletion Command
+    // Test 7: Secret Starting Object Deletion Command & 'Can I delete michigan' Alias
     const origShowConfirm = showConfirmModal;
     showConfirmModal = (title, body, cb) => cb(); // auto-confirm for test
     processRequest("Can I remove starting object");
+    const removeStartingOk = !sceneObjects.includes(startingObj);
+    processRequest("Can I undo"); // restore for alias test
+    const restoredStartingObj = michiganModel || diagnosticCube;
+    processRequest("Can I delete michigan?");
     showConfirmModal = origShowConfirm;
-    assertTest("'Can I remove starting object' successfully deletes starting object", !sceneObjects.includes(startingObj));
+    const deleteMichiganOk = !sceneObjects.includes(restoredStartingObj);
+    processRequest("Can I undo"); // restore
+    assertTest("'Can I remove starting object' and alias 'Can I delete michigan' successfully delete starting object", removeStartingOk && deleteMichiganOk);
 
     // Test 8: Wandering Toolbar Relocation
     const tbBefore = Array.from(toolbar.querySelectorAll(".tool-btn")).map(b => b.dataset.cmd).join(",");
@@ -9694,7 +10040,8 @@ function runAllTests() {
 
     // Test 18d & 18e: Geometric Quality, Watertightness and Manifold Verification
     function verifyMeshManifold(geo) {
-      const pos = geo.attributes.position;
+      const nonIndexed = geo.index ? geo.toNonIndexed() : geo;
+      const pos = nonIndexed.attributes.position;
       const eps = 1e-4;
       const uVerts = [];
       const vmap = [];
@@ -9780,10 +10127,58 @@ function runAllTests() {
     assertTest("Clicking placeholder tool opens retro 'Coming Soon' dialog", csModal && (csModal.open || csModal.hasAttribute("open")));
     if (csModal && csModal.close) csModal.close();
 
-    // Test 18i: Blue Logo / Title Header Width (Roughly 2x wide)
-    const titleContent = document.querySelector(".win95-title-content");
-    const titleW = titleContent ? titleContent.getBoundingClientRect().width : 0;
-    assertTest("Blue header title area is roughly 2x wider (>= 380px)", titleW >= 380);
+    // Test 18i: Blue Logo / Title Header Vertical Height (~2x height, >= 40px) & Clean Branding
+    const titleBarEl = document.getElementById("win95-title-bar");
+    const titleH = titleBarEl ? titleBarEl.getBoundingClientRect().height : 0;
+    const titleTextEl = document.querySelector(".win95-title-text");
+    const titleStr = titleTextEl ? titleTextEl.textContent : "";
+    assertTest("Blue title bar height is approximately twice height (>= 40px) with clean CADN'T branding", titleH >= 40 && titleStr.includes("CADN'T") && !titleStr.includes("[Part1.prt : 4 Viewports]"));
+
+    // Test 18j: Functional Pipe Command on straight line with dimensions & capped watertight 2-manifold geometry (Chi=2)
+    const testStraightLine = createLineSketch([new THREE.Vector3(0, 0, 0), new THREE.Vector3(30, 0, 0)], "top", false);
+    selectObject(testStraightLine);
+    processRequest("Can I pipe 3.0");
+    const pipeBar = document.getElementById("command-bar");
+    const pipeBadge = document.getElementById("command-badge");
+    const pipePreviewObj = scene.getObjectByName("Pipe_Preview");
+    assertTest("Pipe command opens command bar with preview on straight line curve", pipeBar && pipeBar.style.display !== "none" && pipeBadge.textContent === "PIPE ALONG CURVE" && !!pipePreviewObj);
+    activeCommand.confirm();
+    const pipeStraightSolid = selectedObjects[0];
+    const pipeStraightTopo = verifyMeshManifold(pipeStraightSolid.geometry);
+    const pipeStraightBox = pipeStraightSolid.geometry.boundingBox;
+    const straightLen = Math.abs(pipeStraightBox.max.x - pipeStraightBox.min.x);
+    const straightRadiusY = (pipeStraightBox.max.y - pipeStraightBox.min.y) / 2;
+    assertTest("Pipe creates watertight 2-manifold solid (Chi=2, open=0) with capped ends & accurate dimensions along straight line",
+      pipeStraightSolid && pipeStraightSolid.userData.type === "PipeSolid" &&
+      pipeStraightTopo.isWatertight && pipeStraightTopo.isManifold && pipeStraightTopo.chi === 2 &&
+      Math.abs(straightLen - 30) < 0.1 && Math.abs(straightRadiusY - 3.0) < 0.1);
+
+    // Test 18k: Functional Pipe Command on L-shaped polyline curve with capped geometry (Chi=2)
+    const testLPolyline = createLineSketch([new THREE.Vector3(0, 0, 0), new THREE.Vector3(25, 0, 0), new THREE.Vector3(25, 0, 20)], "top", false);
+    selectObject(testLPolyline);
+    processRequest("Can I pipe 2.5");
+    activeCommand.confirm();
+    const pipeLSolid = selectedObjects[0];
+    const pipeLTopo = verifyMeshManifold(pipeLSolid.geometry);
+    assertTest("Pipe creates watertight 2-manifold solid (Chi=2, open=0) with capped ends along L-shaped polyline",
+      pipeLSolid && pipeLSolid.userData.type === "PipeSolid" &&
+      pipeLTopo.isWatertight && pipeLTopo.isManifold && pipeLTopo.chi === 2);
+
+    // Test 18l: Pipe solid undoability via 'Can I undo' and FeatureManager registration
+    const countBeforePipeUndo = sceneObjects.length;
+    processRequest("Can I undo");
+    assertTest("Pipe solid creation is fully undoable via 'Can I undo'", sceneObjects.length === countBeforePipeUndo - 1);
+    processRequest("Can I redo"); // restore for further checks
+
+    // Test 18m: Pipe command reports unsupported path on non-curve mesh object
+    createBoxPrimitive();
+    const boxNonCurve = sceneObjects[sceneObjects.length - 1];
+    selectObject(boxNonCurve);
+    processRequest("Can I pipe");
+    const pipeConfirmBtn = document.getElementById("btn-cmd-confirm");
+    const pipePrompt = document.getElementById("command-prompt");
+    assertTest("Pipe reports unsupported path on solid mesh object and disables confirm button", pipeConfirmBtn && pipeConfirmBtn.disabled === true && pipePrompt.textContent.includes("PIPE:"));
+    cancelActiveCommand();
 
     // Test 19: Layer Management
     const testLayer = addLayer("CAM Toolpaths");
@@ -9864,12 +10259,10 @@ function runAllTests() {
     const isFixedTheme = !document.body.classList.contains("light-theme") && themeBtn === null && themeMenuItem === null;
     assertTest("Light/Dark theme toggle is completely removed and fixed retro theme is active", isFixedTheme === true);
 
-    // Test 30: Audio mute toggle
-    const initialMute = CADNT_AUDIO.mute;
-    CADNT_AUDIO.setMute(!initialMute);
-    const toggledMute = CADNT_AUDIO.mute;
-    CADNT_AUDIO.setMute(initialMute); // revert
-    assertTest("Audio synthesizer mute toggle functions correctly", toggledMute === !initialMute && CADNT_AUDIO.mute === initialMute);
+    // Test 30: User-facing Sound/Mute button and controls completely removed
+    const audioBtn = document.getElementById("btn-audio-mute");
+    const audioMenuItem = document.getElementById("mitem-view-sound");
+    assertTest("User-facing Sound/Mute button and menu controls are completely removed", audioBtn === null && audioMenuItem === null);
 
     // Test 31: 10-second artificial delay bypassed in DEBUG mode
     let delayCallbackFired = false;
@@ -9902,16 +10295,12 @@ function runAllTests() {
     rotateAd();
     assertTest("Ad rotation selects valid advertisement index", currentAdIndex >= 0 && currentAdIndex < ASSET_MANIFEST.ads.length);
 
-    // Test 36: Hold music audio integration respects mute
-    CADNT_AUDIO.setMute(true);
+    // Test 36: Hold music plays at 100% volume, does not loop, and stops cleanly
     CADNT_AUDIO.playHoldMusic();
-    const mutedNoPlay = CADNT_AUDIO.holdMusicAudio === null;
-    CADNT_AUDIO.setMute(false);
-    CADNT_AUDIO.playHoldMusic();
-    const unmutedPlays = !!CADNT_AUDIO.holdMusicAudio && CADNT_AUDIO.holdMusicAudio.loop === false && Math.abs(CADNT_AUDIO.holdMusicAudio.volume - 0.85) < 0.01;
+    const holdPlays100 = !!CADNT_AUDIO.holdMusicAudio && CADNT_AUDIO.holdMusicAudio.loop === false && Math.abs(CADNT_AUDIO.holdMusicAudio.volume - 1.0) < 0.01;
     CADNT_AUDIO.stopHoldMusic();
     const stoppedClean = CADNT_AUDIO.holdMusicAudio === null;
-    assertTest("Hold music respects mute toggle, does not loop, and stops cleanly", mutedNoPlay && unmutedPlays && stoppedClean);
+    assertTest("Hold music plays at 100% volume, does not loop, and stops cleanly", holdPlays100 && stoppedClean);
 
     // Test 37: Satirical badge removed from header
     const satiricalBadge = document.querySelector("header .badge-tag");
@@ -10033,7 +10422,7 @@ function runAllTests() {
     const restoredFreeBox = sceneObjects[sceneObjects.length - 1];
     assertTest("Can I undo restores object displaced by Free Move to exact pre-move position", restoredFreeBox && Math.abs(restoredFreeBox.position.x - initialPos.x) < 0.01 && Math.abs(restoredFreeBox.position.z - initialPos.z) < 0.01);
 
-    // Test 45h: Gumball Free Move applies deliberate slowdown multiplier of 0.04 (4% displacement)
+    // Test 45h: Gumball Free Move applies deliberate slowdown multiplier of 0.01 (1% displacement)
     processRequest("Can I gumball?");
     const slowTestPos = otherBox.position.clone();
     gumballDragState = {
@@ -10054,11 +10443,11 @@ function runAllTests() {
     };
     handleGumballDragMove({ clientX: 50, clientY: 50 }, "top");
     raycaster.ray.intersectPlane = origRayIntersect;
-    const expectedX = slowTestPos.x + 100 * 0.04; // +4.0
-    const expectedZ = slowTestPos.z + 50 * 0.04;  // +2.0
+    const expectedX = slowTestPos.x + 100 * 0.01; // +1.0
+    const expectedZ = slowTestPos.z + 50 * 0.01;  // +0.5
     const isSlowAccurate = Math.abs(otherBox.position.x - expectedX) < 0.01 && Math.abs(otherBox.position.z - expectedZ) < 0.01;
     window.dispatchEvent(new Event("pointerup"));
-    assertTest("Gumball Free Move applies deliberate slowdown multiplier of 0.04 (4% displacement)", isSlowAccurate && gumballGroup.visible === false && isGumballActive === false);
+    assertTest("Gumball Free Move applies deliberate slowdown multiplier of 0.01 (1% displacement)", isSlowAccurate && gumballGroup.visible === false && isGumballActive === false);
 
     // Test 46: Forward and Back manual navigation buttons are removed from top standard toolbar
     const navUndoBtn = document.getElementById("tb-btn-undo");
