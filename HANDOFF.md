@@ -1073,9 +1073,10 @@ Following the release of build `v00000-011` (`fb95d7e`), all four viewports rend
    [sketch_05_retina_dpr2_rect.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/sketch_05_retina_dpr2_rect.png)
    - Full 2880x1800 2x Retina capture demonstrating crisp rendering and accurate coordinate hit-testing of `Rect_Profile_45`.
 
-### 14.5 Checkpoint A Acceptance Gate
-- Checkpoint A is **COMPLETED and VERIFIED** on branch `dev`.
-- Per user instructions: **Stopped for User Acceptance of Checkpoint A before initiating Checkpoints B through F**.
+### 14.5 Deployment & Acceptance Gate
+- **Build Version**: Bumped to `v00000-014` across `index.html` and `sw.js`.
+- **Deployment Status**: Approved for deployment of Checkpoint A (sketching repair and dependencies only) to GitHub Pages for user testing.
+- **User Acceptance Status**: Awaiting hands-on Safari testing by user before final Checkpoint A acceptance and proceeding to Checkpoint B.
 
 
 
