@@ -995,11 +995,12 @@ Following the release of build `v00000-011` (`fb95d7e`), all four viewports rend
    [features_05_test_results_passed.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/features_05_test_results_passed.png)
    - Displays in-app test results terminal log confirming 103/103 tests passed with 0 failures.
 
-### 13.4 Branch & Review Status
-- **Current Branch**: `dev`
-- **Main Branch**: Preserved at `0f447a5` (`v00000-012`).
+### 13.4 Release & Deployment Status
+- **Current Version**: `v00000-013` (incremented across `index.html` and `sw.js`).
+- **Main Branch**: Merged from `dev` with all approved UI and feature updates.
 - **Backup Branch**: `backup-v00000-011` remains preserved at `fb95d7e`.
-- **Status**: Committed on `dev`. **Stopped for user review**. Awaiting explicit approval before merge to `main` or deployment to GitHub Pages.
+- **Live URL**: `https://mrandybuck.github.io/single-file-html-app-template/`
+- **User Approval**: Approved by user for merge to `main`.
 
 
 
