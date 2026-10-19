@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-011`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-012`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -862,6 +862,64 @@ In accordance with honest CAD reporting:
   3. *Concave Internal Edges*: Internal step corners or hollow pocket edges (would require inverse B-Rep addition or CSG boolean union).
   4. *Multi-Edge Vertex Corner Blends*: When two or three edges meeting at the same corner vertex are filleted simultaneously, true CAD systems require rolling-ball spherical corner setback patches (e.g. blend sphere or octant surface). Currently, multi-edge corner junctions fall back to CSG or require sequential independent edge cuts.
   5. *Arbitrary Imported Meshes*: Non-manifold or triangle-soup meshes without defined B-Rep topology.
+
+---
+
+## 12. Build v00000-012 — Startup Exception Repair & Rendering Recovery
+
+### 12.1 Incident Diagnosis & Root Cause Analysis
+Following the release of build `v00000-011` (`fb95d7e`), all four viewports rendered completely blank despite geometry appearing in the FeatureManager tree.
+- **Root Cause**: In commit `34fa0c3`, `<button id="btn-close-construction">` was removed from the `#modal-construction` dialog in `index.html`. However, line 7974 retained an unconditional event listener attachment:
+  ```javascript
+  document.getElementById("btn-close-construction").onclick = () => { ... };
+  ```
+- **Impact**: Because `document.getElementById("btn-close-construction")` returned `null`, JavaScript threw an uncaught `TypeError: Cannot set properties of null (setting 'onclick')` during initial script execution.
+- **Cascading Failure**: This unhandled exception immediately aborted script execution before the main initialization block could reach `initScene()`, `setupViewports()`, and the continuous `render()` loop. Consequently, all 4 WebGL viewports remained unrendered.
+
+### 12.2 Implemented Repairs & Defensive DOM Audit
+1. **Primary Fix**: Restored `<button class="win95-btn" id="btn-close-construction">OK</button>` inside `#modal-construction` and wrapped the click handler registration with a defensive null check.
+2. **Comprehensive DOM Handler Audit**: Audited all DOM event bindings across `index.html`. Added defensive guards around all modal open/close buttons, toolbar action buttons, file input listeners, search inputs, debug toggles, and status elements:
+   - `showConfirmModal`
+   - `btn-tutorial-open`, `btn-close-onboarding`
+   - `btn-buy-credits`
+   - `btn-about-open`, `btn-close-about`
+   - `help-search`, `btn-help-open`, `btn-close-help`
+   - `chip` (version purge button)
+   - `status-message`
+   - `btn-save-project`, `btn-open-project`, `btn-export-mesh`, `btn-import-mesh`, `btn-theme-toggle`, `btn-audio-mute`
+   - `btn-export-download`, `btn-export-cancel`
+   - `btn-cmd-confirm`, `btn-cmd-cancel`
+   - `btn-submit-request`
+   - `file-input-open`, `file-input-import`
+   - `debug-hud-toggle`
+
+### 12.3 Automated & Headless Verification
+1. **Console Diagnostics**: Evaluated in headless Chrome via Chrome DevTools Protocol (`Runtime.exceptionThrown`); verified **0 uncaught exceptions** on startup.
+2. **Unit Test Suite**: 96/96 automated tests passed (100% pass rate).
+3. **Viewport Render Verification**: Verified all 4 viewports (Top, Perspective, Front, Right) render active scenes correctly.
+
+### 12.4 Visual Proof Artifacts
+1. **Startup Michigan Render**:
+   [repaired_01_michigan_startup.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/repaired_01_michigan_startup.png)
+   - Verified Michigan block letter geometry rendered crisp and centered across all 4 viewports upon startup.
+2. **New Box Primitive Render**:
+   [repaired_02_new_box_rendered.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/repaired_02_new_box_rendered.png)
+   - Verified creating a new box primitive (`Can I box`) immediately renders in all four viewports and adds to the FeatureManager tree.
+3. **WASD Perspective Orbit**:
+   [repaired_03_camera_orbited.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/repaired_03_camera_orbited.png)
+   - Verified W/S/A/D keyboard orbit moves Perspective camera smoothly while Top, Front, and Right orthographic views remain stably locked.
+4. **Arrow Pan & Shift+Arrow Zoom**:
+   [repaired_04_camera_pan_zoom.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/repaired_04_camera_pan_zoom.png)
+   - Verified arrow panning and shift+arrow zooming function across active viewports.
+5. **Additional Geometry Commands**:
+   [repaired_05_sphere_primitive.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/repaired_05_sphere_primitive.png)
+   - Verified sphere and other primitive geometry commands execute cleanly.
+
+### 12.5 Deployment & Acceptance Status
+- **Backup Branch**: `backup-v00000-011` remains preserved at commit `fb95d7e`.
+- **Cache Version**: Incremented to `v00000-012` across `index.html` (HUD, Status Chip, About Dialog, `APP.version`) and `sw.js` (`const VERSION = "v00000-012"`).
+- **Live URL**: `https://mrandybuck.github.io/single-file-html-app-template/`
+- **Acceptance Status**: *Awaiting User Acceptance in Safari*. Do NOT mark USER ACCEPTED until user verifies Michigan and newly created geometry render correctly in Safari.
 
 
 

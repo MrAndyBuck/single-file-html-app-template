@@ -1358,7 +1358,7 @@
       <div id="debug-overlay">
         <div class="debug-hud-header" id="debug-hud-toggle">
           <span class="debug-hud-title">🔍 DIAGNOSTIC HUD</span>
-          <span id="debug-hud-version" class="debug-badge">v00000-011</span>
+          <span id="debug-hud-version" class="debug-badge">v00000-012</span>
           <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
         </div>
         <div id="debug-hud-body" class="debug-hud-body">
@@ -1564,7 +1564,7 @@
     <div id="coords-readout" class="status-panel">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div class="nav-hint status-panel">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
     <div class="status-panel status-credit" id="status-credit-panel">Tokens: $249.00</div>
-    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-011 ↻</button>
+    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-012 ↻</button>
   </footer>
 </div>
 
@@ -1611,6 +1611,9 @@
   </h2>
   <p>The CADN'T Cloud Credit Marketplace is temporarily offline for scheduled server griefing.</p>
   <p>Please mail a cashier's check or certified money order payable to CADN'T Customer Friction Division.</p>
+  <div class="dialog-actions" style="margin-top: 10px; text-align: right;">
+    <button class="win95-btn" id="btn-close-construction" onclick="this.closest('dialog').close()">OK</button>
+  </div>
 </dialog>
 
 <!-- Insufficient Funds Modal -->
@@ -1654,7 +1657,7 @@
     <span class="win95-dialog-title">About CADN'T</span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-011</span></p>
+  <p><strong>Version</strong>: <span id="about-version">v00000-012</span></p>
   <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
   <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
   <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
@@ -1770,7 +1773,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-011",
+  version: "v00000-012",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -1782,8 +1785,10 @@ if (DEBUG) {
   if (dbgBtn) dbgBtn.style.display = "inline-flex";
 }
 
-document.getElementById("chip").textContent = APP.version + " ↻";
-document.getElementById("about-version").textContent = APP.version;
+const chipEl = document.getElementById("chip");
+if (chipEl) chipEl.textContent = APP.version + " ↻";
+const aboutVerEl = document.getElementById("about-version");
+if (aboutVerEl) aboutVerEl.textContent = APP.version;
 
 /* =========================================================================
    2. SCENE, CAMERAS & 4-VIEWPORT ENGINE
@@ -6801,15 +6806,21 @@ function executeDirectEdgeCut(mode, param = 2.5) {
 }
 
 // Wire Command Bar buttons
-document.getElementById("btn-cmd-confirm").onclick = () => {
-  if (activeCommand && typeof activeCommand.confirm === "function") {
-    activeCommand.confirm();
-  }
-};
+const btnCmdConfirm = document.getElementById("btn-cmd-confirm");
+if (btnCmdConfirm) {
+  btnCmdConfirm.onclick = () => {
+    if (activeCommand && typeof activeCommand.confirm === "function") {
+      activeCommand.confirm();
+    }
+  };
+}
 
-document.getElementById("btn-cmd-cancel").onclick = () => {
-  cancelActiveCommand();
-};
+const btnCmdCancel = document.getElementById("btn-cmd-cancel");
+if (btnCmdCancel) {
+  btnCmdCancel.onclick = () => {
+    cancelActiveCommand();
+  };
+}
 
 function processRequest(raw) {
   const text = raw.trim();
@@ -7203,12 +7214,15 @@ requestInput.addEventListener("keydown", (e) => {
     focusActiveCanvas();
   }
 });
-document.getElementById("btn-submit-request").onclick = () => {
-  processRequest(requestInput.value);
-  requestInput.value = "";
-  requestInput.blur();
-  focusActiveCanvas();
-};
+const btnSubmitRequest = document.getElementById("btn-submit-request");
+if (btnSubmitRequest) {
+  btnSubmitRequest.onclick = () => {
+    processRequest(requestInput.value);
+    requestInput.value = "";
+    requestInput.blur();
+    focusActiveCanvas();
+  };
+}
 
 /* =========================================================================
    7. WANDERING TOOLBAR MECHANIC
@@ -7941,37 +7955,57 @@ const modalConfirm = document.getElementById("modal-confirm");
 let confirmCallback = null;
 
 function showConfirmModal(title, body, onConfirm) {
-  document.getElementById("confirm-title").textContent = title;
-  document.getElementById("confirm-body").textContent = body;
+  const tEl = document.getElementById("confirm-title");
+  if (tEl) tEl.textContent = title;
+  const bEl = document.getElementById("confirm-body");
+  if (bEl) bEl.textContent = body;
   confirmCallback = onConfirm;
-  modalConfirm.showModal();
+  if (modalConfirm) modalConfirm.showModal();
 }
 
-document.getElementById("btn-confirm-ok").onclick = () => {
-  modalConfirm.close();
-  if (confirmCallback) confirmCallback();
-  confirmCallback = null;
-};
-document.getElementById("btn-confirm-cancel").onclick = () => {
-  modalConfirm.close();
-  confirmCallback = null;
-};
+const btnConfirmOk = document.getElementById("btn-confirm-ok");
+if (btnConfirmOk) {
+  btnConfirmOk.onclick = () => {
+    if (modalConfirm) modalConfirm.close();
+    if (confirmCallback) confirmCallback();
+    confirmCallback = null;
+  };
+}
+const btnConfirmCancel = document.getElementById("btn-confirm-cancel");
+if (btnConfirmCancel) {
+  btnConfirmCancel.onclick = () => {
+    if (modalConfirm) modalConfirm.close();
+    confirmCallback = null;
+  };
+}
 
 // Onboarding Modal
 const modalOnboarding = document.getElementById("modal-onboarding");
-document.getElementById("btn-tutorial-open").onclick = () => modalOnboarding.showModal();
-document.getElementById("btn-close-onboarding").onclick = () => {
-  modalOnboarding.close();
-  localStorage.setItem("cadnt_onboarded", "true");
-};
-if (!localStorage.getItem("cadnt_onboarded") && !new URLSearchParams(location.search).has("no_auto_onboard")) {
+const btnTutorialOpen = document.getElementById("btn-tutorial-open");
+if (btnTutorialOpen && modalOnboarding) {
+  btnTutorialOpen.onclick = () => modalOnboarding.showModal();
+}
+const btnCloseOnboarding = document.getElementById("btn-close-onboarding");
+if (btnCloseOnboarding && modalOnboarding) {
+  btnCloseOnboarding.onclick = () => {
+    modalOnboarding.close();
+    localStorage.setItem("cadnt_onboarded", "true");
+  };
+}
+if (modalOnboarding && !localStorage.getItem("cadnt_onboarded") && !new URLSearchParams(location.search).has("no_auto_onboard")) {
   setTimeout(() => modalOnboarding.showModal(), 350);
 }
 
 // Economy Construction Modal
 const modalConstruction = document.getElementById("modal-construction");
-document.getElementById("btn-buy-credits").onclick = () => modalConstruction.showModal();
-document.getElementById("btn-close-construction").onclick = () => modalConstruction.close();
+const btnBuyCredits = document.getElementById("btn-buy-credits");
+if (btnBuyCredits && modalConstruction) {
+  btnBuyCredits.onclick = () => modalConstruction.showModal();
+}
+const btnCloseConstruction = document.getElementById("btn-close-construction");
+if (btnCloseConstruction && modalConstruction) {
+  btnCloseConstruction.onclick = () => modalConstruction.close();
+}
 
 // Insufficient Funds Modal
 const modalInsufficientFunds = document.getElementById("modal-insufficient-funds");
@@ -7985,8 +8019,14 @@ if (btnCloseInsufficientFunds && modalInsufficientFunds) {
 
 // About Modal
 const modalAbout = document.getElementById("modal-about");
-document.getElementById("btn-about-open").onclick = () => modalAbout.showModal();
-document.getElementById("btn-close-about").onclick = () => modalAbout.close();
+const btnAboutOpen = document.getElementById("btn-about-open");
+if (btnAboutOpen && modalAbout) {
+  btnAboutOpen.onclick = () => modalAbout.showModal();
+}
+const btnCloseAbout = document.getElementById("btn-close-about");
+if (btnCloseAbout && modalAbout) {
+  btnCloseAbout.onclick = () => modalAbout.close();
+}
 
 // Help Modal with Ring Glow
 const modalHelp = document.getElementById("modal-help");
@@ -8038,48 +8078,76 @@ function renderHelpList(filter = "") {
     });
 }
 renderHelpList();
-document.getElementById("help-search").oninput = (e) => renderHelpList(e.target.value);
-document.getElementById("btn-help-open").onclick = () => modalHelp.showModal();
-document.getElementById("btn-close-help").onclick = () => modalHelp.close();
+const helpSearch = document.getElementById("help-search");
+if (helpSearch) helpSearch.oninput = (e) => renderHelpList(e.target.value);
+const btnHelpOpen = document.getElementById("btn-help-open");
+if (btnHelpOpen && modalHelp) btnHelpOpen.onclick = () => modalHelp.showModal();
+const btnCloseHelp = document.getElementById("btn-close-help");
+if (btnCloseHelp && modalHelp) btnCloseHelp.onclick = () => modalHelp.close();
 
 // Update Chip (Click forces complete cache purge & reload)
-document.getElementById("chip").onclick = () => {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => reg.unregister());
-    });
-    if ("caches" in window) {
-      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+const chipBtn = document.getElementById("chip");
+if (chipBtn) {
+  chipBtn.onclick = () => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.unregister());
+      });
+      if ("caches" in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+      }
     }
-  }
-  status("Purging cache and reloading: " + APP.version);
-  setTimeout(() => {
-    window.location.href = window.location.pathname + "?t=" + Date.now();
-  }, 400);
-};
+    status("Purging cache and reloading: " + APP.version);
+    setTimeout(() => {
+      window.location.href = window.location.pathname + "?t=" + Date.now();
+    }, 400);
+  };
+}
 
 function status(msg) {
-  document.getElementById("status-message").textContent = msg;
+  const statusEl = document.getElementById("status-message");
+  if (statusEl) statusEl.textContent = msg;
 }
 
 // Header Actions
-document.getElementById("btn-save-project").onclick = () => initiateSaveWorkflow();
-document.getElementById("btn-open-project").onclick = () => initiateOpenWorkflow();
-document.getElementById("btn-export-mesh").onclick = () => document.getElementById("modal-export").showModal();
-document.getElementById("btn-import-mesh").onclick = () => initiateImportWorkflow();
-document.getElementById("btn-theme-toggle").onclick = () => toggleTheme();
-document.getElementById("btn-audio-mute").onclick = () => CADNT_AUDIO.setMute(!CADNT_AUDIO.mute);
+const btnSaveProject = document.getElementById("btn-save-project");
+if (btnSaveProject) btnSaveProject.onclick = () => initiateSaveWorkflow();
+const btnOpenProject = document.getElementById("btn-open-project");
+if (btnOpenProject) btnOpenProject.onclick = () => initiateOpenWorkflow();
+const btnExportMesh = document.getElementById("btn-export-mesh");
+if (btnExportMesh) {
+  btnExportMesh.onclick = () => {
+    const modalExp = document.getElementById("modal-export");
+    if (modalExp) modalExp.showModal();
+  };
+}
+const btnImportMesh = document.getElementById("btn-import-mesh");
+if (btnImportMesh) btnImportMesh.onclick = () => initiateImportWorkflow();
+const btnThemeToggle = document.getElementById("btn-theme-toggle");
+if (btnThemeToggle) btnThemeToggle.onclick = () => toggleTheme();
+const btnAudioMute = document.getElementById("btn-audio-mute");
+if (btnAudioMute) btnAudioMute.onclick = () => CADNT_AUDIO.setMute(!CADNT_AUDIO.mute);
 
 // Export Modal Handlers
-document.getElementById("btn-export-download").onclick = () => {
-  const format = document.getElementById("export-format").value;
-  const scope = document.getElementById("export-scope").value;
-  exportProjectGeometry(format, true, scope === "selected");
-  document.getElementById("modal-export").close();
-};
-document.getElementById("btn-export-cancel").onclick = () => {
-  document.getElementById("modal-export").close();
-};
+const btnExportDownload = document.getElementById("btn-export-download");
+if (btnExportDownload) {
+  btnExportDownload.onclick = () => {
+    const formatEl = document.getElementById("export-format");
+    const scopeEl = document.getElementById("export-scope");
+    const format = formatEl ? formatEl.value : "stl";
+    const scope = scopeEl ? scopeEl.value : "all";
+    exportProjectGeometry(format, true, scope === "selected");
+    const modalExp = document.getElementById("modal-export");
+    if (modalExp) modalExp.close();
+  };
+}
+const btnExportCancel = document.getElementById("btn-export-cancel");
+if (btnExportCancel) {
+  btnExportCancel.onclick = () => {
+    const modalExp = document.getElementById("modal-export");
+    if (modalExp) modalExp.close();
+  };
+}
 
 // Crash Report Modal Handlers & Logic
 function openCrashReportModal() {
@@ -8171,33 +8239,38 @@ if (modalLoadingEl) {
 }
 
 // File Picker: Open Native .cadnt Project Archive
-document.getElementById("file-input-open").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    recordUndoState("Open Project");
-    const ok = deserializeProjectState(evt.target.result);
-    if (ok) {
-      addLog(`Loaded project archive '${file.name}'.`, "log-success");
-      status(`Opened project: ${file.name}`);
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-});
+const fileInputOpen = document.getElementById("file-input-open");
+if (fileInputOpen) {
+  fileInputOpen.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      recordUndoState("Open Project");
+      const ok = deserializeProjectState(evt.target.result);
+      if (ok) {
+        addLog(`Loaded project archive '${file.name}'.`, "log-success");
+        status(`Opened project: ${file.name}`);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+}
 
 // File Picker: Import External STL or OBJ Mesh ($10 fee)
-document.getElementById("file-input-import").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const isSTL = file.name.toLowerCase().endsWith(".stl");
-  const isOBJ = file.name.toLowerCase().endsWith(".obj");
-  if (!isSTL && !isOBJ) {
-    addLog("Unsupported format. Only .stl and .obj meshes are accepted.", "log-nope");
-    status("Import failed: Unsupported file extension.");
-    return;
-  }
+const fileInputImport = document.getElementById("file-input-import");
+if (fileInputImport) {
+  fileInputImport.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const isSTL = file.name.toLowerCase().endsWith(".stl");
+    const isOBJ = file.name.toLowerCase().endsWith(".obj");
+    if (!isSTL && !isOBJ) {
+      addLog("Unsupported format. Only .stl and .obj meshes are accepted.", "log-nope");
+      status("Import failed: Unsupported file extension.");
+      return;
+    }
 
   triggerArtificialDelay(`Importing External CAD Asset (${file.name})...`, () => {
     recordUndoState(`Import ${file.name}`);
@@ -8283,6 +8356,7 @@ document.getElementById("file-input-import").addEventListener("change", (e) => {
   });
   e.target.value = "";
 });
+}
 
 // Initialize Theme, Audio, Economy
 applyTheme(currentTheme);
@@ -8449,10 +8523,13 @@ if (btnMinDebug && debugOverlay) {
     debugOverlay.classList.toggle("minimized");
     btnMinDebug.textContent = debugOverlay.classList.contains("minimized") ? "+" : "_";
   };
-  document.getElementById("debug-hud-toggle").onclick = () => {
-    debugOverlay.classList.toggle("minimized");
-    btnMinDebug.textContent = debugOverlay.classList.contains("minimized") ? "+" : "_";
-  };
+  const hudToggle = document.getElementById("debug-hud-toggle");
+  if (hudToggle) {
+    hudToggle.onclick = () => {
+      debugOverlay.classList.toggle("minimized");
+      btnMinDebug.textContent = debugOverlay.classList.contains("minimized") ? "+" : "_";
+    };
+  }
 }
 
 const btnToggleTestPrimitives = document.getElementById("btn-toggle-test-primitives");
