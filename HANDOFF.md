@@ -25,13 +25,18 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
-| **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. |
-| **Checkpoint A: Sketching Repair** | **YES** | **YES** | **YES** | **YES** | Rubberband preview duplication eliminated. 1 transient preview group, 1 committed entity, 4 boundary edges on rectangle, auto-exit, single-step undo removal, extrudable to 3D solid. Tested at DPR 1.0 & 2.0. **User Accepted via Safari hands-on testing.** |
-| **Checkpoint B: Header Redesign** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Blue title bar height doubled to 44px (from 22px), fixed width removed, `[Part1.prt : 4 Viewports]` removed, clean bold `CADN'T` branding and scaled retro caption buttons. |
-| **Checkpoint C: Functional Pipe Command** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | `Can I pipe` & `#tool-pipe`. Command Bar with Radius/Diameter selector & live preview. Generates 100% watertight 2-manifold solid ($\chi=2$, open=0) with capped planar ends along straight lines and L-shaped polylines. Registered in FeatureManager (`PipeSolid`), 1 Undo step. Unsupported paths (e.g. solid box) reported with disabled Apply button. |
-| **Checkpoint D: Michigan Removal Alias** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Added `Can I delete michigan` alias (case-insensitive, trailing punctuation tolerant) triggering the exact same confirmation dialog as `Can I remove starting object`. Normal Delete key remains blocked. Undoable via `Can I undo`. |
-| **Checkpoint E: Much Slower Gumball** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Shift+M free move multiplier changed from 0.04 to **0.01** (1% displacement). Releasing pointerup commits transform, creates 1 Undo step, immediately hides Gumball, deactivates Gumball mode, requiring `Can I gumball?` to reactivate. |
-| **Checkpoint F: Audio Changes** | **YES** | **YES** | **YES** | *Awaiting Acceptance* | Removed user-facing Sound/Mute button (`#btn-audio-mute`) and View menu item (`#mitem-view-sound`). Set hold-music playback volume to 100% (`1.0`). Preserved non-looping playback, loading triggers, stop on completion, and autoplay compliance. |
+| **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | **YES** | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. **Accepted by user; merged into `main` (commit `4844d59`).** |
+| **Checkpoint B: Fix Michigan Deletion** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I remove starting object` and `Can I delete michigan` locate starting Michigan directly by internal ID without prior selection. Prompts exact text: `"Are you sure you want to remove this?"`. On confirm: removes both peninsulas, updates 4 viewports and FeatureManager, preserves Undo, leaves unrelated objects intact and selected. Ordinary deletion remains blocked. |
+| **Checkpoint C: Polygon Command** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I polygon [sides]` with dynamic prompt ($\ge 3$ sides), live rubberband regular polygon preview with center anchor and dashed radius guide. Creates `ClosedProfile` with `THREE.Shape`, auto-exits upon radius placement, supports selection, and extrudes cleanly into 3D solid prism with single-step Undo. Verified for 3, 4, 5, 6 sides. |
+| **Checkpoint D: Numeric Easter Eggs** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | Exact numeric inputs `67`, `69`, or `420` trigger a retro Windows 95 modal containing exactly `"nice."`. Rejects substrings (`167`, `4200`, `690`). Dismissible via `OK` or caption `✕`, preserves underlying modeling operations, and triggers on parameter commit rather than keystroke spam. |
+| **Checkpoint E: Rhino-Style Lock** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I lock` and `Can I unlock`. Locked objects remain visible, are unavailable for selection or editing, and are protected against Move, Rotate, Scale, Gumball, and Deletion. Renders 🔒 lock badge in FeatureManager with click-to-unlock. Persists across save/load. Strictly decoupled from Michigan starting geometry protection. |
+| **Checkpoint F: Slowly Escaping Spheres** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | Independent, unlocked spheres roll over time at approximately $0.05\text{ mm/sec}$ with subtle rolling rotation consistent with travel direction on world ground plane ($\vec{\omega} \perp \vec{v}$). Frame-rate independent ($\Delta t$). Locking or Boolean-unioning immediately halts movement; unlocking resumes it. Mesh topology unchanged; pauses during active transforms. |
+| **Checkpoint A: Sketching Repair (v0.14)** | **YES** | **YES** | **YES** | **YES** | Rubberband preview duplication eliminated. 1 transient preview group, 1 committed entity, 4 boundary edges on rectangle, auto-exit, single-step undo removal, extrudable to 3D solid. Tested at DPR 1.0 & 2.0. **User Accepted via Safari hands-on testing.** |
+| **Checkpoint B: Header Redesign (v0.14)** | **YES** | **YES** | **YES** | **YES** | Blue title bar height doubled to 44px (from 22px), fixed width removed, `[Part1.prt : 4 Viewports]` removed, clean bold `CADN'T` branding and scaled retro caption buttons. |
+| **Checkpoint C: Functional Pipe Command (v0.14)** | **YES** | **YES** | **YES** | **YES** | `Can I pipe` & `#tool-pipe`. Command Bar with Radius/Diameter selector & live preview. Generates 100% watertight 2-manifold solid ($\chi=2$, open=0) with capped planar ends along straight lines and L-shaped polylines. Registered in FeatureManager (`PipeSolid`), 1 Undo step. Unsupported paths (e.g. solid box) reported with disabled Apply button. |
+| **Checkpoint D: Michigan Removal Alias (v0.14)** | **YES** | **YES** | **YES** | **YES** | Added `Can I delete michigan` alias (case-insensitive, trailing punctuation tolerant) triggering the exact same confirmation dialog as `Can I remove starting object`. Normal Delete key remains blocked. Undoable via `Can I undo`. |
+| **Checkpoint E: Much Slower Gumball (v0.14)** | **YES** | **YES** | **YES** | **YES** | Shift+M free move multiplier changed from 0.04 to **0.01** (1% displacement). Releasing pointerup commits transform, creates 1 Undo step, immediately hides Gumball, deactivates Gumball mode, requiring `Can I gumball?` to reactivate. |
+| **Checkpoint F: Audio Changes (v0.14)** | **YES** | **YES** | **YES** | **YES** | Removed user-facing Sound/Mute button (`#btn-audio-mute`) and View menu item (`#mitem-view-sound`). Set hold-music playback volume to 100% (`1.0`). Preserved non-looping playback, loading triggers, stop on completion, and autoplay compliance. |
 | **Clean 4-Canvas Viewport Architecture** | **YES** | **YES** | **YES** | **YES** | 4 distinct `<canvas>` elements on CSS Grid (`#vp-top`, `#vp-perspective`, `#vp-front`, `#vp-right`), each with independent `THREE.WebGLRenderer` and camera sharing the scene. User accepted. |
 | **Simple Cube Framing Demonstration** | **YES** | **YES** | **YES** | **YES** | $20 \times 20 \times 20$ blue box with white edges resting at $(0, 10, 0)$, cleanly framed in Top (plan), Perspective (3D), Front (elevation), and Right (side) views. User accepted. |
 | **WASD Camera Orbit (Perspective Only)** | **YES** | **YES** | **YES** | **YES** | W/S (vertical elevation), A/D (horizontal azimuth). Only Perspective camera moves; Top, Front, and Right orthographic views remain fixed. User accepted. |
@@ -1202,11 +1207,222 @@ Following the release of build `v00000-011` (`fb95d7e`), all four viewports rend
 - **Visual Artifact**:
   - [checkpoint_f_toolbar_clean.png](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_f_toolbar_clean.png) (Clean toolbar without sound/mute controls).
 
-### 15.6 Build Version & Git Status
-- **Build Version**: `v00000-015`
-- **Active Branch**: `dev`
-- **Automated Tests**: **118 / 118 passing (100% pass, 0 failures)**.
-- **Deployment Control**: All changes strictly maintained on `dev`. Not merged to `main` or deployed to GitHub Pages awaiting user acceptance.
+### 15.6 Historical Git Status (v0.14 Milestone)
+- **Historical Build Version**: `v00000-014`
+- **Historical Tests**: 118 / 118 passing.
+
+---
+
+## 16. Milestone v00000-015: Sketching Fixes, Commands, and Sphere Sabotage (Checkpoints A–F)
+
+> **Active Branch:** `dev` (Commit [`5f6d7e7`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app))  
+> **Base Branch:** `main` (Commit [`4844d59`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app))  
+> **Source File:** [`index.html`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/index.html) (`v00000-015`)  
+> **Automated Test Suite:** **156 / 156 Passing (100% Pass, 0 Failures)**  
+> **Verification Scripts:** [`verify_checkpoints_b_f.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoints_b_f.py) and [`verify_checkpoint_a_spline.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoint_a_spline.py)  
+> **Screenshots Output:** [`/Users/andybuck/Desktop/CADNT_Screenshots`](file:///Users/andybuck/Desktop/CADNT_Screenshots) (mirrored by [`/Users/andybuck/Desktop/CADNT_Screenshot`](file:///Users/andybuck/Desktop/CADNT_Screenshot))
+
+---
+
+### 16.1 Checkpoint A — Repair Spline (Accepted by User & Merged to `main`)
+- **Problem**: Previous spline sketching produced a straight 2-point line instead of a genuine multi-point curve.
+- **Implementation**:
+  - Implemented `startSketch("spline")` and `setupSplineCommand()` using Three.js `THREE.CatmullRomCurve3`.
+  - Supports clicking arbitrary control points in any active construction plane (Top X/Z, Front X/Y, Right Z/Y, Perspective).
+  - Live curved rubberband preview updating dynamically as the pointer moves.
+  - Requires at least 3 control points; enables `[✓ Finish (Enter)]` once $\ge 3$ points are placed.
+  - Cancel with `Escape` or `[✕ Cancel]`.
+  - Stored as a single editable sketch entity (`SplineCurve`) with 51 sampled curve vertices for smooth WebGL display.
+  - Preserves underlying raw control point data in `userData.controlPoints`.
+  - Interactive 3D control point handles (`Group` with yellow sphere gizmos) appear when selected.
+  - Dragging or editing control points dynamically recalculates curve interpolation in real-time.
+  - Full serialization in `serializeProjectState()` and `deserializeProjectState()` (`.cadnt` project format).
+  - Single-step and multi-level Undo support via `Can I undo`.
+- **Mathematical Curvature Verification**:
+  - Non-collinear test points: $(0, 0, 0)$, $(20, 0, 25)$, $(40, 0, 0)$.
+  - Midpoint chord deviation verified non-zero: peak $Z = 25.0$, intermediate samples $Z \approx 18.7$ and $Z \approx 18.7$.
+  - Tangent vector angle changes continuously across parameter $t \in [0, 1]$.
+- **Status**: **Formally Accepted by User** ("the spline is perfect merge when ready"). Merged into `main` at commit `8d9fb47` / `4844d59`.
+
+---
+
+### 16.2 Checkpoint B — Fix Michigan Deletion
+- **Problem**: The protected Michigan starting object could not be deleted using hidden commands because the parser expected the object to be actively selected by the user.
+- **Implementation**:
+  - Commands recognized: `Can I remove starting object`, `Can I delete michigan`, `remove starting object`, `delete michigan`, `remove michigan`, `delete starting object`.
+  - Directly locates the Michigan starting object by internal identifier (`userData.id === "starting_michigan"` or `isStartingObject` or `michiganModel`).
+  - **No prior user selection is permitted or required**. If an unrelated object is currently selected, it remains selected and completely unaffected.
+  - Presents exact confirmation dialog text:
+    - Title: `"Are you sure you want to remove this?"`
+    - Body: `"Are you sure you want to remove this?"`
+  - On user confirmation (`#btn-confirm-ok.click()`):
+    - Removes the Michigan group (both Upper and Lower Peninsulas simultaneously) from `scene` and `sceneObjects`.
+    - Updates all 4 viewports (`renderAllViewports()`).
+    - Updates the FeatureManager tree (`updateObjectsTree()`) and Properties panel.
+    - Preserves single Undo state (`Can I undo` restores Michigan with `protected = true` status).
+    - Unrelated objects remain in the scene and retain their active selection.
+    - Ordinary deletion via Delete key or `Can I delete` remains strictly restricted.
+- **Verification Screenshots**:
+  - `cp_b_01_confirm_remove_dialog.png`: Confirmation dialog showing exact title and body while unrelated box is selected.
+  - `cp_b_02_michigan_deleted_unrelated_intact.png`: Both peninsulas removed from all 4 viewports, unrelated box intact and selected.
+  - `cp_b_03_michigan_restored_undo.png`: Full restoration of Michigan starting object via `Can I undo`.
+
+---
+
+### 16.3 Checkpoint C — Polygon Command
+- **Requirement**: Add `Can I polygon [sides]` to create regular planar polygons.
+- **Implementation**:
+  - Workflow:
+    1. Activate Polygon: `Can I polygon` (or `Can I polygon 5` or click `#tool-polygon`).
+    2. Prompt for number of sides (minimum integer 3; defaults to 5).
+    3. Click center point in active C-Plane (or type coordinates `X, Y, Z`).
+    4. Move pointer to preview live rubberband regular polygon with center marker dot and dashed radius guide line.
+    5. Click radius point or type exact radius value into Command Bar and press Enter.
+    6. Commits exactly one closed profile object (`ClosedProfile`) with attached `THREE.Shape`.
+    7. Automatically exits the command upon commit.
+  - Regular $N$-gon geometry:
+    - 3 sides $\rightarrow$ Equilateral Triangle.
+    - 4 sides $\rightarrow$ Square.
+    - 5 sides $\rightarrow$ Regular Pentagon.
+    - 6 sides $\rightarrow$ Regular Hexagon.
+  - 3D Extrusion:
+    - Setting `userData.type = "ClosedProfile"`, `userData.closed = true`, and attaching a valid `THREE.Shape` allows the profile to be directly extruded into a 3D solid via `extrudeSelectedProfile(depth)`.
+    - Produces a manifold 3D `ExtrudedSolid` with shaded faces and highlighted silhouette edges.
+  - Single-step Undo cleanly removes the polygon entity.
+  - Tested and verified at both standard resolution (DPR 1.0) and Retina display (DPR 2.0).
+- **Verification Screenshots**:
+  - `cp_c_01_pentagon_rubberband_preview.png`: Live green regular pentagon preview with center anchor dot and radius guide.
+  - `cp_c_02_pentagon_profile_committed.png`: Committed 5-sided closed profile in scene and FeatureManager.
+  - `cp_c_03_pentagon_extruded_solid.png`: 3D regular pentagonal prism solid across all 4 viewports.
+  - `cp_c_04_triangle_and_hexagon.png`: Equilateral triangle (3 sides), pentagonal solid (5 sides), and hexagon (6 sides) side-by-side.
+  - `cp_c_05_retina_dpr2_polygons.png`: Crisp anti-aliased geometry rendering at Retina DPR 2.0.
+
+---
+
+### 16.4 Checkpoint D — Numeric Easter Eggs
+- **Requirement**: When the user explicitly enters `67`, `69`, or `420` as a numeric command value, display a small retro Windows 95-style popup containing exactly `"nice."`.
+- **Implementation**:
+  - Exact match regex: `/^(67|69|420)(\.0+)?$/`.
+  - Substrings like `167`, `4200`, or `690` are strictly rejected.
+  - Modal: `<dialog id="modal-nice-easter-egg" class="win95-dialog">`:
+    - Title bar: `"Notice"` with close button `✕`.
+    - Body text: Exactly `"nice."` in MS Sans Serif font.
+    - Action button: `"OK"` to dismiss.
+  - Modeling Operation Preservation:
+    - The easter egg does **not** cancel, corrupt, or alter the modeling operation.
+    - Example: `Can I box 69` creates `Box_6` with length 69 mm and displays the popup.
+  - Event Handling:
+    - Listens on command token evaluation, Command Bar parameter commit, and document-level input `change` events.
+    - Avoids firing repeatedly on every keystroke (`keydown` without Enter is ignored).
+- **Verification Screenshots**:
+  - `cp_d_01_nice_popup_69.png`: Exact "nice." Windows 95 popup triggered by `Can I box 69`, with `Box_6` created in background.
+  - `cp_d_02_nice_popup_420.png`: Exact "nice." popup triggered by `Can I cylinder 420`, with `Cylinder_7` created in background.
+
+---
+
+### 16.5 Checkpoint E — Rhino-Style Lock
+- **Requirement**: Implement `Can I lock` and `Can I unlock` with Rhino-style lock semantics.
+- **Implementation**:
+  - `Can I lock`:
+    - Requires one or more objects to be selected.
+    - Sets `obj.userData.locked = true`.
+    - Clears active selection and hides Gumball transform gizmos.
+    - Locked objects remain 100% visible with their normal shading and wireframes.
+    - Direct selection in viewports via raycasting is refused: locked objects are filtered out from raycast candidate lists.
+    - Selection in FeatureManager displays advisory: `"'ObjectName' is locked. Click the 🔒 lock icon to unlock."`
+    - Protection: Blocked from Move, Rotate, Scale, Gumball, and Deletion (`handleDelete` rejects locked items).
+    - FeatureManager renders a yellow 🔒 lock badge (`.obj-lock-badge`) next to locked objects.
+  - `Can I unlock`:
+    - Unlocks all previously locked objects in the workspace (`obj.userData.locked = false`).
+    - Alternatively, clicking the 🔒 lock badge directly in the FeatureManager unlocks that specific object.
+    - Single-step Undo records lock and unlock transitions.
+  - Save/Reopen Persistence:
+    - `serializeProjectState()` preserves `userData.locked = true`.
+    - `deserializeProjectState()` restores locked status upon reopening `.cadnt` project files.
+  - Strict Decoupling from Michigan:
+    - Ordinary lock uses `obj.userData.locked`.
+    - Michigan uses `obj.userData.protected` and `obj.userData.isStartingObject`.
+    - `Can I unlock` only affects `userData.locked` and never unlocks or exposes Michigan to ordinary deletion.
+- **Verification Screenshots**:
+  - `cp_e_01_locked_object_feature_manager.png`: Locked box in FeatureManager with 🔒 lock badge; selection cleared.
+  - `cp_e_02_selection_and_deletion_blocked.png`: Status bar confirms deletion and transforms are blocked.
+  - `cp_e_03_unlocked_via_feature_manager.png`: Object unlocked by clicking 🔒 badge in FeatureManager.
+
+---
+
+### 16.6 Checkpoint F — Slowly Escaping Spheres
+- **Requirement**: Intentional slow movement for eligible sphere objects as a piece of CADN'T satire.
+- **Rules & Technical Implementation**:
+  - Eligibility: Must be an independent sphere primitive (`userData.type === "Sphere"`), unlocked (`!userData.locked`), and not protected (`!userData.protected`).
+  - Speed: Approximately $0.05\text{ model units per second}$ ($0.05\text{ mm/sec}$).
+  - Rolling Rotation: Calculates angular velocity $\omega = v / R$ and applies rolling rotation around the horizontal normal axis $\vec{u}_{\text{roll}} = (\text{dir}_z, 0, -\text{dir}_x)$ via `obj.rotateOnWorldAxis()`.
+  - Frame-Rate Independence: Powered by `updateEscapingSpheres(dt)` inside the `render()` loop using `performance.now()` delta time ($\Delta t$). Clamped to prevent jumps if the tab goes to background.
+  - Mesh Topology Untouched: Only updates `obj.position` and `obj.rotation`. Mesh vertices and topology remain 100% untouched.
+  - Zero Undo Spam: Does not create an Undo history entry on animation frames. Current position is saved normally when the project is saved.
+  - Transform Pause: If the user is actively dragging the sphere via Gumball or running an active transform command, escaping movement pauses so the user does not fight the motion.
+  - Stopping Conditions:
+    - Locking the sphere (`Can I lock`) immediately stops movement ($0.00\text{ mm/sec}$).
+    - Joining or Boolean-unioning the sphere converts its type to `BooleanMesh`, permanently disqualifying it.
+    - Unlocking an independent sphere immediately resumes its escape trajectory.
+  - Non-spherical objects (boxes, cylinders, polygons, splines) never move.
+- **Verification Screenshots**:
+  - `cp_f_01_sphere_start_pos.png`: Sphere primitive initialized at $(0, 8, 0)$.
+  - `cp_f_02_sphere_moved_and_rolled.png`: Sphere smoothly displaced by $0.20\text{ mm}$ over $4.0\text{ seconds}$ with rolling rotation.
+  - `cp_f_03_locked_sphere_stopped.png`: Sphere locked via `Can I lock`, completely halting escape movement.
+
+---
+
+### 16.7 Geometric Kernel Architecture Summary
+CADN'T runs on a **hybrid client-side geometric engine** with 4 distinct layers:
+1. **CSG BSP Engine (`three-csg-ts`)**: Volumetric boolean union and difference operations using Binary Space Partitioning trees.
+2. **Analytical 2-Manifold B-Rep Engine (`buildBoxManifoldCut`, `createPipeSolid`)**: In-house exact boundary representation generator that guarantees watertight 2-manifold closed meshes ($\chi = V - E + F = 2$, 0 open edges, 0 non-manifold edges) for Chamfers, Fillets, and Pipe solids.
+3. **2D Sketch & Extrusion Engine**: Three.js `THREE.Shape`, `THREE.Path`, and `THREE.CatmullRomCurve3` with embedded Mapbox Earcut triangulation and `THREE.ExtrudeGeometry` for closed planar sketch extrusion.
+4. **CAD Feature Edge Engine**: Dynamic dihedral crease extraction via `THREE.EdgesGeometry` ($24^\circ - 30^\circ$ cutoff) rendering crisp CAD feature lines over shaded models.
+
+---
+
+### 16.8 Verification & Test Runner Guide
+
+#### 1. Running Automated Test Suite (156 Tests)
+```bash
+cd /Users/andybuck/.gemini/antigravity/single-file-html-app
+python3 scripts/get_test_results.py
+```
+*Expected Result:*
+`SAVED test_run_output.json with total: 156 failures: 0`
+
+#### 2. Running Full Interactive Verification & Screenshot Generation
+```bash
+python3 scripts/verify_checkpoints_b_f.py
+```
+*Captures all 16 verification screenshots directly into `/Users/andybuck/Desktop/CADNT_Screenshots/`.*
+
+#### 3. Manual Interactive Verification in Browser
+1. Open [`index.html`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/index.html) in Chrome or Safari.
+2. Type `Can I spline` $\rightarrow$ Click 3+ points on C-Plane $\rightarrow$ Press Enter $\rightarrow$ Spline curve commits.
+3. Type `Can I delete michigan` $\rightarrow$ Confirm dialog appears $\rightarrow$ Click `Yes, Proceed` $\rightarrow$ Michigan is deleted.
+4. Type `Can I polygon 5` $\rightarrow$ Click center $\rightarrow$ Move cursor to radius $\rightarrow$ Click to commit $\rightarrow$ Extrude with `Can I extrude 20`.
+5. Type `Can I box 69` $\rightarrow$ Retro Windows 95 dialog pops up with exact text `"nice."` $\rightarrow$ Dismiss via OK $\rightarrow$ Box is created.
+6. Select any object $\rightarrow$ Type `Can I lock` $\rightarrow$ Object shows 🔒 lock badge in FeatureManager $\rightarrow$ Selection and deletion are refused $\rightarrow$ Click 🔒 badge to unlock.
+7. Type `Can I sphere` $\rightarrow$ Watch sphere slowly roll across ground plane $\rightarrow$ Type `Can I lock` to freeze it.
+
+---
+
+### 16.9 Current Git State & How to Pick Up
+
+- **Current Git Branch:** `dev`
+- **Current Head Commit:** [`5f6d7e7`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
+- **Status of Checkpoint A:** Merged into `main` (commit `4844d59`).
+- **Status of Checkpoints B–F:** Committed to `dev` branch.
+- **Action Required to Deploy:**
+  When ready to promote Checkpoints B through F to production / GitHub Pages:
+  ```bash
+  cd /Users/andybuck/.gemini/antigravity/single-file-html-app
+  git checkout main
+  git merge dev
+  git push origin main
+  git checkout dev
+  ```
 
 
 
