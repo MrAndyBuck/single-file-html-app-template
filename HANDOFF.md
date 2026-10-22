@@ -25,6 +25,7 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Cubert: Desktop Assistant (Visual Phase)** | **YES** | **YES** | **YES** | *Awaiting Visual Acceptance* | Canonical 1990s desktop assistant (blue cube mascot). Replaced former Object Properties panel in bottom-left dock with permanent Windows 95 Cubert panel (`#cubert-panel`) displaying canonical mascot image. Constructed floating workspace popup window (`#cubert-popup`) with retro title bar, speech bubble, caption row, and close button. Created centralized voice-line manifest (8 canonical keys, fallback to text caption without audio errors). 162 automated tests passing. Screenshots saved to `Oct_22`. |
 | **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | **YES** | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. **Accepted by user; merged into `main` (commit `4844d59`).** |
 | **Checkpoint B: Fix Michigan Deletion** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I remove starting object` and `Can I delete michigan` locate starting Michigan directly by internal ID without prior selection. Prompts exact text: `"Are you sure you want to remove this?"`. On confirm: removes both peninsulas, updates 4 viewports and FeatureManager, preserves Undo, leaves unrelated objects intact and selected. Ordinary deletion remains blocked. |
 | **Checkpoint C: Polygon Command** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I polygon [sides]` with dynamic prompt ($\ge 3$ sides), live rubberband regular polygon preview with center anchor and dashed radius guide. Creates `ClosedProfile` with `THREE.Shape`, auto-exits upon radius placement, supports selection, and extrudes cleanly into 3D solid prism with single-step Undo. Verified for 3, 4, 5, 6 sides. |
@@ -1408,7 +1409,56 @@ python3 scripts/verify_checkpoints_b_f.py
 
 ---
 
-### 16.9 Current Git State & How to Pick Up
+## 17. Milestone v00000-016 — Cubert Desktop Assistant (Visual Acceptance Phase)
+
+### 17.1 Canonical Character Asset
+- **Asset**: Sourced canonical 1254×1254 character artwork [`assets/cubert/cubert.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/assets/cubert/cubert.png) (synced from `/Users/andybuck/Documents/Antigravity/assets/Brand/CubertReference/Cheerful Blue Cube Mascot.png`).
+- **Art Direction Compliance**: Completely adheres to 1990s desktop assistant aesthetic (inspired by Microsoft Office Clippy). Zero 3D animated character meshes, zero skeletal animation, zero synthetic voices. Presentation relies on static 2D image assets, speech bubbles, and text captions.
+
+### 17.2 Permanent Cubert Panel (`#cubert-panel`)
+- **Placement**: Directly replaced the Object Properties panel in the bottom-left sidebar of `#left-sidebar`.
+- **Styling**: Windows 95 sunken panel (`.win95-sunken`) with chiseled borders, neutral dialog background, and navy header badge with `#cubert-panel-status` (`Idle`).
+- **Isolation**: Does not obstruct or compress the FeatureManager tree. Zero impact on the 4-canvas CAD viewport grid.
+
+### 17.3 Cubert Workspace Popup Window (`#cubert-popup`)
+- **Interaction Window**: Authentically styled retro Windows 95 floating assistant window (`#cubert-popup`, 380px wide) floating over the CAD workspace.
+- **Components**:
+  - Title bar with Windows 95 gradient (`#000080` to `#1084d0`), desktop assistant title, and tiny caption close button (`#btn-cubert-close`).
+  - Left column: Cubert illustration with retro `CUBERT v1.0` badge.
+  - Right column: Prominent pale yellow speech bubble (`#cubert-speech-bubble`) with chiseled directional pointer tail, bold header (`Cubert says:`), and dynamic dialogue readout (`#cubert-bubble-text`).
+  - Sub-caption bar (`#cubert-caption-row`): Displays audio alignment status (e.g., `[Audio: cubert_help_1.mp3 (Captioned)]`).
+- **Non-Interference**: Non-blocking floating layout allows the user to click, inspect, or type into the Request Bar without focus trapping.
+
+### 17.4 Centralized Voice-Line Manifest (`CUBERT_VOICE_MANIFEST`)
+- Centralized mapping in JavaScript for all 8 canonical voice lines:
+  - `help_1`: `assets/audio/cubert_help_1.mp3` ("How can I help you?")
+  - `hmm`: `assets/audio/cubert_hmm.mp3` ("Hmm...")
+  - `watch_language`: `assets/audio/cubert_watch_language.mp3` ("Watch your fucking language.")
+  - `not_sure`: `assets/audio/cubert_not_sure.mp3` ("I'm not sure what you mean.")
+  - `retry_carefully`: `assets/audio/cubert_retry_carefully.mp3` ("Please remain calm and try to type that request again a little more carefully.")
+  - `dont_know`: `assets/audio/cubert_dont_know.mp3` ("I don't know that command.")
+  - `break`: `assets/audio/cubert_break.mp3` ("Hey man, I'm going to go on break.")
+  - `broke_ass`: `assets/audio/cubert_broke_ass.mp3` ("Broke ass.")
+- **Graceful Fallback**: All audio files are treated as optional. When audio recordings are not present, text captions render instantly with zero audio playback errors, zero console warnings, and zero workflow interruption.
+
+### 17.5 Visual Verification Artifacts (Saved to `OCT_22`)
+All visual verification outputs captured via Chrome remote debugging and saved to `/Users/andybuck/Documents/Antigravity/CADNT_Screenshots/Oct_22`:
+1. **`oct22_01_cubert_panel_idle_full_app.png`**: Full application window showing the permanent Cubert panel at the bottom-left alongside the FeatureManager and the 4 CAD viewports.
+2. **`oct22_02_cubert_panel_closeup.png`**: Close-up inspection of the permanent Cubert panel in its idle state.
+3. **`oct22_03_cubert_workspace_popup_active.png`**: Full application view showing the Cubert Workspace Popup window active over the workspace with speech bubble saying *"How can I help you?"*.
+4. **`oct22_04_cubert_popup_closeup.png`**: Close-up inspection of the Cubert assistant popup window, speech bubble, and caption bar.
+5. **`oct22_05_cubert_dpr2_retina.png`**: High-DPI Retina (DPR 2.0) full-app capture proving crisp vector borders and typography.
+
+### 17.6 Automated Test Suite Expansion (162 Passing Tests)
+Run test suite:
+```bash
+python3 scripts/get_test_results.py
+```
+*Result:* `SAVED test_run_output.json with total: 162 failures: 0`
+
+---
+
+### 17.7 Current Git State & How to Pick Up
 
 - **Current Git Branch:** `dev`
 - **Current Head Commit:** [`5f6d7e7`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
