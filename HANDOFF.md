@@ -25,7 +25,7 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
-| **Cubert: Desktop Assistant (Clippy-Style Redesign)** | **YES** | **YES** | **YES** | *Awaiting Visual Acceptance* | Clippy-style floating desktop assistant (blue cube mascot). Replaced former Object Properties panel in bottom-left dock with permanent Windows 95 Cubert panel (`#cubert-panel`) displaying canonical mascot image (cheerful idle, burnt-out on break). Floating assistant (`#cubert-popup`, `.cubert-floating-assistant`) rendered directly over CAD workspace without window container, titlebar, or frames. Comic-style speech bubble (`#cubert-speech-bubble`) with pale cream background, thin black border, directional pointer tail, and close button. Sourced 7 canonical character expressions with transparency derivatives. 163 automated tests passing. Screenshots saved to Desktop and `Desktop/OCT_22`. |
+| **Cubert: Desktop Assistant (Location & Single-Instance Invariant)** | **YES** | **YES** | **YES** | *Awaiting Visual Acceptance* | Clippy-style floating desktop assistant with unified single-instance location controller (`setCubertMode`). Strict invariant: exactly ONE visible Cubert across all states. In Standby mode, burnt-out Cubert smoking in office chair is displayed in bottom-left dock (`#cubert-panel`) with status 'Standby'. In Active mode, bottom-left Cubert is completely hidden (`display: none`) and expressive Cubert is displayed centrally over workspace with comic speech bubble. Dismissing Cubert or finishing a tip hides central Cubert and restores bottom-left burnt-out Cubert. Break mode keeps burnt-out Cubert docked for 60s cooldown with status 'On Break'. Full triggers for profanity, Help topics, manual summon, and 2 consecutive misinputs. 169 automated tests passing (0 failures). |
 | **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | **YES** | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. **Accepted by user; merged into `main` (commit `4844d59`).** |
 | **Checkpoint B: Fix Michigan Deletion** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I remove starting object` and `Can I delete michigan` locate starting Michigan directly by internal ID without prior selection. Prompts exact text: `"Are you sure you want to remove this?"`. On confirm: removes both peninsulas, updates 4 viewports and FeatureManager, preserves Undo, leaves unrelated objects intact and selected. Ordinary deletion remains blocked. |
 | **Checkpoint C: Polygon Command** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I polygon [sides]` with dynamic prompt ($\ge 3$ sides), live rubberband regular polygon preview with center anchor and dashed radius guide. Creates `ClosedProfile` with `THREE.Shape`, auto-exits upon radius placement, supports selection, and extrudes cleanly into 3D solid prism with single-step Undo. Verified for 3, 4, 5, 6 sides. |
@@ -1442,12 +1442,43 @@ python3 scripts/verify_checkpoints_b_f.py
   - Dialogue readout (`#cubert-bubble-text`) matching voiceover lines.
   - Inline tip selector (`#cubert-tip-selector`) offering satirical tips ($1, $5, $10, and tiny $0 button).
 
-### 17.4 Permanent Cubert Dock Panel (`#cubert-panel`)
-- Replaces the former Object Properties panel in the bottom-left sidebar (`#left-sidebar`).
-- **Normal / Idle State**: Displays Cheerful Cubert illustration statically with status badge `Idle`.
-- **Break State**: Displays Burnt-Out Cubert sitting in his office chair smoking, accompanied by a 60-second countdown timer and status badge `On Break`.
+### 17.4 Single-Instance Location Controller & Invariant (`setCubertMode`)
+- **Core Rule**: **There is NEVER two visible Cuberts simultaneously.**
+- Cubert occupies exactly one location depending on his current mode:
+  1. **Standby Mode (`STANDBY`)**:
+     - Displayed strictly in the permanent bottom-left Cubert Assistant panel (`#cubert-panel`).
+     - Uses the supplied `Burnt-Out Blue Cube in Office Chair` artwork (`assets/cubert/cubert_burntout.png`).
+     - Mascot is sitting in office chair, smoking a cigarette with a thousand-yard stare, completely exhausted.
+     - Status badge: `Standby`.
+     - Central floating assistant (`#cubert-popup`) is hidden (`display: none`).
+     - Exactly ONE visible Cubert.
+  2. **Active / Helping Mode (`ACTIVE`)**:
+     - Bottom-left Cubert image is hidden completely (`display: none`). The panel remains present in the sidebar layout.
+     - Central workspace displays ONE expressive Cubert illustration with speech bubble.
+     - Status badge: `Active`.
+     - Exactly ONE visible Cubert.
+  3. **Return to Standby**:
+     - Dismissing Cubert (`[✕]`), submitting a tip ($0, $1, $5, $10), or finishing interaction removes the central workspace Cubert and restores the bottom-left burnt-out Cubert.
+     - Status badge: `Standby`.
+     - Exactly ONE visible Cubert.
+  4. **Break Mode (`BREAK`)**:
+     - Central workspace Cubert disappears (`display: none`).
+     - Burnt-out smoking Cubert displayed in bottom-left panel (`display: block`).
+     - Status badge: `On Break`.
+     - 60-second real-world cooldown timer; attempts to summon report `"Cubert will be back in 15"`.
+     - Returns to Standby mode automatically after 60 seconds.
+     - Exactly ONE visible Cubert.
 
-### 17.5 Centralized Voice-Line Manifest (`CUBERT_VOICE_MANIFEST`)
+### 17.5 Activation Triggers & Multi-Turn State Machine
+- **Manual Commands**: `Can I cubert`, `Can I get some help cubert`, `Can I get help from cubert`, `Can I ask cubert`, `Can I talk to cubert`, `Can I have cubert`, `Can I summon cubert`, `Can I get some help from cubert`.
+- **Two Consecutive Failures**: Two unrecognized commands beginning with `Can I` trigger Cubert centrally with `"How can I help you?"`. Recognized commands reset the failure counter.
+- **Help Topics**: Opening the Help interface or tutorial modal summons Cubert centrally.
+- **Profanity Detection**: Whole-word regex matching for profanity words (`fuck`, `shit`, `bitch`, `asshole`, `bullshit`, `damn`) instantly interrupts with Scolding Cubert saying `"Watch your fucking language."`.
+- **Multi-Turn Request Bar Flow**:
+  - `AWAITING_DESCRIPTION`: Accepts natural language feature request $\rightarrow$ responds `"Please remain calm and try to type that request again a little more carefully."` (confused expression).
+  - `AWAITING_RETRY`: If retry is a valid CAD command, handles normally. If invalid, responds `"I know what you need! [random command]!"` (shrugging expression) and presents the tip prompt.
+
+### 17.6 Centralized Voice-Line Manifest (`CUBERT_VOICE_MANIFEST`)
 - Centralized mapping in JavaScript for all 8 canonical voice lines:
   - `help_1`: `assets/audio/cubert_help_1.mp3` ("How can I help you?")
   - `hmm`: `assets/audio/cubert_hmm.mp3` ("Hmm...")
@@ -1459,35 +1490,37 @@ python3 scripts/verify_checkpoints_b_f.py
   - `broke_ass`: `assets/audio/cubert_broke_ass.mp3` ("Broke ass.")
 - **Graceful Fallback**: Text captions render immediately when audio recordings are absent with zero console errors or workflow interruptions.
 
-### 17.6 Visual Verification Artifacts (Saved to Desktop and `Desktop/OCT_22`)
-All visual captures generated via automated Chrome remote debugging script (`scripts/verify_clippy_cubert.py`):
-1. [**`clippy_01_default_panel_idle.png`**](file:///Users/andybuck/Desktop/clippy_01_default_panel_idle.png): Full application view showing Cheerful Cubert in the permanent lower-left panel and the 4 CAD viewports.
-2. [**`clippy_02_cheerful_greeting.png`**](file:///Users/andybuck/Desktop/clippy_02_cheerful_greeting.png): Floating Cheerful Cubert centered over workspace viewports with comic speech bubble saying *"How can I help you?"*.
-3. [**`clippy_03_thinking_uncertain.png`**](file:///Users/andybuck/Desktop/clippy_03_thinking_uncertain.png): Thinking expression with hand on chin saying *"Hmm..."*.
-4. [**`clippy_04_scolding_profanity.png`**](file:///Users/andybuck/Desktop/clippy_04_scolding_profanity.png): Scolding expression pointing forward saying *"Watch your fucking language."*.
-5. [**`clippy_05_shrugging_bad_suggestion.png`**](file:///Users/andybuck/Desktop/clippy_05_shrugging_bad_suggestion.png): Shrugging expression offering a satirical random command suggestion.
-6. [**`clippy_06_tipping_selector.png`**](file:///Users/andybuck/Desktop/clippy_06_tipping_selector.png): Helpful expression with inline tip selector ($1, $5, $10, and tiny $0).
-7. [**`clippy_07_break_burntout_panel.png`**](file:///Users/andybuck/Desktop/clippy_07_break_burntout_panel.png): Burnt-out Cubert smoking in office chair inside the permanent panel during his 60s break.
-8. [**`clippy_08_retina_dpr2_full_app.png`**](file:///Users/andybuck/Desktop/clippy_08_retina_dpr2_full_app.png): High-DPI Retina (DPR 2.0) full-app capture proving sharp vector outline and transparent clipping.
+### 17.7 Visual Verification Artifacts (Single-Cubert Invariant)
+All visual captures generated via automated Chrome remote debugging script (`scripts/verify_single_cubert.py`), confirming `getVisibleCubertCount() == 1` in every state:
+1. [**`single_cubert_01_standby.png`**](file:///Users/andybuck/Desktop/single_cubert_01_standby.png): Standby mode with only burnt-out smoking Cubert visible in the bottom-left dock panel. Center workspace contains no Cubert.
+2. [**`single_cubert_02_active.png`**](file:///Users/andybuck/Desktop/single_cubert_02_active.png): Active helping mode with only the expressive floating Cubert and speech bubble in the center workspace. Bottom-left panel contains no Cubert image.
+3. [**`single_cubert_03_dismissed.png`**](file:///Users/andybuck/Desktop/single_cubert_03_dismissed.png): Dismissed state after clicking `[✕]`. Central Cubert is removed and bottom-left burnt-out Cubert is restored.
+4. [**`single_cubert_04_break.png`**](file:///Users/andybuck/Desktop/single_cubert_04_break.png): Break mode with only burnt-out Cubert in bottom-left panel, status `On Break`, and 60-second cooldown active.
 
-### 17.7 Automated Test Suite Expansion (163 Passing Tests)
+### 17.8 Automated Test Suite Expansion (169 Passing Tests)
 Run test suite:
 ```bash
 python3 scripts/get_test_results.py
 ```
-*Result:* `SAVED test_run_output.json with total: 163 failures: 0`
+*Result:* `SAVED test_run_output.json with total: 169 failures: 0`
 
 ---
 
-### 17.8 Current Git State & How to Pick Up
+### 17.9 Current Git State & How to Pick Up
 
 - **Current Git Branch:** `dev`
-- **Current Head Commit:** [`106319f`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
+- **Current Head Commit:** [`8096433`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
 - **Status of Checkpoint A:** Merged into `main` (commit `4844d59`).
-- **Status of Checkpoints B–F & Cubert Visual Redesign:** On `dev` branch.
+- **Status of Checkpoints B–F & Cubert Location Correction:** On `dev` branch.
 - **Action Required to Deploy:**
-  When ready to promote Checkpoints B through F to production / GitHub Pages:
+  When ready to promote to production / GitHub Pages:
   ```bash
+  cd /Users/andybuck/.gemini/antigravity/single-file-html-app
+  git checkout main
+  git merge dev
+  git push origin main
+  git checkout dev
+  ```
   cd /Users/andybuck/.gemini/antigravity/single-file-html-app
   git checkout main
   git merge dev

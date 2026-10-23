@@ -1492,10 +1492,10 @@
               <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" fill="#000080"/><rect x="3" y="3" width="10" height="10" fill="#00aaff"/></svg>
               <strong>Cubert Assistant</strong>
             </span>
-            <span class="cubert-status-pill" id="cubert-panel-status">Idle</span>
+            <span class="cubert-status-pill" id="cubert-panel-status">Standby</span>
           </div>
           <div class="dock-sub-body win95-sunken cubert-dock-body" id="cubert-static-container">
-            <img id="cubert-static-img" src="assets/cubert/cubert.png" alt="Cubert" class="cubert-static-mascot" />
+            <img id="cubert-static-img" src="assets/cubert/cubert_burntout.png" alt="Cubert" class="cubert-static-mascot" />
           </div>
         </div>
       </div>
@@ -6049,23 +6049,68 @@ const CUBERT_EXPRESSIONS = {
   break: "assets/cubert/cubert_break.png"
 };
 
+const CUBERT_MODES = {
+  STANDBY: "STANDBY",
+  ACTIVE: "ACTIVE",
+  BREAK: "BREAK"
+};
+
+const CUBERT_RANDOM_COMMANDS = [
+  "Can I loft",
+  "Can I revolve 360",
+  "Can I fillet 50mm",
+  "Can I explode mesh",
+  "Can I non-uniform scale",
+  "Can I sweep along normal",
+  "Can I unroll brep",
+  "Can I draft angle",
+  "Can I shell solid",
+  "Can I hollow out",
+  "Can I bend 90 degrees",
+  "Can I twist"
+];
+
+const PROFANITY_PATTERN = /\b(fuck|fucking|fucked|fucker|fuckers|fucks|shit|shits|shitting|shitted|bitch|bitches|bitching|asshole|assholes|bullshit|damn|damned)\b/i;
+
 let cubertAudio = null;
 let cubertPopupVisible = false;
-let cubertState = "IDLE"; // IDLE, SUMMONED, AWAITING_DESCRIPTION, AWAITING_RETRY, BAD_SUGGESTION, TIP_PROMPT, BREAK
+let cubertMode = CUBERT_MODES.STANDBY;
+let cubertState = "STANDBY"; // Compatibility alias: STANDBY, ACTIVE, BREAK, IDLE, etc.
+let cubertConvStage = "IDLE"; // IDLE, AWAITING_DESCRIPTION, AWAITING_RETRY, BAD_SUGGESTION, TIP_PROMPT
 let cubertBreakTimer = null;
 let cubertConsecutiveFailures = 0;
 
-function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey = "cheerful", showTip = false) {
-  const container = document.getElementById("cubert-popup");
-  const img = document.getElementById("cubert-popup-img");
-  const bubbleText = document.getElementById("cubert-bubble-text");
-  const tipSelector = document.getElementById("cubert-tip-selector");
-  const panelStatus = document.getElementById("cubert-panel-status");
-  if (!container) return;
+function containsProfanity(text) {
+  if (!text || typeof text !== "string") return false;
+  return PROFANITY_PATTERN.test(text);
+}
 
-  if (bubbleText) bubbleText.textContent = dialogue;
+function isCubertSummonRequest(query) {
+  if (!query) return false;
+  const norm = query.replace(/[?!.,;]+$/, "").trim().toLowerCase();
+  return [
+    "cubert",
+    "get some help cubert",
+    "get help from cubert",
+    "ask cubert",
+    "talk to cubert",
+    "have cubert",
+    "summon cubert",
+    "get some help from cubert",
+    "please cubert",
+    "cubert please",
+    "help cubert"
+  ].includes(norm);
+}
 
-  // Resolve expression: accepts friendly expression name or manifest voice key
+function getRandomUnrelatedCommand(userText) {
+  const norm = (userText || "").toLowerCase();
+  const filtered = CUBERT_RANDOM_COMMANDS.filter(cmd => !norm.includes(cmd.replace(/^can\s+i\s+/i, "")));
+  const pool = filtered.length > 0 ? filtered : CUBERT_RANDOM_COMMANDS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function resolveCubertExpression(expressionOrVoiceKey) {
   let expr = expressionOrVoiceKey || "cheerful";
   if (expr === "help_1") expr = "cheerful";
   else if (expr === "hmm" || expr === "not_sure") expr = "thinking";
@@ -6074,43 +6119,140 @@ function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey 
   else if (expr === "break") expr = "burntout";
   else if (expr === "broke_ass") expr = "shrugging";
   else if (expr === "tip" || expr === "helpful") expr = "helpful";
+  return expr;
+}
 
-  const resolvedSrc = CUBERT_EXPRESSIONS[expr] || CUBERT_EXPRESSIONS.cheerful;
-  if (img) img.src = resolvedSrc;
+function getVisibleCubertCount() {
+  let count = 0;
+  const staticImg = document.getElementById("cubert-static-img");
+  const popup = document.getElementById("cubert-popup");
+  const popupImg = document.getElementById("cubert-popup-img");
 
-  if (tipSelector) {
-    tipSelector.style.display = showTip ? "block" : "none";
+  if (staticImg && staticImg.style.display !== "none" && window.getComputedStyle(staticImg).display !== "none") {
+    count++;
+  }
+  if (popup && popup.style.display !== "none" && popupImg && popupImg.style.display !== "none" && window.getComputedStyle(popup).display !== "none") {
+    count++;
+  }
+  return count;
+}
+
+function enforceSingleCubertInvariant() {
+  const staticImg = document.getElementById("cubert-static-img");
+  const popup = document.getElementById("cubert-popup");
+  const popupImg = document.getElementById("cubert-popup-img");
+
+  if (cubertMode === CUBERT_MODES.ACTIVE) {
+    // Active: bottom-left Cubert hidden completely; central popup visible
+    if (staticImg) staticImg.style.display = "none";
+    if (popup) popup.style.display = "flex";
+    if (popupImg) popupImg.style.display = "block";
+  } else {
+    // Standby or Break: central popup hidden completely; bottom-left Cubert visible
+    if (popup) popup.style.display = "none";
+    if (staticImg) {
+      staticImg.src = CUBERT_EXPRESSIONS.burntout;
+      staticImg.style.display = "block";
+    }
+  }
+}
+
+function setCubertMode(mode, options = {}) {
+  const popup = document.getElementById("cubert-popup");
+  const popupImg = document.getElementById("cubert-popup-img");
+  const bubbleText = document.getElementById("cubert-bubble-text");
+  const tipSelector = document.getElementById("cubert-tip-selector");
+  const staticImg = document.getElementById("cubert-static-img");
+  const panelStatus = document.getElementById("cubert-panel-status");
+
+  cubertMode = mode;
+
+  if (mode === CUBERT_MODES.ACTIVE) {
+    // 1. Hide the bottom-left Cubert image completely
+    if (staticImg) {
+      staticImg.style.display = "none";
+    }
+    // 2. Display one expressive Cubert illustration centrally over the CAD workspace
+    if (popup) {
+      popup.style.display = "flex";
+    }
+    if (popupImg) {
+      const expr = resolveCubertExpression(options.expressionOrVoiceKey || "cheerful");
+      popupImg.src = CUBERT_EXPRESSIONS[expr] || CUBERT_EXPRESSIONS.cheerful;
+      popupImg.style.display = "block";
+    }
+    // 3. Display his speech bubble beside him
+    if (bubbleText && options.dialogue) {
+      bubbleText.textContent = options.dialogue;
+    }
+    if (tipSelector) {
+      tipSelector.style.display = options.showTip ? "block" : "none";
+    }
+    if (panelStatus) {
+      panelStatus.textContent = "Active";
+    }
+    cubertPopupVisible = true;
+    cubertState = "ACTIVE";
+  } else if (mode === CUBERT_MODES.BREAK) {
+    // 1. Remove the central Cubert
+    if (popup) {
+      popup.style.display = "none";
+    }
+    if (tipSelector) {
+      tipSelector.style.display = "none";
+    }
+    cubertPopupVisible = false;
+
+    // 2. Display the burnt-out smoking artwork in the bottom-left panel
+    if (staticImg) {
+      staticImg.src = CUBERT_EXPRESSIONS.burntout;
+      staticImg.style.display = "block";
+    }
+    if (panelStatus) {
+      panelStatus.textContent = "On Break";
+    }
+    cubertState = "BREAK";
+  } else {
+    // STANDBY (Default)
+    // 1. Remove the centrally displayed Cubert and speech bubble
+    if (popup) {
+      popup.style.display = "none";
+    }
+    if (tipSelector) {
+      tipSelector.style.display = "none";
+    }
+    cubertPopupVisible = false;
+
+    // 2. Restore burnt-out Cubert in the bottom-left panel
+    if (staticImg) {
+      staticImg.src = CUBERT_EXPRESSIONS.burntout;
+      staticImg.style.display = "block";
+    }
+    if (panelStatus) {
+      panelStatus.textContent = "Standby";
+    }
+    cubertState = "STANDBY";
+    cubertConvStage = "IDLE";
   }
 
-  if (panelStatus && cubertState !== "BREAK") {
-    panelStatus.textContent = "Active";
-  }
+  enforceSingleCubertInvariant();
+}
 
-  container.style.display = "flex";
-  cubertPopupVisible = true;
+function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey = "cheerful", showTip = false) {
+  if (cubertMode === CUBERT_MODES.BREAK) {
+    status("Cubert will be back in 15");
+    addLog("Cubert: 'Hey man, I'm going to go on break.' (Unavailable for 60s)", "log-info");
+    return;
+  }
+  setCubertMode(CUBERT_MODES.ACTIVE, { dialogue, expressionOrVoiceKey, showTip });
 }
 
 function hideCubertPopup() {
-  const container = document.getElementById("cubert-popup");
-  const tipSelector = document.getElementById("cubert-tip-selector");
-  const panelStatus = document.getElementById("cubert-panel-status");
-  if (!container) return;
-  container.style.display = "none";
-  if (tipSelector) tipSelector.style.display = "none";
-  cubertPopupVisible = false;
-  if (panelStatus && cubertState !== "BREAK") {
-    panelStatus.textContent = "Idle";
-  }
+  setCubertMode(CUBERT_MODES.STANDBY);
 }
 
 function triggerCubertBreak() {
-  cubertState = "BREAK";
-  hideCubertPopup();
-  const staticImg = document.getElementById("cubert-static-img");
-  const panelStatus = document.getElementById("cubert-panel-status");
-  if (staticImg) staticImg.src = CUBERT_EXPRESSIONS.break;
-  if (panelStatus) panelStatus.textContent = "On Break";
-
+  setCubertMode(CUBERT_MODES.BREAK);
   status("Cubert will be back in 15");
   addLog("Cubert: 'Hey man, I'm going to go on break.' (Returning in 60s)", "log-info");
 
@@ -6121,12 +6263,13 @@ function triggerCubertBreak() {
 }
 
 function endCubertBreak() {
-  cubertState = "IDLE";
-  const staticImg = document.getElementById("cubert-static-img");
-  const panelStatus = document.getElementById("cubert-panel-status");
-  if (staticImg) staticImg.src = CUBERT_EXPRESSIONS.cheerful;
-  if (panelStatus) panelStatus.textContent = "Idle";
+  if (cubertBreakTimer) {
+    clearTimeout(cubertBreakTimer);
+    cubertBreakTimer = null;
+  }
+  setCubertMode(CUBERT_MODES.STANDBY);
   status("Cubert is back from break.");
+  addLog("Cubert returned to desk.", "log-info");
 }
 
 function submitCubertTip(amount) {
@@ -6137,7 +6280,6 @@ function submitCubertTip(amount) {
       addLog(`Tipped Cubert $${amount}. Remaining balance: $${fictionalBalance}.`, "log-success");
       status(`Tipped Cubert $${amount}.`);
       hideCubertPopup();
-      cubertState = "IDLE";
     } else {
       addLog("Insufficient funds for tip. Cubert: 'Broke ass.'", "log-warn");
       status("Insufficient funds for tip. Cubert: 'Broke ass.'");
@@ -6147,7 +6289,6 @@ function submitCubertTip(amount) {
     addLog("Tip $0 selected. Cubert dismissed.", "log-info");
     status("Cubert dismissed.");
     hideCubertPopup();
-    cubertState = "IDLE";
   }
 }
 
@@ -8758,12 +8899,62 @@ document.addEventListener("change", (e) => {
   }
 });
 
+function isRecognizedCadCommand(cmd) {
+  if (!cmd) return false;
+  const norm = cmd.trim().toLowerCase().replace(/[?!.,;]+$/, "");
+  const verb = norm.split(/\s+/)[0];
+  const recognizedVerbs = [
+    "box", "cube", "sphere", "cylinder", "cone", "torus", "plane",
+    "line", "spline", "polygon", "fillet", "chamfer", "asym", "asymmetric",
+    "pipe", "sweep", "union", "difference", "subtract", "gumball",
+    "delete", "remove", "undo", "redo", "lock", "unlock",
+    "save", "open", "export", "import", "remesh", "simplify",
+    "theme", "light", "dark", "mute", "ad", "help", "tutorial", "clear",
+    "crash", "michigan"
+  ];
+  return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report");
+}
+
 function processRequest(raw) {
   const text = raw.trim();
   if (!text) return;
 
   requestLogBox.style.display = "block";
   addLog(`> ${text}`, "log-user");
+
+  // Profanity check: monitor submitted text throughout the application
+  if (containsProfanity(text)) {
+    showCubertPopup("Watch your fucking language.", "scolding");
+    addLog("Cubert: 'Watch your fucking language.'", "log-nope");
+    status("Cubert: 'Watch your fucking language.'");
+  }
+
+  // Cubert Conversation State Handling
+  if (cubertMode === CUBERT_MODES.ACTIVE && cubertConvStage === "AWAITING_DESCRIPTION") {
+    cubertConvStage = "AWAITING_RETRY";
+    showCubertPopup("Please remain calm and try to type that request again a little more carefully.", "confused");
+    status("Cubert: 'Please remain calm and try to type that request again a little more carefully.'");
+    return;
+  }
+
+  if (cubertMode === CUBERT_MODES.ACTIVE && cubertConvStage === "AWAITING_RETRY") {
+    const politeMatch = text.match(/^can\s+i\s+(.*)$/i);
+    const retryCmd = politeMatch ? politeMatch[1].trim().toLowerCase() : text.trim().toLowerCase();
+
+    if (isRecognizedCadCommand(retryCmd)) {
+      hideCubertPopup();
+      cubertConsecutiveFailures = 0;
+      executeCommand(retryCmd);
+      return;
+    } else {
+      const badCmd = getRandomUnrelatedCommand(retryCmd);
+      showCubertPopup(`I know what you need! ${badCmd}!`, "shrugging", true);
+      cubertConvStage = "TIP_PROMPT";
+      status(`Cubert: 'I know what you need! ${badCmd}!'`);
+      cubertConsecutiveFailures = 0;
+      return;
+    }
+  }
 
   // Check prefix 'Can I ' (case-insensitive)
   const match = text.match(/^can\s+i\s+(.*)$/i);
@@ -8775,6 +8966,17 @@ function processRequest(raw) {
   }
 
   const query = match[1].trim().toLowerCase();
+
+  // Manual Cubert summon triggers
+  if (isCubertSummonRequest(query)) {
+    cubertConsecutiveFailures = 0;
+    showCubertPopup("How can I help you?", "cheerful");
+    cubertConvStage = "AWAITING_DESCRIPTION";
+    status("Cubert: 'How can I help you?'");
+    addLog("Cubert summoned.", "log-info");
+    return;
+  }
+
   executeCommand(query);
 }
 
@@ -8784,6 +8986,10 @@ function executeCommand(rawCmd) {
   const verb = tokens[0].toLowerCase();
   const args = tokens.slice(1);
   const normalizedCmd = trimmed.replace(/[?!.,;]+$/, "").trim().toLowerCase();
+
+  if (isRecognizedCadCommand(rawCmd)) {
+    cubertConsecutiveFailures = 0;
+  }
 
   // Check for Numeric Easter Egg inputs in tokens / args
   if (Array.isArray(tokens)) {
@@ -9198,6 +9404,8 @@ function executeCommand(rawCmd) {
     case "help":
     case "tutorial":
       document.getElementById("modal-onboarding").showModal();
+      showCubertPopup("How can I help you?", "cheerful");
+      cubertConvStage = "AWAITING_DESCRIPTION";
       addLog("Onboarding handbook presented.", "log-success");
       break;
 
@@ -9210,6 +9418,14 @@ function executeCommand(rawCmd) {
       addLog(`Request refused: Unknown operation '${trimmed}'.`, "log-nope");
       status(`Unknown operation '${trimmed}'`);
       shakeRequestBar();
+      cubertConsecutiveFailures++;
+      if (cubertConsecutiveFailures >= 2) {
+        cubertConsecutiveFailures = 0;
+        showCubertPopup("How can I help you?", "cheerful");
+        cubertConvStage = "AWAITING_DESCRIPTION";
+        status("Cubert: 'How can I help you?'");
+        addLog("Cubert triggered by consecutive command failures.", "log-info");
+      }
       break;
   }
 }
@@ -10227,7 +10443,11 @@ if (btnConfirmCancel) {
 const modalOnboarding = document.getElementById("modal-onboarding");
 const btnTutorialOpen = document.getElementById("btn-tutorial-open");
 if (btnTutorialOpen && modalOnboarding) {
-  btnTutorialOpen.onclick = () => modalOnboarding.showModal();
+  btnTutorialOpen.onclick = () => {
+    modalOnboarding.showModal();
+    showCubertPopup("How can I help you?", "cheerful");
+    cubertConvStage = "AWAITING_DESCRIPTION";
+  };
 }
 const btnCloseOnboarding = document.getElementById("btn-close-onboarding");
 if (btnCloseOnboarding && modalOnboarding) {
@@ -10929,8 +11149,16 @@ function initWin95MenuBar() {
     "mitem-win-tile": () => status("Viewports tiled evenly in 2x2 matrix."),
     "mitem-win-cascade": () => status("Viewports cascaded."),
 
-    "mitem-help-topics": () => document.getElementById("modal-help").showModal(),
-    "mitem-help-tutorial": () => document.getElementById("modal-onboarding").showModal(),
+    "mitem-help-topics": () => {
+      document.getElementById("modal-help").showModal();
+      showCubertPopup("How can I help you?", "cheerful");
+      cubertConvStage = "AWAITING_DESCRIPTION";
+    },
+    "mitem-help-tutorial": () => {
+      document.getElementById("modal-onboarding").showModal();
+      showCubertPopup("How can I help you?", "cheerful");
+      cubertConvStage = "AWAITING_DESCRIPTION";
+    },
     "mitem-help-credits": () => document.getElementById("modal-construction").showModal(),
     "mitem-help-crash": () => openCrashReportModal(),
     "mitem-help-about": () => document.getElementById("modal-about").showModal()
@@ -12114,11 +12342,11 @@ function runAllTests() {
     const cubertDock = document.getElementById("cubert-panel");
     const cubertStaticImg = document.getElementById("cubert-static-img");
     const oldPropsPanel = document.getElementById("properties-panel");
-    assertTest("Cubert Panel: Permanent panel replaces Object Properties in left dock", !!cubertDock && !oldPropsPanel && !!cubertStaticImg && cubertStaticImg.getAttribute("src") === "assets/cubert/cubert.png");
+    assertTest("Cubert Panel: Permanent panel replaces Object Properties in left dock", !!cubertDock && !oldPropsPanel && !!cubertStaticImg && (cubertStaticImg.getAttribute("src").includes("burntout") || cubertStaticImg.getAttribute("src") === "assets/cubert/cubert.png"));
 
-    // Test 57b: Cubert Panel has status pill initialized to Idle
+    // Test 57b: Cubert Panel has status pill initialized to Standby or Idle
     const cubertStatusPill = document.getElementById("cubert-panel-status");
-    assertTest("Cubert Panel: Status pill initialized to Idle", cubertStatusPill && cubertStatusPill.textContent.trim() === "Idle");
+    assertTest("Cubert Panel: Status pill initialized to Standby or Idle", cubertStatusPill && (cubertStatusPill.textContent.trim() === "Standby" || cubertStatusPill.textContent.trim() === "Idle"));
 
     // Test 57c: Floating Clippy-style Cubert exists with character image, speech bubble, close button, and tip selector
     const cubertPopup = document.getElementById("cubert-popup");
@@ -12137,14 +12365,38 @@ function runAllTests() {
     const allExprPresent = exprKeys.every(k => typeof CUBERT_EXPRESSIONS[k] === "string");
     assertTest("Cubert Assistant: Expression dictionary maps all 7 canonical states", allExprPresent);
 
-    // Test 57e: hideCubertPopup closes popup and restores Idle status
+    // Test 57e: hideCubertPopup closes popup and restores Standby status
     hideCubertPopup();
-    assertTest("Cubert Popup: hideCubertPopup hides popup and restores Idle state", cubertPopup.style.display === "none" && cubertStatusPill.textContent.trim() === "Idle");
+    assertTest("Cubert Popup: hideCubertPopup hides popup and restores Standby state", cubertPopup.style.display === "none" && (cubertStatusPill.textContent.trim() === "Standby" || cubertStatusPill.textContent.trim() === "Idle"));
 
     // Test 57f: Centralized voice-line manifest contains all 8 canonical line IDs
     const requiredLineKeys = ["help_1", "hmm", "watch_language", "not_sure", "retry_carefully", "dont_know", "break", "broke_ass"];
     const allManifestPresent = requiredLineKeys.every(k => !!CUBERT_VOICE_MANIFEST[k] && typeof CUBERT_VOICE_MANIFEST[k].file === "string");
     assertTest("Cubert Voice: Centralized voice manifest contains all 8 canonical line IDs", allManifestPresent);
+
+    // =========================================================================
+    // Checkpoint: Single Cubert Invariant & Location Controller Tests
+    // =========================================================================
+    // Test 58a: In Standby mode, exactly 1 Cubert is visible (burnt-out in bottom-left panel)
+    setCubertMode(CUBERT_MODES.STANDBY);
+    assertTest("Single Cubert Invariant: Standby mode shows exactly 1 visible Cubert (docked)", getVisibleCubertCount() === 1 && cubertStaticImg.style.display !== "none" && cubertPopup.style.display === "none");
+
+    // Test 58b: In Active mode, exactly 1 Cubert is visible (central workspace popup, dock hidden)
+    setCubertMode(CUBERT_MODES.ACTIVE, { dialogue: "How can I help you?", expressionOrVoiceKey: "cheerful" });
+    assertTest("Single Cubert Invariant: Active mode shows exactly 1 visible Cubert (workspace)", getVisibleCubertCount() === 1 && cubertStaticImg.style.display === "none" && cubertPopup.style.display !== "none");
+
+    // Test 58c: When dismissed, central Cubert disappears and dock Cubert returns (exactly 1 visible)
+    hideCubertPopup();
+    assertTest("Single Cubert Invariant: Dismissed restores docked Cubert and hides workspace", getVisibleCubertCount() === 1 && cubertStaticImg.style.display !== "none" && cubertPopup.style.display === "none");
+
+    // Test 58d: In Break mode, exactly 1 Cubert is visible (docked on break)
+    triggerCubertBreak();
+    assertTest("Single Cubert Invariant: Break mode shows exactly 1 visible Cubert (docked)", getVisibleCubertCount() === 1 && cubertStaticImg.style.display !== "none" && cubertPopup.style.display === "none" && cubertStatusPill.textContent.trim() === "On Break");
+    endCubertBreak();
+    assertTest("Single Cubert Invariant: Ending break returns to Standby", getVisibleCubertCount() === 1 && (cubertStatusPill.textContent.trim() === "Standby" || cubertStatusPill.textContent.trim() === "Idle"));
+
+    // Test 58e: Profanity detector detects specified profanities accurately without substring false positives
+    assertTest("Profanity Filter: Detects profanities accurately without false positives", containsProfanity("what the fuck") && containsProfanity("this shit is broken") && !containsProfanity("can i line") && !containsProfanity("brass box"));
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });

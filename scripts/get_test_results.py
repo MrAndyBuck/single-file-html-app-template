@@ -11,9 +11,17 @@ proc = subprocess.Popen([
     f'--remote-debugging-port={PORT}',
     'file:///Users/andybuck/.gemini/antigravity/single-file-html-app/index.html?run_tests=1&no_auto_onboard=1'
 ])
-time.sleep(3.0)
+time.sleep(1.0)
 try:
-    tabs = json.loads(urllib.request.urlopen(f'http://127.0.0.1:{PORT}/json').read().decode())
+    tabs = None
+    for _ in range(15):
+        try:
+            tabs = json.loads(urllib.request.urlopen(f'http://127.0.0.1:{PORT}/json').read().decode())
+            break
+        except Exception:
+            time.sleep(0.5)
+    if not tabs:
+        raise Exception("Could not connect to Chrome debugging port")
     target = next(t for t in tabs if t.get('type') == 'page')
     ws_url = target['webSocketDebuggerUrl']
     host, port, path = '127.0.0.1', PORT, ws_url.split(f'127.0.0.1:{PORT}')[1]
