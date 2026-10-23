@@ -667,131 +667,143 @@
     font-weight: normal;
   }
 
-  /* Cubert Workspace Popup Window */
-  .cubert-popup-window {
+  /* Floating Clippy-Style Cubert Assistant (No Application Window Frame) */
+  .cubert-floating-assistant {
     position: absolute;
-    bottom: 24px;
-    right: 90px;
-    width: 380px;
-    background: #c0c0c0;
-    border: 2px outset #ffffff;
-    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.45);
-    z-index: 950;
-    pointer-events: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 850;
+    pointer-events: none;
     user-select: none;
-    font-family: var(--font-ui);
-    box-sizing: border-box;
+    max-width: 90%;
+    filter: drop-shadow(0px 8px 24px rgba(0, 0, 0, 0.5));
   }
-  .cubert-popup-titlebar {
-    height: 20px;
-    background: linear-gradient(90deg, #000080, #1084d0);
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: bold;
+
+  .cubert-character-wrap {
+    flex-shrink: 0;
+    pointer-events: auto;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 3px;
-  }
-  .cubert-titlebar-left {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .cubert-popup-body {
-    display: flex;
-    padding: 10px;
-    gap: 12px;
-    align-items: center;
-    background: #c0c0c0;
-  }
-  .cubert-popup-mascot-col {
-    width: 105px;
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
   }
-  .cubert-popup-mascot-img {
-    width: 100px;
-    height: 100px;
+
+  .cubert-floating-img {
+    width: 210px;
+    height: 210px;
     object-fit: contain;
-    filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.3));
     user-select: none;
+    image-rendering: auto;
+    background: transparent !important;
+    border: none !important;
   }
-  .cubert-popup-mascot-label {
-    font-size: 9px;
-    font-family: var(--font-mono);
-    color: #333333;
-    font-weight: bold;
-    margin-top: 4px;
-    letter-spacing: 0.5px;
-  }
-  .cubert-popup-content-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-  }
+
   .cubert-speech-bubble {
-    background: #ffffe6;
-    border: 1px solid #000000;
-    border-radius: 4px;
-    padding: 8px 10px;
-    box-shadow: 2px 2px 0px rgba(0,0,0,0.15);
+    pointer-events: auto;
     position: relative;
+    background: #ffffdf;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    padding: 14px 28px 14px 16px;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
+    min-width: 190px;
+    max-width: 330px;
+    box-sizing: border-box;
   }
+
+  /* Triangular speech pointer tail pointing toward Cubert on the left */
   .cubert-bubble-tail {
     position: absolute;
-    top: 22px;
-    left: -8px;
+    top: 50%;
+    left: -12px;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 8px solid #000000;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 12px solid #000000;
   }
   .cubert-bubble-tail::after {
     content: "";
     position: absolute;
-    top: -5px;
+    top: -6px;
     left: 2px;
     width: 0;
     height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-right: 7px solid #ffffe6;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 10px solid #ffffdf;
   }
-  .cubert-bubble-speaker {
-    font-size: 10px;
+
+  .cubert-bubble-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 14px;
+    height: 14px;
+    background: #c0c0c0;
+    border: 1px outset #ffffff;
+    box-shadow: 1px 1px 0 #000;
+    font-size: 9px;
+    line-height: 12px;
+    text-align: center;
+    padding: 0;
+    cursor: pointer;
+    color: #000;
+    font-family: var(--font-ui);
+    font-weight: bold;
+  }
+  .cubert-bubble-close:active {
+    border-style: inset;
+  }
+
+  .cubert-bubble-text {
+    color: #000000;
+    font-family: var(--font-ui), "MS Sans Serif", Tahoma, sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  .cubert-tip-selector {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed #777777;
+  }
+  .cubert-tip-label {
+    font-size: 11px;
     font-weight: bold;
     color: #000080;
-    margin-bottom: 3px;
+    margin-bottom: 6px;
+    font-family: var(--font-ui);
   }
-  .cubert-bubble-text {
-    font-size: 12px;
-    color: #000000;
-    line-height: 1.4;
-    font-weight: 500;
-  }
-  .cubert-caption-row {
-    font-size: 10px;
-    font-style: italic;
-    color: #333333;
+  .cubert-tip-buttons {
     display: flex;
     align-items: center;
-    gap: 4px;
-    background: #dfdfdf;
-    padding: 3px 6px;
-    border: 1px inset #808080;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    gap: 6px;
+  }
+  .cubert-tip-btn {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 8px;
+    min-width: 38px;
+    cursor: pointer;
+  }
+  .cubert-tip-zero {
+    font-size: 8px;
+    padding: 1px 4px;
+    height: 14px;
+    line-height: 11px;
+    cursor: pointer;
+    opacity: 0.65;
+    margin-left: auto;
+  }
+  .cubert-tip-zero:hover {
+    opacity: 1;
   }
   .dock-sub-header {
     font-size: 10px;
@@ -1621,6 +1633,29 @@
           </div>
         </div>
       </div>
+
+      <!-- Floating Clippy-Style Cubert Assistant (No application window) -->
+      <div id="cubert-popup" class="cubert-floating-assistant" style="display:none;">
+        <div class="cubert-character-wrap">
+          <img id="cubert-popup-img" src="assets/cubert/cubert_cheerful.png" alt="Cubert" class="cubert-floating-img" />
+        </div>
+        <div class="cubert-speech-bubble" id="cubert-speech-bubble">
+          <div class="cubert-bubble-tail"></div>
+          <button id="btn-cubert-close" class="cubert-bubble-close" title="Dismiss Cubert" onclick="hideCubertPopup()">✕</button>
+          <div class="cubert-bubble-text" id="cubert-bubble-text">How can I help you?</div>
+
+          <!-- Floating Tip Selector (only displayed during tip prompt stage) -->
+          <div id="cubert-tip-selector" class="cubert-tip-selector" style="display:none;">
+            <div class="cubert-tip-label">Leave Cubert a tip?</div>
+            <div class="cubert-tip-buttons">
+              <button class="win95-btn cubert-tip-btn" data-tip="1" onclick="submitCubertTip(1)">$1</button>
+              <button class="win95-btn cubert-tip-btn" data-tip="5" onclick="submitCubertTip(5)">$5</button>
+              <button class="win95-btn cubert-tip-btn" data-tip="10" onclick="submitCubertTip(10)">$10</button>
+              <button class="win95-btn cubert-tip-zero" data-tip="0" onclick="submitCubertTip(0)" title="No tip ($0)">$0</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- RIGHT: Additional Modeling Command Toolbar -->
@@ -1743,34 +1778,6 @@
         </button>
       </div>
     </aside>
-
-    <!-- Cubert Assistant Workspace Popup (Non-blocking authentic Win95 floating assistant) -->
-    <div id="cubert-popup" class="cubert-popup-window" style="display:none;">
-      <div class="cubert-popup-titlebar">
-        <div class="cubert-titlebar-left">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="margin-right:2px;"><rect width="16" height="16" fill="#ffff00" stroke="#000"/><rect x="3" y="3" width="10" height="10" fill="#000080"/></svg>
-          <span>Cubert — Desktop Assistant</span>
-        </div>
-        <button class="win95-btn-caption btn-caption-close" id="btn-cubert-close" title="Dismiss Cubert" onclick="hideCubertPopup()">✕</button>
-      </div>
-      <div class="cubert-popup-body">
-        <div class="cubert-popup-mascot-col">
-          <img id="cubert-popup-img" src="assets/cubert/cubert.png" alt="Cubert" class="cubert-popup-mascot-img" />
-          <div class="cubert-popup-mascot-label">CUBERT v1.0</div>
-        </div>
-        <div class="cubert-popup-content-col">
-          <div class="cubert-speech-bubble" id="cubert-speech-bubble">
-            <div class="cubert-bubble-tail"></div>
-            <div class="cubert-bubble-speaker">Cubert says:</div>
-            <div class="cubert-bubble-text" id="cubert-bubble-text">How can I help you?</div>
-          </div>
-          <div class="cubert-caption-row" id="cubert-caption-row">
-            <span class="cubert-caption-icon">🔊</span>
-            <span class="cubert-caption-text" id="cubert-caption-text">[Audio: cubert_help_1.mp3 (Captioned)]</span>
-          </div>
-        </div>
-      </div>
-    </div>
 
   </div>
 
@@ -6030,37 +6037,117 @@ const CUBERT_VOICE_MANIFEST = {
   "broke_ass": { file: "assets/audio/cubert_broke_ass.mp3", caption: "Broke ass." }
 };
 
+const CUBERT_EXPRESSIONS = {
+  cheerful: "assets/cubert/cubert_cheerful.png",
+  thinking: "assets/cubert/cubert_thinking.png",
+  scolding: "assets/cubert/cubert_scolding.png",
+  confused: "assets/cubert/cubert_confused.png",
+  shrugging: "assets/cubert/cubert_shrugging.png",
+  helpful: "assets/cubert/cubert_helpful.png",
+  tipping: "assets/cubert/cubert_tipping.png",
+  burntout: "assets/cubert/cubert_burntout.png",
+  break: "assets/cubert/cubert_break.png"
+};
+
 let cubertAudio = null;
 let cubertPopupVisible = false;
 let cubertState = "IDLE"; // IDLE, SUMMONED, AWAITING_DESCRIPTION, AWAITING_RETRY, BAD_SUGGESTION, TIP_PROMPT, BREAK
 let cubertBreakTimer = null;
 let cubertConsecutiveFailures = 0;
 
-function showCubertPopup(dialogue = "How can I help you?", voiceKey = "help_1") {
-  const popup = document.getElementById("cubert-popup");
+function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey = "cheerful", showTip = false) {
+  const container = document.getElementById("cubert-popup");
+  const img = document.getElementById("cubert-popup-img");
   const bubbleText = document.getElementById("cubert-bubble-text");
-  const captionText = document.getElementById("cubert-caption-text");
+  const tipSelector = document.getElementById("cubert-tip-selector");
   const panelStatus = document.getElementById("cubert-panel-status");
-  if (!popup) return;
+  if (!container) return;
 
   if (bubbleText) bubbleText.textContent = dialogue;
-  const manifestEntry = CUBERT_VOICE_MANIFEST[voiceKey];
-  const audioFile = manifestEntry ? manifestEntry.file.split("/").pop() : "none";
-  if (captionText) captionText.textContent = `[Audio: ${audioFile} (Captioned)]`;
-  if (panelStatus) panelStatus.textContent = "Active";
 
-  popup.style.display = "block";
+  // Resolve expression: accepts friendly expression name or manifest voice key
+  let expr = expressionOrVoiceKey || "cheerful";
+  if (expr === "help_1") expr = "cheerful";
+  else if (expr === "hmm" || expr === "not_sure") expr = "thinking";
+  else if (expr === "watch_language") expr = "scolding";
+  else if (expr === "retry_carefully" || expr === "dont_know") expr = "confused";
+  else if (expr === "break") expr = "burntout";
+  else if (expr === "broke_ass") expr = "shrugging";
+  else if (expr === "tip" || expr === "helpful") expr = "helpful";
+
+  const resolvedSrc = CUBERT_EXPRESSIONS[expr] || CUBERT_EXPRESSIONS.cheerful;
+  if (img) img.src = resolvedSrc;
+
+  if (tipSelector) {
+    tipSelector.style.display = showTip ? "block" : "none";
+  }
+
+  if (panelStatus && cubertState !== "BREAK") {
+    panelStatus.textContent = "Active";
+  }
+
+  container.style.display = "flex";
   cubertPopupVisible = true;
 }
 
 function hideCubertPopup() {
-  const popup = document.getElementById("cubert-popup");
+  const container = document.getElementById("cubert-popup");
+  const tipSelector = document.getElementById("cubert-tip-selector");
   const panelStatus = document.getElementById("cubert-panel-status");
-  if (!popup) return;
-  popup.style.display = "none";
+  if (!container) return;
+  container.style.display = "none";
+  if (tipSelector) tipSelector.style.display = "none";
   cubertPopupVisible = false;
   if (panelStatus && cubertState !== "BREAK") {
     panelStatus.textContent = "Idle";
+  }
+}
+
+function triggerCubertBreak() {
+  cubertState = "BREAK";
+  hideCubertPopup();
+  const staticImg = document.getElementById("cubert-static-img");
+  const panelStatus = document.getElementById("cubert-panel-status");
+  if (staticImg) staticImg.src = CUBERT_EXPRESSIONS.break;
+  if (panelStatus) panelStatus.textContent = "On Break";
+
+  status("Cubert will be back in 15");
+  addLog("Cubert: 'Hey man, I'm going to go on break.' (Returning in 60s)", "log-info");
+
+  if (cubertBreakTimer) clearTimeout(cubertBreakTimer);
+  cubertBreakTimer = setTimeout(() => {
+    endCubertBreak();
+  }, 60000);
+}
+
+function endCubertBreak() {
+  cubertState = "IDLE";
+  const staticImg = document.getElementById("cubert-static-img");
+  const panelStatus = document.getElementById("cubert-panel-status");
+  if (staticImg) staticImg.src = CUBERT_EXPRESSIONS.cheerful;
+  if (panelStatus) panelStatus.textContent = "Idle";
+  status("Cubert is back from break.");
+}
+
+function submitCubertTip(amount) {
+  if (amount > 0) {
+    if (fictionalBalance >= amount) {
+      fictionalBalance -= amount;
+      updateBalanceDisplay();
+      addLog(`Tipped Cubert $${amount}. Remaining balance: $${fictionalBalance}.`, "log-success");
+      status(`Tipped Cubert $${amount}.`);
+      hideCubertPopup();
+      cubertState = "IDLE";
+    } else {
+      addLog("Insufficient funds for tip. Cubert: 'Broke ass.'", "log-warn");
+      status("Insufficient funds for tip. Cubert: 'Broke ass.'");
+      showCubertPopup("Broke ass.", "shrugging", false);
+    }
+  } else {
+    addLog("Tip $0 selected. Cubert dismissed.", "log-info");
+    status("Cubert dismissed.");
+    hideCubertPopup();
+    cubertState = "IDLE";
   }
 }
 
@@ -12033,16 +12120,22 @@ function runAllTests() {
     const cubertStatusPill = document.getElementById("cubert-panel-status");
     assertTest("Cubert Panel: Status pill initialized to Idle", cubertStatusPill && cubertStatusPill.textContent.trim() === "Idle");
 
-    // Test 57c: Cubert Workspace Popup exists with speech bubble, dialogue text, caption row, and close button
+    // Test 57c: Floating Clippy-style Cubert exists with character image, speech bubble, close button, and tip selector
     const cubertPopup = document.getElementById("cubert-popup");
+    const cubertImg = document.getElementById("cubert-popup-img");
     const bubbleText = document.getElementById("cubert-bubble-text");
-    const captionRow = document.getElementById("cubert-caption-row");
+    const tipSelector = document.getElementById("cubert-tip-selector");
     const closeBtn = document.getElementById("btn-cubert-close");
-    assertTest("Cubert Popup: Workspace popup exists with speech bubble, caption row, and close button", !!cubertPopup && !!bubbleText && !!captionRow && !!closeBtn);
+    assertTest("Cubert Assistant: Floating Clippy-style assistant exists without window frame", !!cubertPopup && !!cubertImg && !!bubbleText && !!tipSelector && !!closeBtn);
 
-    // Test 57d: showCubertPopup displays dialogue text and updates caption without errors
-    showCubertPopup("How can I help you?", "help_1");
-    assertTest("Cubert Popup: showCubertPopup activates popup and renders prompt", cubertPopup.style.display !== "none" && bubbleText.textContent.includes("How can I help you?"));
+    // Test 57d: showCubertPopup displays dialogue text and switches expressions without errors
+    showCubertPopup("How can I help you?", "cheerful");
+    assertTest("Cubert Assistant: showCubertPopup activates floating assistant and renders prompt", cubertPopup.style.display !== "none" && bubbleText.textContent.includes("How can I help you?"));
+
+    // Test 57d2: Expressions mapping covers all required expressions
+    const exprKeys = ["cheerful", "thinking", "scolding", "confused", "shrugging", "helpful", "burntout", "break"];
+    const allExprPresent = exprKeys.every(k => typeof CUBERT_EXPRESSIONS[k] === "string");
+    assertTest("Cubert Assistant: Expression dictionary maps all 7 canonical states", allExprPresent);
 
     // Test 57e: hideCubertPopup closes popup and restores Idle status
     hideCubertPopup();

@@ -25,7 +25,7 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
-| **Cubert: Desktop Assistant (Visual Phase)** | **YES** | **YES** | **YES** | *Awaiting Visual Acceptance* | Canonical 1990s desktop assistant (blue cube mascot). Replaced former Object Properties panel in bottom-left dock with permanent Windows 95 Cubert panel (`#cubert-panel`) displaying canonical mascot image. Constructed floating workspace popup window (`#cubert-popup`) with retro title bar, speech bubble, caption row, and close button. Created centralized voice-line manifest (8 canonical keys, fallback to text caption without audio errors). 162 automated tests passing. Screenshots saved to `Oct_22`. |
+| **Cubert: Desktop Assistant (Clippy-Style Redesign)** | **YES** | **YES** | **YES** | *Awaiting Visual Acceptance* | Clippy-style floating desktop assistant (blue cube mascot). Replaced former Object Properties panel in bottom-left dock with permanent Windows 95 Cubert panel (`#cubert-panel`) displaying canonical mascot image (cheerful idle, burnt-out on break). Floating assistant (`#cubert-popup`, `.cubert-floating-assistant`) rendered directly over CAD workspace without window container, titlebar, or frames. Comic-style speech bubble (`#cubert-speech-bubble`) with pale cream background, thin black border, directional pointer tail, and close button. Sourced 7 canonical character expressions with transparency derivatives. 163 automated tests passing. Screenshots saved to Desktop and `Desktop/OCT_22`. |
 | **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | **YES** | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. **Accepted by user; merged into `main` (commit `4844d59`).** |
 | **Checkpoint B: Fix Michigan Deletion** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I remove starting object` and `Can I delete michigan` locate starting Michigan directly by internal ID without prior selection. Prompts exact text: `"Are you sure you want to remove this?"`. On confirm: removes both peninsulas, updates 4 viewports and FeatureManager, preserves Undo, leaves unrelated objects intact and selected. Ordinary deletion remains blocked. |
 | **Checkpoint C: Polygon Command** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I polygon [sides]` with dynamic prompt ($\ge 3$ sides), live rubberband regular polygon preview with center anchor and dashed radius guide. Creates `ClosedProfile` with `THREE.Shape`, auto-exits upon radius placement, supports selection, and extrudes cleanly into 3D solid prism with single-step Undo. Verified for 3, 4, 5, 6 sides. |
@@ -1409,27 +1409,45 @@ python3 scripts/verify_checkpoints_b_f.py
 
 ---
 
-## 17. Milestone v00000-016 — Cubert Desktop Assistant (Visual Acceptance Phase)
+## 17. Milestone v00000-016 — Cubert Desktop Assistant (Clippy-Style Redesign)
 
-### 17.1 Canonical Character Asset
-- **Asset**: Sourced canonical 1254×1254 character artwork [`assets/cubert/cubert.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/assets/cubert/cubert.png) (synced from `/Users/andybuck/Documents/Antigravity/assets/Brand/CubertReference/Cheerful Blue Cube Mascot.png`).
-- **Art Direction Compliance**: Completely adheres to 1990s desktop assistant aesthetic (inspired by Microsoft Office Clippy). Zero 3D animated character meshes, zero skeletal animation, zero synthetic voices. Presentation relies on static 2D image assets, speech bubbles, and text captions.
+### 17.1 Canonical Character Assets & Expressions
+- **Source**: Sourced all 7 canonical character illustrations from `/Users/andybuck/Documents/Antigravity/assets/Brand/CubertReference`.
+- **Expression Mappings Installed in `assets/cubert/`**:
+  1. `cubert_cheerful.png` (and `cubert.png`): Cheerful greeting / default idle.
+  2. `cubert_thinking.png`: Hand on chin, looking up ("Hmm...").
+  3. `cubert_scolding.png`: Angry pointing, shouting ("Watch your fucking language.").
+  4. `cubert_confused.png`: Shrugging hands, puzzled expression ("I'm not sure about that.").
+  5. `cubert_shrugging.png`: Shrugging arms ("I know what you need: [command]!").
+  6. `cubert_helpful.png` (and `cubert_tipping.png`): Cash gesture / tipping.
+  7. `cubert_burntout.png` (and `cubert_break.png`): Smoking in office chair on break.
+- **Transparency Derivatives**: All ChatGPT character renders were native 32-bit transparent PNGs (`color_type 6`). For `Burnt-Out Blue Cube in Office Chair.png`, created a transparent derivative by flood-filling exterior black pixels to alpha `0`, preserving all interior line work, eyes, cigarette, and office chair geometry.
 
-### 17.2 Permanent Cubert Panel (`#cubert-panel`)
-- **Placement**: Directly replaced the Object Properties panel in the bottom-left sidebar of `#left-sidebar`.
-- **Styling**: Windows 95 sunken panel (`.win95-sunken`) with chiseled borders, neutral dialog background, and navy header badge with `#cubert-panel-status` (`Idle`).
-- **Isolation**: Does not obstruct or compress the FeatureManager tree. Zero impact on the 4-canvas CAD viewport grid.
+### 17.2 Clippy-Style Floating Assistant (`#cubert-popup`, `.cubert-floating-assistant`)
+- **"Cubert himself is the popup. There should NOT be a window containing Cubert."**
+- **Eliminated Elements**:
+  - Blue Windows title bar removed.
+  - Gray window frame removed.
+  - Minimize/maximize buttons removed.
+  - Version labels and audio/status debugging text removed.
+  - Rectangular containers and opaque image backgrounds removed.
+- **Workspace Centering**: Rendered as an absolute floating overlay inside `#stage-container` (`top: 50%; left: 50%; transform: translate(-50%, -50%);`), centered relative to the 4 CAD viewports rather than the full browser window, accounting for the FeatureManager, side toolbars, top menus, and Request Bar.
+- **Pointer Events**: Container uses `pointer-events: none` with `pointer-events: auto` strictly on the character wrap and speech bubble, ensuring full click-through to CAD viewports, camera orbiting, object selection, and Request Bar typing.
 
-### 17.3 Cubert Workspace Popup Window (`#cubert-popup`)
-- **Interaction Window**: Authentically styled retro Windows 95 floating assistant window (`#cubert-popup`, 380px wide) floating over the CAD workspace.
+### 17.3 Comic-Style Speech Bubble (`#cubert-speech-bubble`)
+- **Aesthetic**: Classic comic speech bubble attached to the right of Cubert.
+- **Styling**: Pale cream background (`#ffffdf`), thin black outline (`1.5px solid #000`), smooth rounded corners (`10px`), and directional triangular pointer tail pointing directly toward Cubert.
 - **Components**:
-  - Title bar with Windows 95 gradient (`#000080` to `#1084d0`), desktop assistant title, and tiny caption close button (`#btn-cubert-close`).
-  - Left column: Cubert illustration with retro `CUBERT v1.0` badge.
-  - Right column: Prominent pale yellow speech bubble (`#cubert-speech-bubble`) with chiseled directional pointer tail, bold header (`Cubert says:`), and dynamic dialogue readout (`#cubert-bubble-text`).
-  - Sub-caption bar (`#cubert-caption-row`): Displays audio alignment status (e.g., `[Audio: cubert_help_1.mp3 (Captioned)]`).
-- **Non-Interference**: Non-blocking floating layout allows the user to click, inspect, or type into the Request Bar without focus trapping.
+  - Caption close button (`#btn-cubert-close` / `[✕]`) in the top-right corner.
+  - Dialogue readout (`#cubert-bubble-text`) matching voiceover lines.
+  - Inline tip selector (`#cubert-tip-selector`) offering satirical tips ($1, $5, $10, and tiny $0 button).
 
-### 17.4 Centralized Voice-Line Manifest (`CUBERT_VOICE_MANIFEST`)
+### 17.4 Permanent Cubert Dock Panel (`#cubert-panel`)
+- Replaces the former Object Properties panel in the bottom-left sidebar (`#left-sidebar`).
+- **Normal / Idle State**: Displays Cheerful Cubert illustration statically with status badge `Idle`.
+- **Break State**: Displays Burnt-Out Cubert sitting in his office chair smoking, accompanied by a 60-second countdown timer and status badge `On Break`.
+
+### 17.5 Centralized Voice-Line Manifest (`CUBERT_VOICE_MANIFEST`)
 - Centralized mapping in JavaScript for all 8 canonical voice lines:
   - `help_1`: `assets/audio/cubert_help_1.mp3` ("How can I help you?")
   - `hmm`: `assets/audio/cubert_hmm.mp3` ("Hmm...")
@@ -1439,31 +1457,34 @@ python3 scripts/verify_checkpoints_b_f.py
   - `dont_know`: `assets/audio/cubert_dont_know.mp3` ("I don't know that command.")
   - `break`: `assets/audio/cubert_break.mp3` ("Hey man, I'm going to go on break.")
   - `broke_ass`: `assets/audio/cubert_broke_ass.mp3` ("Broke ass.")
-- **Graceful Fallback**: All audio files are treated as optional. When audio recordings are not present, text captions render instantly with zero audio playback errors, zero console warnings, and zero workflow interruption.
+- **Graceful Fallback**: Text captions render immediately when audio recordings are absent with zero console errors or workflow interruptions.
 
-### 17.5 Visual Verification Artifacts (Saved to `OCT_22`)
-All visual verification outputs captured via Chrome remote debugging and saved to `/Users/andybuck/Documents/Antigravity/CADNT_Screenshots/Oct_22`:
-1. **`oct22_01_cubert_panel_idle_full_app.png`**: Full application window showing the permanent Cubert panel at the bottom-left alongside the FeatureManager and the 4 CAD viewports.
-2. **`oct22_02_cubert_panel_closeup.png`**: Close-up inspection of the permanent Cubert panel in its idle state.
-3. **`oct22_03_cubert_workspace_popup_active.png`**: Full application view showing the Cubert Workspace Popup window active over the workspace with speech bubble saying *"How can I help you?"*.
-4. **`oct22_04_cubert_popup_closeup.png`**: Close-up inspection of the Cubert assistant popup window, speech bubble, and caption bar.
-5. **`oct22_05_cubert_dpr2_retina.png`**: High-DPI Retina (DPR 2.0) full-app capture proving crisp vector borders and typography.
+### 17.6 Visual Verification Artifacts (Saved to Desktop and `Desktop/OCT_22`)
+All visual captures generated via automated Chrome remote debugging script (`scripts/verify_clippy_cubert.py`):
+1. [**`clippy_01_default_panel_idle.png`**](file:///Users/andybuck/Desktop/clippy_01_default_panel_idle.png): Full application view showing Cheerful Cubert in the permanent lower-left panel and the 4 CAD viewports.
+2. [**`clippy_02_cheerful_greeting.png`**](file:///Users/andybuck/Desktop/clippy_02_cheerful_greeting.png): Floating Cheerful Cubert centered over workspace viewports with comic speech bubble saying *"How can I help you?"*.
+3. [**`clippy_03_thinking_uncertain.png`**](file:///Users/andybuck/Desktop/clippy_03_thinking_uncertain.png): Thinking expression with hand on chin saying *"Hmm..."*.
+4. [**`clippy_04_scolding_profanity.png`**](file:///Users/andybuck/Desktop/clippy_04_scolding_profanity.png): Scolding expression pointing forward saying *"Watch your fucking language."*.
+5. [**`clippy_05_shrugging_bad_suggestion.png`**](file:///Users/andybuck/Desktop/clippy_05_shrugging_bad_suggestion.png): Shrugging expression offering a satirical random command suggestion.
+6. [**`clippy_06_tipping_selector.png`**](file:///Users/andybuck/Desktop/clippy_06_tipping_selector.png): Helpful expression with inline tip selector ($1, $5, $10, and tiny $0).
+7. [**`clippy_07_break_burntout_panel.png`**](file:///Users/andybuck/Desktop/clippy_07_break_burntout_panel.png): Burnt-out Cubert smoking in office chair inside the permanent panel during his 60s break.
+8. [**`clippy_08_retina_dpr2_full_app.png`**](file:///Users/andybuck/Desktop/clippy_08_retina_dpr2_full_app.png): High-DPI Retina (DPR 2.0) full-app capture proving sharp vector outline and transparent clipping.
 
-### 17.6 Automated Test Suite Expansion (162 Passing Tests)
+### 17.7 Automated Test Suite Expansion (163 Passing Tests)
 Run test suite:
 ```bash
 python3 scripts/get_test_results.py
 ```
-*Result:* `SAVED test_run_output.json with total: 162 failures: 0`
+*Result:* `SAVED test_run_output.json with total: 163 failures: 0`
 
 ---
 
-### 17.7 Current Git State & How to Pick Up
+### 17.8 Current Git State & How to Pick Up
 
 - **Current Git Branch:** `dev`
-- **Current Head Commit:** [`5f6d7e7`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
+- **Current Head Commit:** [`106319f`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
 - **Status of Checkpoint A:** Merged into `main` (commit `4844d59`).
-- **Status of Checkpoints B–F:** Committed to `dev` branch.
+- **Status of Checkpoints B–F & Cubert Visual Redesign:** On `dev` branch.
 - **Action Required to Deploy:**
   When ready to promote Checkpoints B through F to production / GitHub Pages:
   ```bash
@@ -1473,6 +1494,7 @@ python3 scripts/get_test_results.py
   git push origin main
   git checkout dev
   ```
+
 
 
 
