@@ -1506,21 +1506,77 @@ python3 scripts/get_test_results.py
 
 ---
 
-### 17.9 Current Git State & How to Pick Up
+## 18. Cubert Voiceover Integration (ElevenLabs Audio Subsystem)
+
+### 18.1 Audio Asset Audit
+All 21 ElevenLabs audio files in `assets/audio/Cubert/` were inventoried, measured, and empirically transcribed via speech recognition:
+
+| Audio Filename | Duration | Transcribed Voice Content | Expression | Dialogue Event / Trigger |
+| :--- | :--- | :--- | :--- | :--- |
+| `HowCanIHelpYou.mp3` | 1.15s | *"how can I help you"* | `cheerful` | Stage 1 greeting, Help modal, consecutive failures |
+| `PleaseRemainCalm.mp3` | 4.91s | *"please remain calm and try to type that request again a little more carefully"* | `confused` | Stage 2 Request Bar retry instruction |
+| `WatchYourLanguage.mp3` | 1.88s | *"watch your fucking language"* | `scolding` | Profanity outburst interruption |
+| `GoingOnBreak.mp3` | 3.87s | *"hey man I'm going to go on break"* | `burntout` | Break announcement (60s break trigger) |
+| `BrokeAss.mp3` | 1.23s | *"broke ass"* | `shrugging` | Insufficient fictional funds for tip |
+| `SoAreYouGonnaTipMe.mp3` | 2.85s | *"so are you going to tip me"* | `helpful` | Tip selector prompt presentation |
+| `ThanksForTheTip.mp3` | 2.19s | *"oh hey thanks for the tip"* | `cheerful` | Tip submitted successfully |
+| `Hmm.mp3` | 1.72s | Non-verbal hum (*"Hmm..."*) | `thinking` | Uncertain / thinking state |
+| `ImNotSure.mp3` | 1.88s | *"I'm not sure about that"* | `thinking` | Uncertain response |
+| `IDKWhatYouWant.mp3` | 2.69s | *"look man I don't know what you want from me"* | `confused` | Unknown command fallback |
+| `OhOk.mp3` | 2.27s | *"oh okay that's fine"* | `cheerful` | Neutral acknowledgment |
+| `Box.mp3` | 2.35s | *"I know what you need: box"* | `shrugging` | Bad suggestion: Box (`suggest_box`) |
+| `Sphere.mp3` | 2.35s | *"I know what you need: sphere"* | `shrugging` | Bad suggestion: Sphere (`suggest_sphere`) |
+| `Pipe.mp3` | 2.04s | *"I know what you need: pipe"* | `shrugging` | Bad suggestion: Pipe (`suggest_pipe`) |
+| `Filet.mp3` | 2.27s | *"I know what you need: fillet"* | `shrugging` | Bad suggestion: Fillet (`suggest_fillet`) |
+| `Chamfer.mp3` | 2.43s | *"I know what you need: chamfer"* | `shrugging` | Bad suggestion: Chamfer (`suggest_chamfer`) |
+| `Sweep.mp3` | 2.27s | *"I know what you need: sweep"* | `shrugging` | Bad suggestion: Sweep (`suggest_sweep`) |
+| `Difference.mp3` | 3.00s | *"I know what you need: Boolean difference"* | `shrugging` | Bad suggestion: Difference (`suggest_difference`) |
+| `Explode.mp3` | 2.69s | *"I know what you need: explode"* | `shrugging` | Bad suggestion: Explode (`suggest_explode`) |
+| `Join.mp3` | 2.35s | *"I know what you need: join"* | `shrugging` | Bad suggestion: Join (`suggest_join`) |
+| `Trim.mp3` | 2.19s | *"I know what you need: trim"* | `shrugging` | Bad suggestion: Trim (`suggest_trim`) |
+
+### 18.2 Playback Engine & Coordination Rules
+1. **Single Active Voiceover & Instant Interruption**:
+   - `playCubertVoiceover(voiceKey, onEnded)` calls `stopCubertVoiceover()`, pausing and resetting `currentTime = 0` on any existing audio before starting a new line.
+   - Prevents overlapping or echo voiceovers.
+2. **Hold Music Ducking**:
+   - If CADN'T hold music (`CADNT_AUDIO.holdMusicAudio`) is playing, volume is automatically ducked from 1.0 to 0.15 when Cubert speaks.
+   - Restored back to 1.0 when voiceover finishes (`ended` event) or is interrupted.
+3. **Command Suggestion Pairing**:
+   - In Stage 3, `getRandomCubertSuggestion(retryCmd)` selects an eligible command from the 10 recorded suggestions (`box`, `sphere`, `pipe`, `fillet`, `chamfer`, `sweep`, `difference`, `explode`, `join`, `trim`).
+   - Guarantees both spoken voiceover and speech bubble caption refer to the identical command.
+4. **Autoplay Policy Resilience & Missing File Fallback**:
+   - Catches browser autoplay rejections gracefully with silent fallback. Text captions render unimpeded.
+   - Missing or unrecorded voice keys return null without throwing errors or breaking the interaction.
+
+### 18.3 Verification Results (Chrome & Safari / WebKit)
+Verified via automated script [`scripts/verify_cubert_audio.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_cubert_audio.py):
+- **1. How can I help you?**: Verified in Chrome (`HowCanIHelpYou.mp3`, 1.15s) and Safari (`HowCanIHelpYou.mp3`).
+- **2. Request Bar retry**: Verified in Chrome (`PleaseRemainCalm.mp3`, 4.91s) and Safari (`PleaseRemainCalm.mp3`).
+- **3. Profanity outburst**: Verified in Chrome (`WatchYourLanguage.mp3`, 1.88s) and Safari (`WatchYourLanguage.mp3`).
+- **4. Random bad suggestion**: Verified in Chrome (`Chamfer.mp3` / *"I know what you need! Chamfer!"*) and Safari (`Difference.mp3` / *"I know what you need! Boolean difference!"*).
+- **5. Break announcement**: Verified in Chrome (`GoingOnBreak.mp3`, 3.87s) and Safari (`GoingOnBreak.mp3`).
+- **6. Insufficient funds**: Verified in Chrome (`BrokeAss.mp3`, 1.23s) and Safari (`BrokeAss.mp3`).
+- **Hold Music Ducking**: Verified volume ducking (1.0 $\rightarrow$ 0.15 $\rightarrow$ 1.0) in both browsers.
+- **Audio Interruption**: Verified that starting audio 2 instantly stops audio 1 in both browsers.
+
+### 18.4 Automated Test Suite Expansion (174 Passing Tests)
+Run test suite:
+```bash
+python3 scripts/get_test_results.py
+```
+*Result:* `SAVED test_run_output.json with total: 174 failures: 0`
+
+---
+
+### 18.5 Current Git State & How to Pick Up
 
 - **Current Git Branch:** `dev`
-- **Current Head Commit:** [`8096433`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app)
 - **Status of Checkpoint A:** Merged into `main` (commit `4844d59`).
-- **Status of Checkpoints B–F & Cubert Location Correction:** On `dev` branch.
+- **Status of Checkpoints B–F, Cubert Clippy Redesign, Single Invariant & Voiceover Integration:** On `dev` branch.
 - **Action Required to Deploy:**
   When ready to promote to production / GitHub Pages:
   ```bash
-  cd /Users/andybuck/.gemini/antigravity/single-file-html-app
-  git checkout main
-  git merge dev
-  git push origin main
-  git checkout dev
-  ```
   cd /Users/andybuck/.gemini/antigravity/single-file-html-app
   git checkout main
   git merge dev

@@ -6024,17 +6024,48 @@ function recordModelingCommand(cmd) {
    CUBERT DESKTOP ASSISTANT SUBSYSTEM (FOUNDATION & VISUAL UI)
    ========================================================================= */
 
-// Centralized Voice-Line Manifest mapping line IDs to audio filenames and canonical captions
+// Centralized Voice-Line Manifest mapping line IDs to audio filenames, canonical captions, and expressions
 const CUBERT_VOICE_MANIFEST = {
-  "help_1": { file: "assets/audio/cubert_help_1.mp3", caption: "How can I help you?" },
-  "hmm": { file: "assets/audio/cubert_hmm.mp3", caption: "Hmm..." },
-  "watch_language": { file: "assets/audio/cubert_watch_language.mp3", caption: "Watch your fucking language." },
-  "not_sure": { file: "assets/audio/cubert_not_sure.mp3", caption: "I'm not sure what you mean." },
-  "retry_carefully": { file: "assets/audio/cubert_retry_carefully.mp3", caption: "Please remain calm and try to type that request again a little more carefully." },
-  "dont_know": { file: "assets/audio/cubert_dont_know.mp3", caption: "I don't know that command." },
-  "break": { file: "assets/audio/cubert_break.mp3", caption: "Hey man, I'm going to go on break." },
-  "broke_ass": { file: "assets/audio/cubert_broke_ass.mp3", caption: "Broke ass." }
+  // Canonical Voice Lines
+  "help_1": { file: "assets/audio/Cubert/HowCanIHelpYou.mp3", caption: "How can I help you?", expr: "cheerful" },
+  "hmm": { file: "assets/audio/Cubert/Hmm.mp3", caption: "Hmm...", expr: "thinking" },
+  "watch_language": { file: "assets/audio/Cubert/WatchYourLanguage.mp3", caption: "Watch your fucking language.", expr: "scolding" },
+  "not_sure": { file: "assets/audio/Cubert/ImNotSure.mp3", caption: "I'm not sure about that.", expr: "thinking" },
+  "retry_carefully": { file: "assets/audio/Cubert/PleaseRemainCalm.mp3", caption: "Please remain calm and try to type that request again a little more carefully.", expr: "confused" },
+  "dont_know": { file: "assets/audio/Cubert/IDKWhatYouWant.mp3", caption: "Look man, I don't know what you want from me.", expr: "confused" },
+  "break": { file: "assets/audio/Cubert/GoingOnBreak.mp3", caption: "Hey man, I'm going to go on break.", expr: "burntout" },
+  "broke_ass": { file: "assets/audio/Cubert/BrokeAss.mp3", caption: "Broke ass.", expr: "shrugging" },
+
+  // Supplementary Interaction Lines
+  "tip_prompt": { file: "assets/audio/Cubert/SoAreYouGonnaTipMe.mp3", caption: "So are you gonna tip me?", expr: "helpful" },
+  "thanks_tip": { file: "assets/audio/Cubert/ThanksForTheTip.mp3", caption: "Oh hey, thanks for the tip.", expr: "cheerful" },
+  "oh_ok": { file: "assets/audio/Cubert/OhOk.mp3", caption: "Oh okay, that's fine.", expr: "cheerful" },
+
+  // Command Suggestion Lines (Audio + exact caption pairing)
+  "suggest_box": { file: "assets/audio/Cubert/Box.mp3", caption: "I know what you need! Box!", command: "box", expr: "shrugging" },
+  "suggest_sphere": { file: "assets/audio/Cubert/Sphere.mp3", caption: "I know what you need! Sphere!", command: "sphere", expr: "shrugging" },
+  "suggest_pipe": { file: "assets/audio/Cubert/Pipe.mp3", caption: "I know what you need! Pipe!", command: "pipe", expr: "shrugging" },
+  "suggest_fillet": { file: "assets/audio/Cubert/Filet.mp3", caption: "I know what you need! Fillet!", command: "fillet", expr: "shrugging" },
+  "suggest_chamfer": { file: "assets/audio/Cubert/Chamfer.mp3", caption: "I know what you need! Chamfer!", command: "chamfer", expr: "shrugging" },
+  "suggest_sweep": { file: "assets/audio/Cubert/Sweep.mp3", caption: "I know what you need! Sweep!", command: "sweep", expr: "shrugging" },
+  "suggest_difference": { file: "assets/audio/Cubert/Difference.mp3", caption: "I know what you need! Boolean difference!", command: "difference", expr: "shrugging" },
+  "suggest_explode": { file: "assets/audio/Cubert/Explode.mp3", caption: "I know what you need! Explode!", command: "explode", expr: "shrugging" },
+  "suggest_join": { file: "assets/audio/Cubert/Join.mp3", caption: "I know what you need! Join!", command: "join", expr: "shrugging" },
+  "suggest_trim": { file: "assets/audio/Cubert/Trim.mp3", caption: "I know what you need! Trim!", command: "trim", expr: "shrugging" }
 };
+
+const CUBERT_SUGGESTION_KEYS = [
+  "suggest_box",
+  "suggest_sphere",
+  "suggest_pipe",
+  "suggest_fillet",
+  "suggest_chamfer",
+  "suggest_sweep",
+  "suggest_difference",
+  "suggest_explode",
+  "suggest_join",
+  "suggest_trim"
+];
 
 const CUBERT_EXPRESSIONS = {
   cheerful: "assets/cubert/cubert_cheerful.png",
@@ -6043,7 +6074,6 @@ const CUBERT_EXPRESSIONS = {
   confused: "assets/cubert/cubert_confused.png",
   shrugging: "assets/cubert/cubert_shrugging.png",
   helpful: "assets/cubert/cubert_helpful.png",
-  tipping: "assets/cubert/cubert_tipping.png",
   burntout: "assets/cubert/cubert_burntout.png",
   break: "assets/cubert/cubert_break.png"
 };
@@ -6072,12 +6102,140 @@ const CUBERT_RANDOM_COMMANDS = [
 const PROFANITY_PATTERN = /\b(fuck|fucking|fucked|fucker|fuckers|fucks|shit|shits|shitting|shitted|bitch|bitches|bitching|asshole|assholes|bullshit|damn|damned)\b/i;
 
 let cubertAudio = null;
+let currentCubertAudio = null;
+let holdMusicDucked = false;
+let preDuckHoldMusicVolume = 1.0;
 let cubertPopupVisible = false;
 let cubertMode = CUBERT_MODES.STANDBY;
 let cubertState = "STANDBY"; // Compatibility alias: STANDBY, ACTIVE, BREAK, IDLE, etc.
 let cubertConvStage = "IDLE"; // IDLE, AWAITING_DESCRIPTION, AWAITING_RETRY, BAD_SUGGESTION, TIP_PROMPT
 let cubertBreakTimer = null;
 let cubertConsecutiveFailures = 0;
+
+function stopCubertVoiceover() {
+  if (currentCubertAudio) {
+    try {
+      currentCubertAudio.pause();
+      currentCubertAudio.currentTime = 0;
+    } catch (e) {}
+    currentCubertAudio = null;
+  }
+  if (cubertAudio) {
+    try {
+      cubertAudio.pause();
+      cubertAudio.currentTime = 0;
+    } catch (e) {}
+    cubertAudio = null;
+  }
+  restoreHoldMusicAfterDialogue();
+}
+
+function duckHoldMusicForDialogue() {
+  if (typeof CADNT_AUDIO !== "undefined" && CADNT_AUDIO.holdMusicAudio && !CADNT_AUDIO.holdMusicAudio.paused) {
+    if (!holdMusicDucked) {
+      preDuckHoldMusicVolume = CADNT_AUDIO.holdMusicAudio.volume !== undefined ? CADNT_AUDIO.holdMusicAudio.volume : 1.0;
+      CADNT_AUDIO.holdMusicAudio.volume = Math.min(preDuckHoldMusicVolume, 0.15);
+      holdMusicDucked = true;
+    }
+  }
+}
+
+function restoreHoldMusicAfterDialogue() {
+  if (holdMusicDucked && typeof CADNT_AUDIO !== "undefined" && CADNT_AUDIO.holdMusicAudio) {
+    try {
+      CADNT_AUDIO.holdMusicAudio.volume = preDuckHoldMusicVolume;
+    } catch (e) {}
+    holdMusicDucked = false;
+  }
+}
+
+function findVoiceKeyForDialogue(dialogue, expression) {
+  if (!dialogue) return null;
+  const dNorm = dialogue.trim().toLowerCase();
+
+  for (const [key, item] of Object.entries(CUBERT_VOICE_MANIFEST)) {
+    if (item.caption && item.caption.trim().toLowerCase() === dNorm) {
+      return key;
+    }
+  }
+  if (dNorm.includes("how can i help you")) return "help_1";
+  if (dNorm.includes("please remain calm")) return "retry_carefully";
+  if (dNorm.includes("watch your fucking language")) return "watch_language";
+  if (dNorm.includes("broke ass")) return "broke_ass";
+  if (dNorm.includes("going to go on break") || dNorm.includes("go on break")) return "break";
+  if (dNorm.includes("thanks for the tip")) return "thanks_tip";
+  if (dNorm.includes("gonna tip me") || dNorm.includes("leave cubert a tip")) return "tip_prompt";
+  if (dNorm.includes("hmm")) return "hmm";
+  if (dNorm.includes("not sure")) return "not_sure";
+  if (dNorm.includes("don't know")) return "dont_know";
+
+  for (const key of CUBERT_SUGGESTION_KEYS) {
+    const item = CUBERT_VOICE_MANIFEST[key];
+    if (item && item.command && dNorm.includes(item.command)) {
+      return key;
+    }
+  }
+  return null;
+}
+
+function playCubertVoiceover(voiceKey, onEnded) {
+  stopCubertVoiceover();
+
+  if (typeof CADNT_AUDIO !== "undefined" && CADNT_AUDIO.mute) {
+    if (typeof onEnded === "function") onEnded();
+    return null;
+  }
+
+  let fileSrc = null;
+  if (CUBERT_VOICE_MANIFEST[voiceKey] && CUBERT_VOICE_MANIFEST[voiceKey].file) {
+    fileSrc = CUBERT_VOICE_MANIFEST[voiceKey].file;
+  } else if (typeof voiceKey === "string" && (voiceKey.endsWith(".mp3") || voiceKey.endsWith(".wav") || voiceKey.endsWith(".m4a"))) {
+    fileSrc = voiceKey;
+  }
+
+  if (!fileSrc) {
+    if (typeof onEnded === "function") onEnded();
+    return null;
+  }
+
+  duckHoldMusicForDialogue();
+
+  try {
+    const audio = new Audio(fileSrc);
+    audio.volume = 1.0;
+    currentCubertAudio = audio;
+    cubertAudio = audio;
+
+    const cleanup = () => {
+      if (currentCubertAudio === audio) {
+        currentCubertAudio = null;
+        cubertAudio = null;
+        restoreHoldMusicAfterDialogue();
+      }
+      if (typeof onEnded === "function") onEnded();
+    };
+
+    audio.addEventListener("ended", cleanup, { once: true });
+    audio.addEventListener("error", (err) => {
+      console.warn("Cubert voiceover failed to load/play:", fileSrc, err);
+      cleanup();
+    }, { once: true });
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.warn("Cubert voiceover autoplay blocked or interrupted:", err);
+        cleanup();
+      });
+    }
+    return audio;
+  } catch (e) {
+    console.warn("Cubert voiceover creation error:", e);
+    restoreHoldMusicAfterDialogue();
+    if (typeof onEnded === "function") onEnded();
+    return null;
+  }
+}
 
 function containsProfanity(text) {
   if (!text || typeof text !== "string") return false;
@@ -6109,15 +6267,30 @@ function getRandomUnrelatedCommand(userText) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+function getRandomCubertSuggestion(userText) {
+  const norm = (userText || "").toLowerCase();
+  const eligible = CUBERT_SUGGESTION_KEYS.filter(k => {
+    const cmd = CUBERT_VOICE_MANIFEST[k].command;
+    return !norm.includes(cmd);
+  });
+  const pool = eligible.length > 0 ? eligible : CUBERT_SUGGESTION_KEYS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function resolveCubertExpression(expressionOrVoiceKey) {
   let expr = expressionOrVoiceKey || "cheerful";
+  if (CUBERT_VOICE_MANIFEST[expr] && CUBERT_VOICE_MANIFEST[expr].expr) {
+    return CUBERT_VOICE_MANIFEST[expr].expr;
+  }
   if (expr === "help_1") expr = "cheerful";
   else if (expr === "hmm" || expr === "not_sure") expr = "thinking";
   else if (expr === "watch_language") expr = "scolding";
   else if (expr === "retry_carefully" || expr === "dont_know") expr = "confused";
   else if (expr === "break") expr = "burntout";
   else if (expr === "broke_ass") expr = "shrugging";
-  else if (expr === "tip" || expr === "helpful") expr = "helpful";
+  else if (expr === "tip" || expr === "helpful" || expr === "tip_prompt") expr = "helpful";
+  else if (expr === "thanks_tip") expr = "cheerful";
+  else if (typeof expr === "string" && expr.startsWith("suggest_")) expr = "shrugging";
   return expr;
 }
 
@@ -6237,20 +6410,43 @@ function setCubertMode(mode, options = {}) {
   enforceSingleCubertInvariant();
 }
 
-function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey = "cheerful", showTip = false) {
+function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey = "cheerful", showTip = false, voiceKey = null) {
   if (cubertMode === CUBERT_MODES.BREAK) {
     status("Cubert will be back in 15");
     addLog("Cubert: 'Hey man, I'm going to go on break.' (Unavailable for 60s)", "log-info");
     return;
   }
-  setCubertMode(CUBERT_MODES.ACTIVE, { dialogue, expressionOrVoiceKey, showTip });
+
+  let expr = expressionOrVoiceKey;
+  let vKey = voiceKey;
+
+  if (CUBERT_VOICE_MANIFEST[expressionOrVoiceKey]) {
+    vKey = expressionOrVoiceKey;
+    expr = CUBERT_VOICE_MANIFEST[expressionOrVoiceKey].expr || resolveCubertExpression(expressionOrVoiceKey);
+    if (!dialogue && CUBERT_VOICE_MANIFEST[expressionOrVoiceKey].caption) {
+      dialogue = CUBERT_VOICE_MANIFEST[expressionOrVoiceKey].caption;
+    }
+  } else if (!vKey) {
+    vKey = findVoiceKeyForDialogue(dialogue, expressionOrVoiceKey);
+    expr = resolveCubertExpression(expressionOrVoiceKey);
+  } else {
+    expr = resolveCubertExpression(expressionOrVoiceKey);
+  }
+
+  setCubertMode(CUBERT_MODES.ACTIVE, { dialogue, expressionOrVoiceKey: expr, showTip });
+
+  if (vKey) {
+    playCubertVoiceover(vKey);
+  }
 }
 
 function hideCubertPopup() {
+  stopCubertVoiceover();
   setCubertMode(CUBERT_MODES.STANDBY);
 }
 
 function triggerCubertBreak() {
+  playCubertVoiceover("break");
   setCubertMode(CUBERT_MODES.BREAK);
   status("Cubert will be back in 15");
   addLog("Cubert: 'Hey man, I'm going to go on break.' (Returning in 60s)", "log-info");
@@ -6278,11 +6474,12 @@ function submitCubertTip(amount) {
       updateBalanceDisplay();
       addLog(`Tipped Cubert $${amount}. Remaining balance: $${fictionalBalance}.`, "log-success");
       status(`Tipped Cubert $${amount}.`);
+      playCubertVoiceover("thanks_tip");
       hideCubertPopup();
     } else {
       addLog("Insufficient funds for tip. Cubert: 'Broke ass.'", "log-warn");
       status("Insufficient funds for tip. Cubert: 'Broke ass.'");
-      showCubertPopup("Broke ass.", "shrugging", false);
+      showCubertPopup("Broke ass.", "shrugging", false, "broke_ass");
     }
   } else {
     addLog("Tip $0 selected. Cubert dismissed.", "log-info");
@@ -8946,10 +9143,12 @@ function processRequest(raw) {
       executeCommand(retryCmd);
       return;
     } else {
-      const badCmd = getRandomUnrelatedCommand(retryCmd);
-      showCubertPopup(`I know what you need! ${badCmd}!`, "shrugging", true);
+      const suggestionKey = getRandomCubertSuggestion(retryCmd);
+      const suggestionItem = CUBERT_VOICE_MANIFEST[suggestionKey];
+      const suggestionCaption = suggestionItem ? suggestionItem.caption : `I know what you need! ${getRandomUnrelatedCommand(retryCmd)}!`;
+      showCubertPopup(suggestionCaption, "shrugging", true, suggestionKey);
       cubertConvStage = "TIP_PROMPT";
-      status(`Cubert: 'I know what you need! ${badCmd}!'`);
+      status(`Cubert: '${suggestionCaption}'`);
       cubertConsecutiveFailures = 0;
       return;
     }
@@ -12396,6 +12595,44 @@ function runAllTests() {
 
     // Test 58e: Profanity detector detects specified profanities accurately without substring false positives
     assertTest("Profanity Filter: Detects profanities accurately without false positives", containsProfanity("what the fuck") && containsProfanity("this shit is broken") && !containsProfanity("can i line") && !containsProfanity("brass box"));
+
+    // =========================================================================
+    // Checkpoint: Cubert Voiceover Audio Engine Tests
+    // =========================================================================
+    // Test 59a: Centralized voice manifest contains 21 verified ElevenLabs recordings
+    const manifestKeys = Object.keys(CUBERT_VOICE_MANIFEST);
+    const has21Recordings = manifestKeys.length >= 21 && manifestKeys.every(k => typeof CUBERT_VOICE_MANIFEST[k].file === "string" && CUBERT_VOICE_MANIFEST[k].file.startsWith("assets/audio/Cubert/"));
+    assertTest("Cubert Voiceover: Manifest contains 21 verified ElevenLabs audio files", has21Recordings);
+
+    // Test 59b: findVoiceKeyForDialogue accurately resolves dialogue events to voice keys
+    const testDialogueMap = [
+      ["How can I help you?", "help_1"],
+      ["Please remain calm and try to type that request again a little more carefully.", "retry_carefully"],
+      ["Watch your fucking language.", "watch_language"],
+      ["Hey man, I'm going to go on break.", "break"],
+      ["Broke ass.", "broke_ass"],
+      ["So are you gonna tip me?", "tip_prompt"],
+      ["Oh hey, thanks for the tip.", "thanks_tip"]
+    ];
+    const dialogueResolvesCleanly = testDialogueMap.every(([dlg, expectedKey]) => findVoiceKeyForDialogue(dlg) === expectedKey);
+    assertTest("Cubert Voiceover: findVoiceKeyForDialogue accurately resolves dialogue events", dialogueResolvesCleanly);
+
+    // Test 59c: Random suggestion keys pair audio command and text caption consistently
+    const suggestionsValid = CUBERT_SUGGESTION_KEYS.length === 10 && CUBERT_SUGGESTION_KEYS.every(k => {
+      const item = CUBERT_VOICE_MANIFEST[k];
+      return item && item.command && item.caption.toLowerCase().includes(item.command) && item.file.endsWith(".mp3");
+    });
+    assertTest("Cubert Voiceover: Random suggestions pair command, caption, and audio consistently", suggestionsValid);
+
+    // Test 59d: playCubertVoiceover instantiates audio without errors and stops previous playback
+    const audio1 = playCubertVoiceover("help_1");
+    const audioStarted = !audio1 || audio1.src.includes("HowCanIHelpYou.mp3");
+    stopCubertVoiceover();
+    assertTest("Cubert Voiceover: playCubertVoiceover creates audio instance and stopCubertVoiceover resets state", audioStarted && currentCubertAudio === null);
+
+    // Test 59e: Missing audio key falls back gracefully without errors or UI disruption
+    const nullAudio = playCubertVoiceover("nonexistent_voice_key_xyz");
+    assertTest("Cubert Voiceover: Nonexistent audio key degrades gracefully to null without throwing", nullAudio === null);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
