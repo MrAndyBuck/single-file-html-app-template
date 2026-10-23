@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CADN'T — Cubert Desktop Assistant Expression Variations</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #008080; /* Classic Win95 Teal */
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    padding: 24px;
+    color: #000;
+  }
+  .win95-window {
+    background: #c0c0c0;
+    border-top: 2px solid #dfdfdf;
+    border-left: 2px solid #dfdfdf;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    max-width: 1380px;
+    margin: 0 auto;
+  }
+  .win95-titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #fff;
+    padding: 6px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .win95-titlebar-btn {
+    width: 16px;
+    height: 14px;
+    background: #c0c0c0;
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    line-height: 1;
+  }
+  .content {
+    padding: 20px;
+  }
+  .header-desc {
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #222;
+    background: #ffffdf;
+    border: 1px solid #999;
+    padding: 8px 12px;
+    line-height: 1.4;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .card {
+    background: #d4d0c8;
+    border-top: 2px solid #808080;
+    border-left: 2px solid #808080;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #000080;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #999;
+    padding-bottom: 4px;
+  }
+  .stage-preview {
+    background: #2a2a2a;
+    border: 2px inset #fff;
+    padding: 14px;
+    min-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 2px;
+    flex: 1;
+  }
+  .assistant-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .character-img {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  }
+  .bubble {
+    background: #ffffdf;
+    border: 1.5px solid #000;
+    border-radius: 10px;
+    padding: 10px 14px;
+    position: relative;
+    color: #000;
+    font-size: 12px;
+    font-weight: normal;
+    max-width: 300px;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    line-height: 1.35;
+  }
+  .bubble-tail {
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 10px solid #000;
+  }
+  .bubble-tail::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: -6px;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 9px solid #ffffdf;
+  }
+  .bubble-close {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    background: #e0e0c0;
+    border: 1px solid #666;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+  }
+  .tip-box {
+    margin-top: 8px;
+    border-top: 1px dashed #999;
+    padding-top: 6px;
+  }
+  .tip-buttons {
+    display: flex;
+    gap: 5px;
+    margin-top: 4px;
+  }
+  .btn-win95 {
+    background: #c0c0c0;
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    font-size: 10px;
+    padding: 2px 7px;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .desc-text {
+    font-size: 11px;
+    color: #444;
+    margin-top: 8px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="win95-window">
+  <div class="win95-titlebar">
+    <span>CADN'T Desktop Assistant — Cubert Expression Variations &amp; Dialogue Matrix</span>
+    <span class="win95-titlebar-btn">✕</span>
+  </div>
+  <div class="content">
+    <div class="header-desc">
+      <strong>Clippy-Style Floating Assistant:</strong> Cubert is rendered as a standalone floating 2D illustration over the CAD modeling workspace without application frames or titlebars. Each state pairs a canonical expression with contextual voiceover captions. In accordance with the Single-Instance Invariant, exactly one Cubert is visible at any given time.
+    </div>
+
+    <div class="grid">
+
+      <!-- 1. Cheerful Greeting -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Cheerful Greeting (Stage 1 / Idle Summon)</span>
+          <span style="font-weight:normal; color:#444;">cubert_cheerful.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_cheerful.png" alt="Cheerful Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>How can I help you?</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: Summoned manually ("Can I cubert"), opened via Help, or after two consecutive misinputs.</div>
+      </div>
+
+      <!-- 2. Thinking / Uncertain -->
+      <div class="card">
+        <div class="card-title">
+          <span>2. Thinking / Uncertain</span>
+          <span style="font-weight:normal; color:#444;">cubert_thinking.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_thinking.png" alt="Thinking Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>Hmm... I am not quite sure what you mean.</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: Puzzled reflection, query evaluation, or uncertain user prompts.</div>
+      </div>
+
+      <!-- 3. Confused / Calm Retry -->
+      <div class="card">
+        <div class="card-title">
+          <span>3. Confused (Stage 2 — Retry Request)</span>
+          <span style="font-weight:normal; color:#444;">cubert_confused.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_confused.png" alt="Confused Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>Please remain calm and try to type that request again a little more carefully.</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: User enters natural language feature description during Cubert conversation mode.</div>
+      </div>
+
+      <!-- 4. Scolding / Profanity Interrupt -->
+      <div class="card">
+        <div class="card-title">
+          <span>4. Scolding (Profanity Detector Interrupt)</span>
+          <span style="font-weight:normal; color:#444;">cubert_scolding.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_scolding.png" alt="Scolding Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>Watch your fucking language.</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: Whole-word profanity detected in Request Bar. Interrupts any active action.</div>
+      </div>
+
+      <!-- 5. Shrugging / Incompetent Bad Suggestion -->
+      <div class="card">
+        <div class="card-title">
+          <span>5. Shrugging (Stage 3 — Bad Suggestion)</span>
+          <span style="font-weight:normal; color:#444;">cubert_shrugging.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_shrugging.png" alt="Shrugging Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>I know what you need! Can I loft!</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: Retry fails to match a valid CAD command; Cubert recommends a random unrelated tool.</div>
+      </div>
+
+      <!-- 6. Helpful / Tip Request -->
+      <div class="card">
+        <div class="card-title">
+          <span>6. Helpful / Tipping Prompt (Stage 4)</span>
+          <span style="font-weight:normal; color:#444;">cubert_helpful.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_helpful.png" alt="Helpful Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>Would you like to leave Cubert a tip for this stellar guidance?</div>
+              <div class="tip-box">
+                <div style="font-weight:bold; font-size:10px;">Support Cubert:</div>
+                <div class="tip-buttons">
+                  <button class="btn-win95">$1</button>
+                  <button class="btn-win95">$5</button>
+                  <button class="btn-win95">$10</button>
+                  <button class="btn-win95" style="font-size:8px;">$0</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: Concluding interaction or direct tip request with fictional balance deductions.</div>
+      </div>
+
+      <!-- 7. Shrugging / Broke Ass -->
+      <div class="card">
+        <div class="card-title">
+          <span>7. Broke Ass (Insufficient Funds for Tip)</span>
+          <span style="font-weight:normal; color:#444;">cubert_shrugging.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_shrugging.png" alt="Shrugging Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>Broke ass.</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: User selects a tip amount that exceeds their current fictional balance.</div>
+      </div>
+
+      <!-- 8. Burnt-out Cubert (Office Chair) -->
+      <div class="card">
+        <div class="card-title">
+          <span>8. Burnt-Out Cubert (Office Chair — Standby &amp; Break)</span>
+          <span style="font-weight:normal; color:#444;">cubert_burntout.png</span>
+        </div>
+        <div class="stage-preview">
+          <div class="assistant-wrap">
+            <img class="character-img" src="assets/cubert/cubert_burntout.png" alt="Burnt-Out Cubert">
+            <div class="bubble">
+              <div class="bubble-tail"></div>
+              <div class="bubble-close">✕</div>
+              <div>Hey man, I'm going to go on break. Back in 15.</div>
+            </div>
+          </div>
+        </div>
+        <div class="desc-text">Trigger: Standby mode &amp; 60s Break. Docked in bottom-left panel with thousand-yard stare.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
