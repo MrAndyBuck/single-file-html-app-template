@@ -1356,14 +1356,18 @@
   <!-- 1. Classic Windows 95 Title Bar -->
   <div id="win95-title-bar" class="win95-title-bar">
     <div class="win95-title-content">
-      <svg class="win95-app-icon" viewBox="0 0 16 16" width="24" height="24">
+      <svg class="win95-app-icon" viewBox="0 0 16 16" width="20" height="20">
         <rect width="16" height="16" fill="#000080" />
         <polygon points="8,2 14,5 8,8 2,5" fill="#00ffff" />
         <polygon points="2,5 8,8 8,14 2,11" fill="#0000ff" />
         <polygon points="8,8 14,5 14,11 8,14" fill="#0080ff" />
         <line x1="2" y1="14" x2="14" y2="2" stroke="#ffff00" stroke-width="1.5" />
       </svg>
-      <span class="win95-title-text" style="font-size: 14px; font-weight: bold; letter-spacing: 0.5px;">CADN'T</span>
+      <div class="win95-title-logo-badge" style="display: inline-flex; align-items: center; background: #ffffff; padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.3); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.9), 1px 1px 2px rgba(0,0,0,0.35); height: 30px; box-sizing: border-box;">
+        <img id="cadnt-official-logo" src="assets/brand/CADNTLogo.png" alt="CADN'T Logo" style="height: 24px; width: auto; object-fit: contain; display: block;" title="CADN'T">
+        <span class="win95-title-text" style="display: none;">CADN'T</span>
+      </div>
+      <span class="win95-title-subtext" style="font-size: 11px; font-weight: bold; color: #ffffff; letter-spacing: 0.3px; margin-left: 6px; opacity: 0.95; white-space: nowrap;">Computer Aided Design Noncompliance Technology</span>
     </div>
     <div class="win95-window-controls">
       <button class="win95-btn-caption" id="btn-win-min" title="Minimize">_</button>
@@ -13282,6 +13286,18 @@ f 4 5 6`;
       constHtml.includes("404 No Wake Boulevard") &&
       constHtml.includes("Middle of Lake Superior, MI 00000");
     assertTest("Checkpoint F: Parody billing address present in About dialog and Under Construction marketplace modal", addressInAbout && addressInConst);
+
+    // =========================================================================
+    // Checkpoint G: Official Logo Integration
+    // =========================================================================
+    // Test 65: Official CADN'T Logo rendered in top blue title bar with supporting text
+    const logoImgEl = document.getElementById("cadnt-official-logo");
+    const logoSrc = logoImgEl ? (logoImgEl.getAttribute("src") || logoImgEl.src) : "";
+    const logoInTitle = logoImgEl && logoImgEl.closest("#win95-title-bar") !== null;
+    const subtextEl = document.querySelector(".win95-title-subtext");
+    const subtextStr = subtextEl ? subtextEl.textContent : "";
+    const hasSupportingText = subtextStr.includes("Computer Aided Design Noncompliance Technology");
+    assertTest("Checkpoint G: Official CADN'T Logo image integrated in top title bar with right-aligned supporting text", logoInTitle && logoSrc.includes("CADNTLogo.png") && hasSupportingText);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
