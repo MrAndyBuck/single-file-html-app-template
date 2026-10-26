@@ -1104,6 +1104,16 @@
     z-index: 960;
     box-shadow: 2px 2px 12px rgba(0,0,0,0.35);
   }
+  #modal-about {
+    width: 620px;
+    max-width: 92vw;
+    max-height: 85vh;
+    display: none;
+    flex-direction: column;
+  }
+  #modal-about[open] {
+    display: flex;
+  }
   .win95-dialog-titlebar {
     display: flex;
     justify-content: space-between;
@@ -1937,6 +1947,13 @@
   </h2>
   <p>The CADN'T Cloud Credit Marketplace is temporarily offline for scheduled server griefing.</p>
   <p>Please mail a cashier's check or certified money order payable to CADN'T Customer Friction Division.</p>
+  <div style="font-family: var(--font-mono); font-size: 10px; color: #000000; background: #ffffff; padding: 6px 8px; border: 1px solid var(--win95-dark); margin: 6px 4px;">
+    CADN'T Corporate Billing Department<br>
+    404 No Wake Boulevard<br>
+    Middle of Lake Superior, MI 00000<br>
+    United States
+  </div>
+  <p style="font-size: 10px; color: #555555; margin: 4px 4px;"><em>(Fictional parody address. Do not mail real money or actual checks.)</em></p>
   <div class="dialog-actions" style="margin-top: 10px; text-align: right;">
     <button class="win95-btn" id="btn-close-construction" onclick="this.closest('dialog').close()">OK</button>
   </div>
@@ -2003,15 +2020,92 @@
 <!-- About Modal -->
 <dialog id="modal-about">
   <h2>
-    <span class="win95-dialog-title">About CADN'T</span>
+    <span class="win95-dialog-title">About CADN'T — Computer Aided Design Noncompliance Technology</span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
-  <p><strong>Version</strong>: <span id="about-version">v00000-015</span></p>
-  <p><em>CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space.</em></p>
-  <p>Built as an adversarial, fully functional 3D CAD environment. Real geometry calculations, real meshes, deliberately hostile user interface.</p>
-  <p>Your work stays in this browser. Nothing is uploaded or tracked.</p>
-  <div class="dialog-actions">
-    <button class="btn-dialog btn-secondary" id="btn-close-about">Close</button>
+  <div style="padding: 6px 8px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; font-size: 11px; line-height: 1.45; color: #000000;">
+    
+    <!-- Title & Manifesto -->
+    <div style="background: #ffffff; border: 1px solid var(--win95-dark); box-shadow: inset 1px 1px 0 #000000; padding: 8px 10px;">
+      <div style="font-weight: bold; font-size: 13px; color: #000080; margin-bottom: 2px;">
+        CADN'T — Computer Aided Design Noncompliance Technology
+      </div>
+      <div style="font-size: 10px; color: #555555; margin-bottom: 6px;">
+        Version: <span id="about-version">v00000-015</span> (Release Build)
+      </div>
+      <p style="margin: 0; font-style: italic; color: #222222;">
+        CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space. Built as an adversarial, fully functional 3D CAD environment featuring genuine geometry calculations, genuine meshes, and a deliberately hostile user interface.
+      </p>
+    </div>
+
+    <!-- Development Credits -->
+    <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;">
+        Development Credits
+      </div>
+      <ul style="margin: 4px 0 0 16px; padding: 0;">
+        <li><strong>Original Concept & Creative Direction:</strong> Andrew Robert Buck (Andy Buck)</li>
+        <li><strong>AI-Assisted Implementation:</strong> Google Antigravity / AGY (Advanced Agentic Coding Environment)</li>
+        <li><strong>Design, Planning & Specification Drafting:</strong> ChatGPT by OpenAI (GPT-6)</li>
+      </ul>
+      <div style="font-size: 10px; color: #444444; margin-top: 4px; font-style: italic;">
+        Note: ChatGPT collaborated on architecture specifications, satirical design briefs, and test planning; code implementation, execution, and browser verification were driven in Google Antigravity.
+      </div>
+    </div>
+
+    <!-- Technology & Dependency Audit -->
+    <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;">
+        Technology Audit & Dependencies
+      </div>
+      <ul style="margin: 4px 0 0 16px; padding: 0;">
+        <li><strong>3D Rendering Engine:</strong> Three.js (r128) WebGL Scenegraph & 4-Viewport Matrix (MIT License, mrdoob). <em>Three.js serves strictly as the rendering pipeline and scenegraph; it is not a dedicated CAD B-rep geometry kernel.</em></li>
+        <li><strong>Solid CSG Engine:</strong> <code>three-csg.js</code> (Constructive Solid Geometry via Binary Space Partitioning / BSP trees; MIT License, ChandlerPrall / tapio).</li>
+        <li><strong>Discrete Manifold Modeling Engine:</strong> Custom native boundary evaluation algorithms (<code>buildBoxManifoldCut</code>, <code>createPipeSolidGeometry</code>, Catmull-Rom spline curves) maintaining Euler characteristic &chi; = 2 and watertight 2-manifold boundary topology.</li>
+        <li><strong>Mesh Loaders:</strong> Official Three.js <code>STLLoader</code> (ASCII & binary) and <code>OBJLoader</code> (Wavefront text geometry).</li>
+        <li><strong>Audio Subsystem:</strong> ElevenLabs Voice Synthesis (voice of Cubert), Web Audio API dynamic synthesizers, and real hold-music playback.</li>
+      </ul>
+      <div style="font-size: 10px; color: #444444; margin-top: 4px; font-style: italic;">
+        Kernel Audit Notice: CADN'T contains zero code from proprietary solid modeling kernels (Parasolid, ACIS, Granite, or Open CASCADE). All discrete boundary modifications are computed natively in JavaScript.
+      </div>
+    </div>
+
+    <!-- Inspirations & Clickable Bibliography -->
+    <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;">
+        Inspirations & References (Bibliography)
+      </div>
+      <ul style="margin: 4px 0 0 16px; padding: 0;">
+        <li><a href="https://www.rhino3d.com/" target="_blank" rel="noopener noreferrer" style="color: #000080; font-weight: bold;">Rhinoceros 3D</a> (Robert McNeel & Associates) — Command-driven CLI interaction, C-Plane coordinate system, and 4-viewport simultaneous layout.</li>
+        <li><a href="https://www.solidworks.com/" target="_blank" rel="noopener noreferrer" style="color: #000080; font-weight: bold;">SOLIDWORKS</a> (Dassault Systèmes) — Windows-era FeatureManager design tree, parametric feature states, and rebuild friction.</li>
+        <li><a href="https://www.autodesk.com/products/fusion-360/" target="_blank" rel="noopener noreferrer" style="color: #000080; font-weight: bold;">Autodesk Fusion</a> (Autodesk) — Timeline sketching, parametric profiles, and cloud-connected credit monetization.</li>
+        <li><a href="https://www.blender.org/" target="_blank" rel="noopener noreferrer" style="color: #000080; font-weight: bold;">Blender</a> (Blender Foundation) — Mesh transformations, hotkey paradigms, and Gumball manipulation.</li>
+        <li><a href="https://en.wikipedia.org/wiki/Office_Assistant" target="_blank" rel="noopener noreferrer" style="color: #000080; font-weight: bold;">Microsoft Office Assistant (Clippy)</a> (Microsoft Corporation) — Intrusive desktop assistant popups, unprompted suggestions, and Windows 95/98 desktop UI aesthetics.</li>
+      </ul>
+      <div style="font-size: 10px; color: #444444; margin-top: 6px;">
+        <strong>Parody Disclaimer:</strong> CADN'T is an independent satirical parody project created for educational and entertainment purposes. It is not affiliated with, sponsored by, or endorsed by Robert McNeel & Associates, Dassault Systèmes, Autodesk, the Blender Foundation, or Microsoft Corporation.
+      </div>
+    </div>
+
+    <!-- Fictional Corporate Billing & Mailing Address (Checkpoint F) -->
+    <div style="background: #ffffdf; border: 1px solid #c0a000; padding: 8px 10px;">
+      <div style="font-weight: bold; color: #806000; margin-bottom: 3px; font-size: 11px;">
+        📬 Fictional Corporate Billing & Customer Friction Address:
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 11px; color: #000000; background: #ffffff; padding: 6px 8px; border: 1px solid #d0d0a0; margin: 4px 0;">
+        CADN'T Corporate Billing Department<br>
+        404 No Wake Boulevard<br>
+        Middle of Lake Superior, MI 00000<br>
+        United States
+      </div>
+      <div style="font-size: 10px; color: #666644; font-style: italic;">
+        Please mail cashier's checks or certified money orders to the above address. The address is intentionally fictional. No physical delivery exists in Lake Superior. Do not send real funds or financial instruments.
+      </div>
+    </div>
+
+  </div>
+  <div class="dialog-actions" style="margin-top: 4px; padding: 4px 8px;">
+    <button class="btn-dialog btn-primary" id="btn-close-about">Close</button>
   </div>
 </dialog>
 
@@ -6581,6 +6675,33 @@ function closeHelpWindow() {
   if (cubertPopup) cubertPopup.classList.remove("beside-help");
 }
 
+function isCubertDismissRequest(text) {
+  if (!text || typeof text !== "string") return false;
+  const cleaned = text.toLowerCase().replace(/['".,!?;:]/g, " ").replace(/\s+/g, " ").trim();
+  if (!cleaned) return false;
+  
+  const patterns = [
+    /^can\s+you\s+(?:please\s+)?leave(?:\s+cubert)?$/i,
+    /^(?:please\s+)?leave\s+cubert$/i,
+    /^can\s+i\s+(?:ask\s+you\s+to\s+)?(?:please\s+)?leave\s+cubert$/i,
+    /^can\s+you\s+(?:please\s+)?go\s+away(?:\s+cubert)?$/i,
+    /^(?:please\s+)?go\s+away\s+cubert$/i,
+    /^(?:please\s+)?dismiss\s+cubert$/i,
+    /^(?:please\s+)?exit\s+cubert$/i,
+    /^(?:please\s+)?bye\s+cubert$/i
+  ];
+  return patterns.some(p => p.test(cleaned));
+}
+
+function dismissCubertByCommand() {
+  stopCubertVoiceover();
+  hideCubertPopup();
+  cubertConvStage = "IDLE";
+  cubertConsecutiveFailures = 0;
+  addLog("Cubert: 'Alright, see ya.' (Dismissed by command)", "log-info");
+  status("Cubert dismissed.");
+}
+
 function handleCubertConversationSubmit(raw) {
   const inputEl = document.getElementById("cubert-input");
   const text = (raw !== undefined ? raw : (inputEl ? inputEl.value : "")).trim();
@@ -6596,6 +6717,12 @@ function handleCubertConversationSubmit(raw) {
     addLog("Cubert: 'Watch your fucking language.'", "log-nope");
     status("Cubert: 'Watch your fucking language.'");
     if (inputEl) inputEl.focus();
+    return;
+  }
+
+  // 2. Dismiss command check: "Can you leave Cubert" (case-insensitive, optional punctuation & variations)
+  if (isCubertDismissRequest(text)) {
+    dismissCubertByCommand();
     return;
   }
 
@@ -8475,8 +8602,15 @@ function setupFilletOrChamferCommand(mode, args = {}) {
   cancelBtn.textContent = "✕ Cancel (Esc)";
 
   let target = selectedObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
+  if (target && target.userData && target.userData.isImported) {
+    cancelActiveCommand("Imported discrete triangle meshes lack parametric B-rep topology and cannot undergo fillet/chamfer operations.");
+    addLog("Imported discrete triangle meshes lack parametric B-rep topology and cannot undergo fillet/chamfer operations.", "log-nope");
+    status("Operation blocked: Imported mesh is read-only discrete geometry.");
+    shakeRequestBar();
+    return;
+  }
   if (!target) {
-    target = sceneObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked);
+    target = sceneObjects.find(o => o.isMesh && !o.userData.protected && !o.userData.locked && !o.userData.isImported);
     if (target) selectObject(target);
   }
 
@@ -9286,7 +9420,7 @@ function isRecognizedCadCommand(cmd) {
     "theme", "light", "dark", "mute", "ad", "help", "tutorial", "clear",
     "crash", "michigan"
   ];
-  return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report");
+  return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report") || isCubertDismissRequest(cmd);
 }
 
 function processRequest(raw) {
@@ -9301,6 +9435,12 @@ function processRequest(raw) {
     showCubertPopup("Watch your fucking language.", "scolding");
     addLog("Cubert: 'Watch your fucking language.'", "log-nope");
     status("Cubert: 'Watch your fucking language.'");
+    return;
+  }
+
+  // Cubert Dismiss Command: "Can you leave Cubert" (case-insensitive, optional punctuation & variations)
+  if (isCubertDismissRequest(text)) {
+    dismissCubertByCommand();
     return;
   }
 
@@ -9321,6 +9461,12 @@ function processRequest(raw) {
   }
 
   const query = match[1].trim().toLowerCase();
+
+  // Cubert dismiss via polite command (e.g. "Can I ask you to leave Cubert", "Can I leave Cubert")
+  if (isCubertDismissRequest(query)) {
+    dismissCubertByCommand();
+    return;
+  }
 
   // Manual Cubert summon triggers
   if (isCubertSummonRequest(query)) {
@@ -9347,6 +9493,11 @@ function executeCommand(rawCmd) {
   const verb = tokens[0].toLowerCase();
   const args = tokens.slice(1);
   const normalizedCmd = trimmed.replace(/[?!.,;]+$/, "").trim().toLowerCase();
+
+  if (isCubertDismissRequest(rawCmd) || isCubertDismissRequest(normalizedCmd)) {
+    dismissCubertByCommand();
+    return;
+  }
 
   if (isRecognizedCadCommand(rawCmd)) {
     cubertConsecutiveFailures = 0;
@@ -11124,6 +11275,152 @@ if (fileInputOpen) {
   });
 }
 
+// Centralized Geometry Import Parser (Supports ASCII STL, Binary STL, Wavefront OBJ)
+function parseAndImportGeometry(data, filename, format) {
+  const isSTL = format === "stl" || (filename && filename.toLowerCase().endsWith(".stl"));
+  const isOBJ = format === "obj" || (filename && filename.toLowerCase().endsWith(".obj"));
+  if (!isSTL && !isOBJ) {
+    addLog(`Unsupported format for '${filename}'. Only .stl and .obj meshes are accepted.`, "log-nope");
+    status("Import failed: Unsupported file extension.");
+    return { success: false, error: "Unsupported file extension" };
+  }
+
+  if (creditBalance < 10) {
+    addLog(`Insufficient fictional credits to import CAD asset ($10.00 required). Current balance: $${creditBalance.toFixed(2)}. $0.00 deducted.`, "log-nope");
+    status("Import rejected: Insufficient credits. $0.00 deducted.");
+    showInsufficientFundsModal("Import", 10.00, creditBalance);
+    shakeRequestBar();
+    return { success: false, error: "Insufficient credits" };
+  }
+
+  try {
+    let importedEntity = null;
+    let vertCount = 0;
+    let triCount = 0;
+    const box = new THREE.Box3();
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+
+    if (isSTL) {
+      if (typeof THREE.STLLoader !== "function") {
+        throw new Error("Three.js STLLoader component is unavailable.");
+      }
+      const loader = new THREE.STLLoader();
+      const geo = loader.parse(data);
+      if (!geo || !geo.attributes || !geo.attributes.position || geo.attributes.position.count === 0) {
+        throw new Error("STL file contains zero valid vertices or empty geometry.");
+      }
+      geo.computeVertexNormals();
+      geo.computeBoundingBox();
+      box.copy(geo.boundingBox);
+      box.getSize(size);
+      box.getCenter(center);
+      vertCount = geo.attributes.position.count;
+      triCount = geo.index ? Math.floor(geo.index.count / 3) : Math.floor(vertCount / 3);
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x8899aa,
+        roughness: 0.5,
+        metalness: 0.1,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.userData = mesh.userData || {};
+      mesh.userData.isImported = true;
+      mesh.userData.type = "Imported Mesh";
+
+      const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), wireMat);
+      mesh.add(edges);
+      importedEntity = mesh;
+    } else {
+      if (typeof THREE.OBJLoader !== "function") {
+        throw new Error("Three.js OBJLoader component is unavailable.");
+      }
+      const loader = new THREE.OBJLoader();
+      const text = typeof data === "string" ? data : new TextDecoder("utf-8").decode(data);
+      const group = loader.parse(text);
+      if (!group || !group.children || group.children.length === 0) {
+        throw new Error("OBJ file contains no valid 3D geometry objects.");
+      }
+
+      let validMeshFound = false;
+      group.traverse(c => {
+        if (c.isMesh && c.geometry && c.geometry.attributes && c.geometry.attributes.position) {
+          validMeshFound = true;
+          c.geometry.computeVertexNormals();
+          c.geometry.computeBoundingBox();
+          const count = c.geometry.attributes.position.count;
+          vertCount += count;
+          triCount += c.geometry.index ? Math.floor(c.geometry.index.count / 3) : Math.floor(count / 3);
+
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0x8899aa,
+            roughness: 0.5,
+            metalness: 0.1,
+            polygonOffset: true,
+            polygonOffsetFactor: 1,
+            polygonOffsetUnits: 1
+          });
+          const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(c.geometry, 30), wireMat);
+          c.add(edges);
+        }
+      });
+
+      if (!validMeshFound || vertCount === 0) {
+        throw new Error("OBJ file contains no mesh elements with valid vertex positions.");
+      }
+
+      group.userData = group.userData || {};
+      group.userData.isImported = true;
+      group.userData.type = "Imported Mesh";
+      box.setFromObject(group);
+      box.getSize(size);
+      box.getCenter(center);
+      importedEntity = group;
+    }
+
+    // Success: Record undo state BEFORE mutating document state or economy
+    recordUndoState(`Import ${filename}`);
+
+    // Deduct $10 fictional fee only when import succeeds
+    creditBalance -= 10;
+    updateEconomyDisplay();
+
+    const name = "Imported_" + (filename || "mesh").replace(/\.[^/.]+$/, "");
+    registerNewObject(importedEntity, name, "Imported Mesh");
+
+    addLog(`Imported '${filename}' (${vertCount} vertices, ${triCount} triangles). Bounds: [${size.x.toFixed(2)} × ${size.y.toFixed(2)} × ${size.z.toFixed(2)}] mm at (${center.x.toFixed(1)}, ${center.y.toFixed(1)}, ${center.z.toFixed(1)}). $10.00 fee deducted.`, "log-success");
+    status(`Imported: ${filename} ($10.00 fee deducted)`);
+
+    // Orient perspective camera target if imported model is off-center or unusually sized
+    if (center.length() > 50 || Math.max(size.x, size.y, size.z) > 100) {
+      if (viewports && viewports.perspective && viewports.perspective.camera) {
+        viewports.perspective.camera.lookAt(center);
+      }
+      renderAllViewports();
+    }
+
+    return {
+      success: true,
+      object: importedEntity,
+      box: box,
+      size: size,
+      center: center,
+      vertCount: vertCount,
+      triCount: triCount
+    };
+  } catch (err) {
+    addLog(`Import failed for '${filename}': ${err.message}`, "log-nope");
+    status(`Import failed: ${err.message}`);
+    shakeRequestBar();
+    return { success: false, error: err.message };
+  }
+}
+
 // File Picker: Import External STL or OBJ Mesh ($10 fee)
 const fileInputImport = document.getElementById("file-input-import");
 if (fileInputImport) {
@@ -11135,93 +11432,35 @@ if (fileInputImport) {
     if (!isSTL && !isOBJ) {
       addLog("Unsupported format. Only .stl and .obj meshes are accepted.", "log-nope");
       status("Import failed: Unsupported file extension.");
+      e.target.value = "";
       return;
     }
 
-  triggerArtificialDelay(`Importing External CAD Asset (${file.name})...`, () => {
-    recordUndoState(`Import ${file.name}`);
-    creditBalance -= 10;
-    updateEconomyDisplay();
-
-    const reader = new FileReader();
-    if (isSTL) {
-      reader.onload = (evt) => {
-        try {
-          const loader = new THREE.STLLoader();
-          const geo = loader.parse(evt.target.result);
-          geo.computeVertexNormals();
-          geo.computeBoundingSphere();
-          const s = geo.boundingSphere && geo.boundingSphere.radius > 50 ? (30 / geo.boundingSphere.radius) : 1;
-          geo.scale(s, s, s);
-
-          const mat = new THREE.MeshStandardMaterial({
-            color: 0x8899aa,
-            roughness: 0.5,
-            metalness: 0.1,
-            polygonOffset: true,
-            polygonOffsetFactor: 1,
-            polygonOffsetUnits: 1
-          });
-          const mesh = new THREE.Mesh(geo, mat);
-          mesh.userData.isImported = true;
-
-          const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
-          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), wireMat);
-          mesh.add(edges);
-
-          const name = "Imported_" + file.name.replace(/\.[^/.]+$/, "");
-          registerNewObject(mesh, name, "Imported Mesh");
-          addLog(`Imported '${file.name}' ($10.00 deducted). Read-only geometry locked.`, "log-success");
-          status(`Imported: ${file.name} ($10.00 fee deducted)`);
-        } catch (err) {
-          addLog("STL parse error: " + err.message, "log-nope");
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.onload = (evt) => {
-        try {
-          const loader = new THREE.OBJLoader();
-          const group = loader.parse(evt.target.result);
-          const box = new THREE.Box3().setFromObject(group);
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const maxDim = Math.max(size.x, size.y, size.z);
-          if (maxDim > 60) {
-            const sc = 30 / maxDim;
-            group.scale.set(sc, sc, sc);
-          }
-
-          group.traverse(c => {
-            if (c.isMesh) {
-              c.material = new THREE.MeshStandardMaterial({
-                color: 0x8899aa,
-                roughness: 0.5,
-                metalness: 0.1,
-                polygonOffset: true,
-                polygonOffsetFactor: 1,
-                polygonOffsetUnits: 1
-              });
-              const wireMat = new THREE.LineBasicMaterial({ color: 0x111111 });
-              const edges = new THREE.LineSegments(new THREE.EdgesGeometry(c.geometry, 30), wireMat);
-              c.add(edges);
-            }
-          });
-
-          group.userData.isImported = true;
-          const name = "Imported_" + file.name.replace(/\.[^/.]+$/, "");
-          registerNewObject(group, name, "Imported Mesh");
-          addLog(`Imported '${file.name}' ($10.00 deducted). Read-only geometry locked.`, "log-success");
-          status(`Imported: ${file.name} ($10.00 fee deducted)`);
-        } catch (err) {
-          addLog("OBJ parse error: " + err.message, "log-nope");
-        }
-      };
-      reader.readAsText(file);
+    if (creditBalance < 10) {
+      addLog(`Insufficient fictional credits to import CAD asset ($10.00 required). Current balance: $${creditBalance.toFixed(2)}. $0.00 deducted.`, "log-nope");
+      status("Import rejected: Insufficient credits. $0.00 deducted.");
+      showInsufficientFundsModal("Import", 10.00, creditBalance);
+      shakeRequestBar();
+      e.target.value = "";
+      return;
     }
+
+    triggerArtificialDelay(`Importing External CAD Asset (${file.name})...`, () => {
+      const reader = new FileReader();
+      if (isSTL) {
+        reader.onload = (evt) => {
+          parseAndImportGeometry(evt.target.result, file.name, "stl");
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.onload = (evt) => {
+          parseAndImportGeometry(evt.target.result, file.name, "obj");
+        };
+        reader.readAsText(file);
+      }
+    });
+    e.target.value = "";
   });
-  e.target.value = "";
-});
 }
 
 // Initialize Theme, Audio, Economy
@@ -12891,6 +13130,158 @@ function runAllTests() {
     const adCountUnchanged2 = modelingCommandCount === initialAdCount;
     hideCubertPopup();
     assertTest("Checkpoint B: Follow-up in Cubert Bar yields bad suggestion and tip prompt without ad impact", tipStage && tipSelectorVisible && adCountUnchanged2);
+
+    // =========================================================================
+    // Checkpoint C: Dismiss Cubert ("Can you leave Cubert")
+    // =========================================================================
+    // Test 62a: "Can you leave Cubert" from Request Bar dismisses Cubert without credit loss or geometry change
+    showCubertPopup("How can I help you?", "cheerful");
+    const initialCreditsC = creditBalance;
+    const initialSceneLenC = sceneObjects.length;
+    processRequest("Can you leave Cubert");
+    const dismissedFromReq = (cubertMode === CUBERT_MODES.STANDBY) &&
+      (cubertPopup.style.display === "none") &&
+      (cubertBarEl.style.display === "none") &&
+      (cubertStaticImg.src.includes("cubert_cheerful.png") || cubertStaticImg.src.includes("cubert.png")) &&
+      (cubertStaticImg.style.display !== "none") &&
+      (creditBalance === initialCreditsC) &&
+      (sceneObjects.length === initialSceneLenC) &&
+      (getVisibleCubertCount() === 1);
+    assertTest("Checkpoint C: 'Can you leave Cubert' from Request Bar dismisses Cubert without credit loss or geometry change", dismissedFromReq);
+
+    // Test 62b: Cubert dismissal from dedicated Cubert Bar
+    showCubertPopup("How can I help you?", "cheerful");
+    handleCubertConversationSubmit("can you leave cubert?");
+    const dismissedFromCubertBar = (cubertMode === CUBERT_MODES.STANDBY) &&
+      (cubertPopup.style.display === "none") &&
+      (cubertBarEl.style.display === "none") &&
+      (getVisibleCubertCount() === 1);
+    assertTest("Checkpoint C: 'can you leave cubert?' from Cubert Bar dismisses Cubert and hides bar", dismissedFromCubertBar);
+
+    // Test 62c: Case-insensitivity, trailing punctuation, and variations (leave cubert, Please leave Cubert, Can you leave)
+    showCubertPopup("How can I help you?", "cheerful");
+    processRequest("can you please leave, Cubert!");
+    const dismissedVariation1 = (cubertMode === CUBERT_MODES.STANDBY);
+    showCubertPopup("How can I help you?", "cheerful");
+    processRequest("Leave Cubert");
+    const dismissedVariation2 = (cubertMode === CUBERT_MODES.STANDBY);
+    showCubertPopup("How can I help you?", "cheerful");
+    processRequest("Can you leave");
+    const dismissedVariation3 = (cubertMode === CUBERT_MODES.STANDBY);
+    hideCubertPopup();
+    assertTest("Checkpoint C: Dismissal handles case-insensitivity, optional punctuation, and variations", dismissedVariation1 && dismissedVariation2 && dismissedVariation3);
+
+    // =========================================================================
+    // Checkpoint D: Real Geometry Import (STL & OBJ)
+    // =========================================================================
+    // Test 63a: ASCII STL import parsing with 1:1 coordinate preservation & $10 fee deduction
+    const asciiSTLData = `solid test_box
+      facet normal 0 0 1
+        outer loop
+          vertex 0 0 10
+          vertex 20 0 10
+          vertex 20 15 10
+        endloop
+      endfacet
+      facet normal 0 0 1
+        outer loop
+          vertex 0 0 10
+          vertex 20 15 10
+          vertex 0 15 10
+        endloop
+      endfacet
+    endsolid test_box`;
+    const creditsBeforeAscii = creditBalance;
+    const resAscii = parseAndImportGeometry(asciiSTLData, "bracket.stl", "stl");
+    const asciiSuccess = resAscii.success === true &&
+      resAscii.object &&
+      resAscii.object.userData.isImported === true &&
+      Math.abs(resAscii.size.x - 20) < 0.001 &&
+      Math.abs(resAscii.size.y - 15) < 0.001 &&
+      sceneObjects.includes(resAscii.object) &&
+      creditBalance === creditsBeforeAscii - 10;
+    assertTest("Checkpoint D: ASCII STL imported at 1:1 scale with bounds reporting and $10 fee deduction", asciiSuccess);
+
+    // Test 63b: Multi-object Wavefront OBJ import parsing
+    const multiObjText = `o PartA
+v 0 0 0
+v 10 0 0
+v 10 10 0
+f 1 2 3
+o PartB
+v 0 0 5
+v 10 0 5
+v 0 10 5
+f 4 5 6`;
+    const creditsBeforeObj = creditBalance;
+    const resObj = parseAndImportGeometry(multiObjText, "gearbox.obj", "obj");
+    const objSuccess = resObj.success === true &&
+      resObj.object &&
+      resObj.object.isGroup === true &&
+      resObj.object.userData.isImported === true &&
+      resObj.vertCount === 6 &&
+      sceneObjects.includes(resObj.object) &&
+      creditBalance === creditsBeforeObj - 10;
+    assertTest("Checkpoint D: Multi-object Wavefront OBJ imported with child mesh traversal and FeatureManager registration", objSuccess);
+
+    // Test 63c: Undo removes imported mesh and refunds credits; Save/Reopen round-trip preserves geometry
+    const sceneLenBeforeUndo = sceneObjects.length;
+    processRequest("Can I undo"); // undoes gearbox.obj import
+    const undoRemovedObj = sceneObjects.length === sceneLenBeforeUndo - 1 && !sceneObjects.includes(resObj.object);
+    // Test round trip on bracket.stl
+    const snapshotWithSTL = serializeProjectState();
+    const stlOriginalBox = new THREE.Box3().setFromObject(resAscii.object);
+    deserializeProjectState(snapshotWithSTL);
+    const restoredSTL = sceneObjects.find(o => o.name === "Imported_bracket");
+    const restoredSTLBox = restoredSTL ? new THREE.Box3().setFromObject(restoredSTL) : null;
+    const roundTripSuccess = restoredSTL &&
+      restoredSTL.userData.isImported === true &&
+      restoredSTLBox &&
+      Math.abs(restoredSTLBox.max.x - stlOriginalBox.max.x) < 0.001 &&
+      Math.abs(restoredSTLBox.max.y - stlOriginalBox.max.y) < 0.001;
+    assertTest("Checkpoint D: Undo removes imported geometry; native project save/reopen round-trip preserves geometry", undoRemovedObj && roundTripSuccess);
+
+    // Test 63d: Malformed 3D file does not deduct credits or corrupt scene; discrete mesh blocks fillet
+    const creditsBeforeBad = creditBalance;
+    const badRes = parseAndImportGeometry("NOT A VALID 3D FILE", "corrupt.stl", "stl");
+    const badRejected = badRes.success === false && creditBalance === creditsBeforeBad;
+    // Fillet on imported mesh
+    selectObject(restoredSTL);
+    setupFilletOrChamferCommand("fillet");
+    const filletBlocked = (activeCommand === null || activeCommand.type !== "fillet");
+    assertTest("Checkpoint D: Corrupt import rejected with zero credit loss; discrete imported mesh blocks B-Rep fillet", badRejected && filletBlocked);
+
+    // Clean up imported test objects
+    if (restoredSTL) {
+      scene.remove(restoredSTL);
+      const idx = sceneObjects.indexOf(restoredSTL);
+      if (idx !== -1) sceneObjects.splice(idx, 1);
+    }
+    updateObjectsTree();
+
+    // =========================================================================
+    // Checkpoints E & F: About Section, Credits, Bibliography & Parody Address
+    // =========================================================================
+    // Test 64a: About modal contains official title, credits, technology audit, and clickable bibliography
+    const modalAboutEl = document.getElementById("modal-about");
+    const aboutHtml = modalAboutEl ? modalAboutEl.innerHTML : "";
+    const hasOfficialTitle = aboutHtml.includes("CADN'T — Computer Aided Design Noncompliance Technology");
+    const hasCredits = aboutHtml.includes("Andrew Robert Buck") && aboutHtml.includes("Google Antigravity") && aboutHtml.includes("ChatGPT by OpenAI");
+    const hasTechAudit = aboutHtml.includes("Three.js (r128)") && aboutHtml.includes("three-csg.js") && aboutHtml.includes("buildBoxManifoldCut");
+    const hasBiblioLinks = aboutHtml.includes("rhino3d.com") && aboutHtml.includes("solidworks.com") && aboutHtml.includes("fusion-360") && aboutHtml.includes("blender.org");
+    const hasParodyNotice = aboutHtml.includes("independent satirical parody");
+    assertTest("Checkpoint E: About dialog features official title, contributor credits, technology audit, and clickable bibliography", hasOfficialTitle && hasCredits && hasTechAudit && hasBiblioLinks && hasParodyNotice);
+
+    // Test 64b: Parody billing address present in About dialog and Under Construction modal
+    const modalConstEl = document.getElementById("modal-construction");
+    const constHtml = modalConstEl ? modalConstEl.innerHTML : "";
+    const addressInAbout = aboutHtml.includes("CADN'T Corporate Billing Department") &&
+      aboutHtml.includes("404 No Wake Boulevard") &&
+      aboutHtml.includes("Middle of Lake Superior, MI 00000");
+    const addressInConst = constHtml.includes("CADN'T Corporate Billing Department") &&
+      constHtml.includes("404 No Wake Boulevard") &&
+      constHtml.includes("Middle of Lake Superior, MI 00000");
+    assertTest("Checkpoint F: Parody billing address present in About dialog and Under Construction marketplace modal", addressInAbout && addressInConst);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });

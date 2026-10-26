@@ -25,6 +25,13 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint A: Cubert & Help Integration + Standby Mascot** | **YES** | **YES** | **YES** | **YES** | Side-by-side non-overlapping Help and Cubert layout; cheerful standby dock mascot; burnt-out break mascot; single Cubert invariant strictly enforced across all states. **Accepted by user; merged into `main` (commit `3bcb9a3`).** |
+| **Checkpoint B: Dedicated Cubert Conversation Bar ("Talk to Cubert:")** | **YES** | **YES** | **YES** | **YES** | Clean separation of Request Bar (CAD commands only) and dedicated Cubert Bar. Multi-turn dialogue, retry instruction, randomized bad suggestion + tip prompt, zero ad command frequency impact. **Accepted by user; merged into `main` (commit `3bcb9a3`).** |
+| **Checkpoint C: Dismiss Cubert (`Can you leave Cubert`)** | **YES** | **YES** | **YES** | *Awaiting Visual Review* | Recognized command `Can you leave Cubert` (and variations/case-insensitive/punctuation) dismisses Cubert from Request Bar and Cubert Bar. Immediately stops voiceover, hides popup & speech bubble, hides Cubert Bar, resets conversation mode, restores cheerful standby mascot, preserves geometry and fictional balance ($0.00 deducted). 189 automated tests passing. |
+| **Checkpoint D: Real Geometry Import (STL & OBJ)** | **YES** | **YES** | **YES** | *Awaiting Visual Review* | Direct 3D mesh import via Three.js `STLLoader` (ASCII & binary) and `OBJLoader` (multi-object groups). Eliminates destructive downscaling (1:1 scale preservation). Renders in 4 viewports, registers in FeatureManager, reports bounding box & dimensions in log, auto-frames camera if off-center, single-step Undo removes mesh, native save/reopen round-trip preserves coordinates, $10.00 fee deducted only on success (corrupt file fee protection), discrete mesh B-Rep operations blocked. |
+| **Checkpoint E: About Section, Credits & Technology Audit** | **YES** | **YES** | **YES** | *Awaiting Visual Review* | Redesigned `#modal-about` with official full name (*CADN'T — Computer Aided Design Noncompliance Technology*), accurate development credits (Andrew Robert Buck, Google Antigravity / AGY, ChatGPT by OpenAI), technology dependency audit (Three.js r128, three-csg.js, native manifold engine, ElevenLabs; no commercial CAD kernels), and clickable bibliography (Rhino, SOLIDWORKS, Fusion, Blender, Clippy) with independent parody disclaimer. |
+| **Checkpoint F: Fictional Corporate Billing & Mailing Address** | **YES** | **YES** | **YES** | *Awaiting Visual Review* | Parody corporate mailing address (*CADN'T Corporate Billing Department, 404 No Wake Boulevard, Middle of Lake Superior, MI 00000, United States*) prominently displayed in About dialog and Under Construction marketplace modal for fictional cashier's check friction. |
+| **Checkpoint G: Official Logo Integration** | *Pending Permission* | *Pending Permission* | *Pending Permission* | *Pending Permission* | Target logo `CADNTLogo` located in `/Users/andybuck/Documents`. Permission request surfaced to user to access Documents or copy to project assets in strict compliance with Global Agent boundary rules. |
 | **Cubert: Desktop Assistant (Location & Single-Instance Invariant)** | **YES** | **YES** | **YES** | *Awaiting Visual Acceptance* | Clippy-style floating desktop assistant with unified single-instance location controller (`setCubertMode`). Strict invariant: exactly ONE visible Cubert across all states. In Standby mode, burnt-out Cubert smoking in office chair is displayed in bottom-left dock (`#cubert-panel`) with status 'Standby'. In Active mode, bottom-left Cubert is completely hidden (`display: none`) and expressive Cubert is displayed centrally over workspace with comic speech bubble. Dismissing Cubert or finishing a tip hides central Cubert and restores bottom-left burnt-out Cubert. Break mode keeps burnt-out Cubert docked for 60s cooldown with status 'On Break'. Full triggers for profanity, Help topics, manual summon, and 2 consecutive misinputs. 169 automated tests passing (0 failures). |
 | **Checkpoint A: Repair Spline** | **YES** | **YES** | **YES** | **YES** | Multi-point CatmullRomCurve3 spline on C-Plane. Live curved preview, $\ge 3$ control points, [✓ Finish] and Enter key commit, Esc cancels, single SplineCurve entity (51 vertices), 3D interactive handles, dynamic Properties panel editing, project save/reopen serialization, multi-level and single-step undo. Real pointer tested on DPR 1.0 & 2.0 with screenshots. **Accepted by user; merged into `main` (commit `4844d59`).** |
 | **Checkpoint B: Fix Michigan Deletion** | **YES** | **YES** | **YES** | *Awaiting Approval to Merge* | `Can I remove starting object` and `Can I delete michigan` locate starting Michigan directly by internal ID without prior selection. Prompts exact text: `"Are you sure you want to remove this?"`. On confirm: removes both peninsulas, updates 4 viewports and FeatureManager, preserves Undo, leaves unrelated objects intact and selected. Ordinary deletion remains blocked. |
@@ -1641,8 +1648,102 @@ python3 scripts/get_test_results.py
 
 ### 19.4 Git Status & User Acceptance Hold
 - **Active Branch**: `dev`
-- **Work Status**: Checkpoints A and B fully implemented, tested, and visually confirmed.
-- **Hold for User Acceptance**: Paused prior to beginning Checkpoints C–G (dismiss command, geometry import, about bibliography, fictional billing address, logo), adhering strictly to instructions: *"Begin with Checkpoint A and B. Stop for my user acceptance before continuing to the remaining checkpoints."*
+- **Work Status**: Checkpoints A and B fully implemented, tested, visually confirmed, accepted by user, and merged into `main` and pushed to GitHub (`origin/main` and `origin/dev`, commit `3bcb9a3`).
+
+---
+
+## 20. Checkpoints C, D, E, F: Cubert Dismissal, Real Geometry Import, About Section & Parody Address
+
+### 20.1 Checkpoint C — Dismiss Cubert (`Can you leave Cubert`)
+1. **Recognized Dismissal Command**:
+   - `Can you leave Cubert` (case-insensitive, optional trailing punctuation `?`, `.`, `!`).
+   - Supports natural variations: `Can you leave, Cubert?`, `Can you please leave Cubert`, `Can you leave`, `Leave Cubert`, `Please leave Cubert`, `Can I ask you to leave Cubert`, `Can I leave Cubert`.
+   - Accessible from both the CAD Request Bar (bypassing polite "Can I" requirement) and the dedicated Cubert Bar.
+2. **Unified State Dismissal (`dismissCubertByCommand()`)**:
+   - Stops currently playing Cubert ElevenLabs voiceover immediately.
+   - Hides centrally displayed Cubert popup and comic speech bubble.
+   - Hides dedicated Cubert Bar (`#cubert-bar-row`) and restores focus to CAD Request Bar.
+   - Resets conversation state machine to `IDLE` and resets misinput counter.
+   - Restores cheerful standby mascot (`assets/cubert/cubert_cheerful.png`) in bottom-left panel (`#cubert-panel`).
+   - Strict Invariant: Exactly one visible Cubert preserved (`getVisibleCubertCount() == 1`).
+   - Non-destructive: Does NOT alter CAD scene geometry and does NOT deduct fictional credits ($0.00 deducted).
+
+### 20.2 Checkpoint D — Real Geometry Import (ASCII/Binary STL & Wavefront OBJ)
+1. **Direct Parsing via Three.js Loaders**:
+   - Centralized `parseAndImportGeometry(data, filename, format)` using official `THREE.STLLoader` and `THREE.OBJLoader`.
+   - **ASCII STL & Binary STL**: Automatically detects and parses triangle buffers into non-indexed `THREE.BufferGeometry`.
+   - **Wavefront OBJ**: Parses multi-object hierarchical meshes into `THREE.Group` with individual child meshes.
+2. **1:1 Coordinate & Scale Preservation (Zero Destructive Scaling)**:
+   - Completely eliminated legacy destructive downscaling (`geo.scale(...)`, `group.scale.set(...)`). Original coordinates, aspect ratios, and dimensions are preserved 1:1.
+   - Bounding box calculation and dimensions (width, height, depth) and vertex/triangle counts are computed and reported in the status log.
+   - Non-destructive camera framing: If imported model is off-center (`center.length() > 50`) or large, the camera looks at the model center rather than moving or resizing the geometry.
+3. **Four-Viewport Integration & FeatureManager**:
+   - Imported meshes receive standard CAD materials and wireframe edges (`THREE.EdgesGeometry(geo, 30)`).
+   - Displayed immediately across all 4 viewports (Top, Perspective, Front, Right).
+   - Registered in FeatureManager design tree (`registerNewObject(entity, name, "Imported Mesh")`).
+   - Selection and transformations (Move, Rotate, Scale, Gumball) supported.
+4. **Fictional Economy & Undo Protection**:
+   - Fictional $10.00 fee deducted **only upon successful parse and registration**. Corrupt or malformed files fail gracefully with clear log warnings and $0.00 deducted.
+   - Single-step Undo (`Can I undo`) cleanly reverts the import, removing the object from the scene and restoring the project snapshot and credits.
+   - Native project saving (`serializeProjectState`) and reopening (`deserializeProjectState`) round-trip tested: preserves imported meshes, coordinates, and `userData.isImported` state.
+5. **Parametric B-Rep Guard**:
+   - Discrete imported triangle facet meshes explicitly block parametric B-Rep operations (fillet, chamfer, extrude, CSG union/difference) with clear explanatory advisories: *"Imported discrete triangle meshes lack parametric B-rep topology and cannot undergo fillet/chamfer operations."*
+
+### 20.3 Checkpoint E — About Section, Credits & Technology Audit
+1. **Official Full Name**:
+   - **CADN'T — Computer Aided Design Noncompliance Technology**
+2. **Accurate Contributor Credits**:
+   - **Original Concept & Creative Direction**: Andrew Robert Buck (Andy Buck)
+   - **AI-Assisted Implementation**: Google Antigravity / AGY (Advanced Agentic Coding Environment)
+   - **Design, Planning & Specification Drafting**: ChatGPT by OpenAI (GPT-6)
+3. **Technology & Dependency Audit**:
+   - **3D Rendering**: Three.js (r128) WebGL Scenegraph & 4-Viewport Matrix (MIT License, mrdoob). *Explicitly clarified: Three.js serves as rendering pipeline and scenegraph, not a CAD B-rep geometry kernel.*
+   - **CSG Boolean Engine**: `three-csg.js` (Constructive Solid Geometry via BSP trees; MIT License, ChandlerPrall / tapio).
+   - **Discrete Manifold Engine**: Custom native boundary evaluation (`buildBoxManifoldCut`, `createPipeSolidGeometry`, Catmull-Rom spline curves) maintaining $\chi=2$ Euler characteristic and watertight boundary topology.
+   - **Mesh Loaders**: Official Three.js `STLLoader` and `OBJLoader`.
+   - **Audio Subsystem**: ElevenLabs Voice Synthesis (Cubert voiceovers), Web Audio API dynamic synthesizers, and hold music.
+   - *Kernel Clarification*: CADN'T contains zero code from proprietary solid modeling kernels (Parasolid, ACIS, Granite, or Open CASCADE).
+4. **Clickable Inspirations Bibliography**:
+   - [Rhinoceros 3D](https://www.rhino3d.com/) (Robert McNeel & Associates)
+   - [SOLIDWORKS](https://www.solidworks.com/) (Dassault Systèmes)
+   - [Autodesk Fusion](https://www.autodesk.com/products/fusion-360/) (Autodesk)
+   - [Blender](https://www.blender.org/) (Blender Foundation)
+   - [Microsoft Office Assistant (Clippy)](https://en.wikipedia.org/wiki/Office_Assistant) (Microsoft Corporation)
+   - *Parody Disclaimer*: Independent satirical parody; not affiliated with or endorsed by those organizations.
+
+### 20.4 Checkpoint F — Fictional Corporate Billing & Mailing Address
+- Parody mailing address added to redesigned `#modal-about` and `#modal-construction` (Buy Credits modal):
+  ```
+  CADN'T Corporate Billing Department
+  404 No Wake Boulevard
+  Middle of Lake Superior, MI 00000
+  United States
+  ```
+- Labeled explicitly as a humorous parody address for sending fictional cashier's checks. Fictional economy remains intact.
+
+### 20.5 Automated Testing & Visual Verification
+1. **Automated Unit Test Suite Expansion (189 Passing Tests)**:
+   - Added Tests 62a–62c (Checkpoint C: Dismissal via Request Bar, Cubert Bar, case-insensitivity/variations, zero credit loss, invariant check).
+   - Added Tests 63a–63d (Checkpoint D: ASCII STL 1:1 import, Multi-object Wavefront OBJ import, Undo removal, Save/Reopen round-trip coordinate preservation, corrupt file fee protection, B-Rep fillet guard).
+   - Added Tests 64a–64b (Checkpoints E & F: Official full title, contributor credits, technology audit, clickable bibliography, parody mailing address in About and Under Construction modals).
+   - Run: `python3 scripts/get_test_results.py` $\rightarrow$ `total: 189 failures: 0`.
+2. **Dedicated Visual Verification Script & Artifacts**:
+   - Created [`scripts/verify_checkpoints_c_d_e_f.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoints_c_d_e_f.py).
+   - Tested at both **DPR 1.0** and **DPR 2.0 (Retina)**.
+   - Captured 14 high-resolution visual evidence artifacts in `screenshots/` and user `Desktop/`:
+     - `checkpoint_c_01_dismissed_request_bar.png` (and `_dpr2.png`)
+     - `checkpoint_c_02_dismissed_cubert_bar.png` (and `_dpr2.png`)
+     - `checkpoint_d_01_stl_imported.png` (and `_dpr2.png`)
+     - `checkpoint_d_02_obj_imported.png` (and `_dpr2.png`)
+     - `checkpoint_d_03_undo_import.png` (and `_dpr2.png`)
+     - `checkpoint_e_01_about_credits_audit.png` (and `_dpr2.png`)
+     - `checkpoint_f_01_fictional_billing_address.png` (and `_dpr2.png`)
+
+### 20.6 Status of Checkpoint G (Official Logo) & Mandatory Permission Protocol
+- Checkpoint G requires locating and integrating `CADNTLogo` located in `/Users/andybuck/Documents`.
+- In strict adherence to Global Agent Rule user_global and project boundary controls, the agent did not read, scan, or copy from `/Users/andybuck/Documents` without explicit prior user authorization.
+- Explicit user permission request has been surfaced to the user to either grant permission to copy `CADNTLogo` from Documents or provide the file into `assets/branding/`.
+
 
 
 

@@ -57,7 +57,12 @@ try:
             res = json.loads(raw.decode('utf-8'))
             if res.get('id') == cid: return res
 
-    time.sleep(3.0)
+    for _ in range(30):
+        time.sleep(0.5)
+        check = send_cmd('Runtime.evaluate', {'expression': 'window.__TESTS_DONE__ === true'})
+        if check and check.get('result', {}).get('result', {}).get('value') is True:
+            break
+
     res = send_cmd('Runtime.evaluate', {
         'expression': 'JSON.stringify(window.__TEST_RESULTS__ || {})',
         'returnByValue': True
