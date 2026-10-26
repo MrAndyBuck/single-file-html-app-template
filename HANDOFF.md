@@ -1569,20 +1569,81 @@ python3 scripts/get_test_results.py
 
 ---
 
-### 18.5 Current Git State & How to Pick Up
+### 18.5 Current Git State (Previous Session)
 
-- **Current Git Branch:** `dev`
-- **Status of Checkpoint A:** Merged into `main` (commit `4844d59`).
+- **Previous Git Branch:** `dev`
+- **Status of Checkpoint A (Initial):** Merged into `main` (commit `4844d59`).
 - **Status of Checkpoints B–F, Cubert Clippy Redesign, Single Invariant & Voiceover Integration:** On `dev` branch.
-- **Action Required to Deploy:**
-  When ready to promote to production / GitHub Pages:
-  ```bash
-  cd /Users/andybuck/.gemini/antigravity/single-file-html-app
-  git checkout main
-  git merge dev
-  git push origin main
-  git checkout dev
-  ```
+
+---
+
+## 19. Checkpoints A & B: Cubert & Help Integration, Standby Correction, and Dedicated Cubert Bar
+
+### 19.1 Checkpoint A — Cubert and Help Integration & Standby Correction
+1. **Standby Correction**:
+   - In **Standby** (idle / non-interacting), Cubert displays the original cheerful, smiling blue-cube mascot (`assets/cubert/cubert_cheerful.png` / `assets/cubert/cubert.png`) in the bottom-left `#cubert-panel`.
+   - In **Active** (summoned), the docked mascot is hidden (`display: none`), and expressive Cubert floats in the modeling workspace with his speech bubble.
+   - In **Break** (random break), the bottom-left panel displays the exhausted, smoking, thousand-yard-stare artwork (`assets/cubert/cubert_burntout.png`) with status `"On Break"`.
+   - **Single Cubert Invariant**: `getVisibleCubertCount() == 1` strictly enforced across all states.
+2. **Help Window + Cubert Integration**:
+   - Centralized `openHelpWindow()` triggers whenever:
+     - Help toolbar button (`#btn-help-open`) is clicked.
+     - Menu item `Help -> Help Topics` (`#mitem-help-topics`) is selected.
+     - User types `help` or `Can I help` in the Request Bar.
+     - User presses `F1`.
+   - Automatically summons Cubert with greeting *"How can I help you?"* (`cheerful`, playing `HowCanIHelpYou.mp3`).
+   - Side-by-side non-overlapping positioning:
+     - `#modal-help.beside-cubert`: Positioned on the left side of the modeling workspace (`left: calc(50% - 180px); width: 400px; z-index: 960`).
+     - `#cubert-popup.beside-help`: Positioned on the right side of the modeling workspace (`left: calc(50% + 200px); z-index: 950`).
+     - 59px measured clearance between Help right edge (660px) and Cubert left edge (719px).
+   - Dialog interactivity: Uses non-modal presentation (`.show()`) so browser does not apply an inerting top-layer backdrop, allowing the user to browse Help topics, click help items to trigger rings, and interact with Cubert simultaneously.
+   - Closing Help (`closeHelpWindow()`): Closes modal, cleans up `.beside-cubert` and `.beside-help`, and returns Cubert smoothly to central alignment if still active.
+
+### 19.2 Checkpoint B — Dedicated Cubert Conversation Bar ("Talk to Cubert:")
+1. **Separation of Input Responsibilities**:
+   - **Ordinary Request Bar** (`#request-input`): Dedicated strictly to CAD commands (e.g. `Can I box`, `Can I fillet`). If a valid CAD command is submitted while Cubert is active, the command executes and Cubert is dismissed.
+   - **Cubert Bar** (`#cubert-bar-row`): A dedicated conversation row appearing inside `#request-bar-container`:
+     - Label: `<span id="cubert-bar-label">Talk to Cubert:</span>` (bold navy `#000080`).
+     - Input: `<input id="cubert-input">` (`placeholder="Explain what CAD feature you need..."`).
+     - Actions: `<button id="btn-submit-cubert">Send</button>` and `<button id="btn-dismiss-cubert-bar">✕ Dismiss</button>`.
+2. **State Machine & Multi-Turn Dialogue**:
+   - Handled exclusively via `handleCubertConversationSubmit(text)`:
+     - **Profanity Check**: Detects profanities, triggers scolding Cubert (*"Watch your fucking language."* / `WatchYourLanguage.mp3`).
+     - **Stage 1 (AWAITING_DESCRIPTION)**: User submits feature explanation $\rightarrow$ Cubert issues retry instruction (*"Please remain calm and try to type that request again a little more carefully."* / `PleaseRemainCalm.mp3`, `confused` expression), transitioning to `AWAITING_RETRY`.
+     - **Stage 2 (AWAITING_RETRY / Follow-up)**: Follow-up messages in Cubert Bar remain in the conversation and produce a randomized bad suggestion (*"I know what you need! ..."* with matching ElevenLabs audio and `shrugging` expression) + tip prompt ($1, $5, $10, $0), transitioning to `TIP_PROMPT`.
+3. **Zero Advertisement Threshold Impact**:
+   - Submissions in the Cubert Bar do **not** increment `modelingCommandCount` and never trigger the 7-command commercial break.
+4. **Dismissal & Focus Restoration**:
+   - When dismissed via `✕ Dismiss`, speech bubble `✕`, tip completion, or valid CAD command:
+     - `#cubert-bar-row` is hidden (`display: none`).
+     - Cubert returns to Standby (cheerful dock mascot).
+     - Focus is automatically restored to `#request-input`.
+
+### 19.3 Automated Testing & Visual Verification
+1. **Test Suite Expansion (180 Passing Tests)**:
+   - Added Tests 60a–60c (Checkpoint A: Standby cheerful mascot, Break burntout artwork, Help + Cubert side-by-side summon, close cleanup).
+   - Added Tests 61a–61c (Checkpoint B: Dedicated Cubert Bar appearance/dismissal, explanation retry instruction, follow-up bad suggestion, zero ad count impact).
+   - Run: `python3 scripts/get_test_results.py` $\rightarrow$ `total: 180 failures: 0`.
+2. **Dedicated Verification Script & Visual Evidence**:
+   - Created `scripts/verify_checkpoints_a_b.py`:
+     - Verified at both **DPR 1.0** and **DPR 2.0**.
+     - Verified zero overlap (Help Right=660px vs Cubert Left=719px).
+     - Verified audio playback and ducking in Chrome and Safari.
+     - Captured visual evidence:
+       - `checkpoint_a_01_standby_cheerful.png` (and `_dpr2.png`)
+       - `checkpoint_a_02_help_with_cubert_beside.png` (and `_dpr2.png`)
+       - `checkpoint_a_04_break_burntout.png` (and `_dpr2.png`)
+       - `checkpoint_b_01_cubert_bar_active.png` (and `_dpr2.png`)
+       - `checkpoint_b_02_cubert_conversation_retry.png` (and `_dpr2.png`)
+       - `checkpoint_b_03_cubert_bad_suggestion_tip.png` (and `_dpr2.png`)
+       - `checkpoint_b_04_dismissed_restored.png` (and `_dpr2.png`)
+     - Saved to `single-file-html-app/screenshots/` and user `Desktop/`.
+
+### 19.4 Git Status & User Acceptance Hold
+- **Active Branch**: `dev`
+- **Work Status**: Checkpoints A and B fully implemented, tested, and visually confirmed.
+- **Hold for User Acceptance**: Paused prior to beginning Checkpoints C–G (dismiss command, geometry import, about bibliography, fictional billing address, logo), adhering strictly to instructions: *"Begin with Checkpoint A and B. Stop for my user acceptance before continuing to the remaining checkpoints."*
+
 
 
 

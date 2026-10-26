@@ -682,6 +682,11 @@
     max-width: 90%;
   }
 
+  .cubert-floating-assistant.beside-help {
+    left: calc(50% + 200px);
+    transform: translate(-50%, -50%);
+  }
+
   .cubert-character-wrap {
     flex-shrink: 0;
     pointer-events: auto;
@@ -851,6 +856,43 @@
     position: relative;
     z-index: 100;
     flex-shrink: 0;
+  }
+  /* Dedicated Cubert Conversation Bar (The Cubert Bar) */
+  #cubert-bar-row {
+    display: none;
+    align-items: center;
+    padding: 3px 6px;
+    gap: 6px;
+    height: 32px;
+    background: #ffffdf;
+    border-top: 1px solid var(--win95-light);
+    border-bottom: 1px solid var(--win95-dark);
+    position: relative;
+    box-shadow: 0 -1px 2px rgba(0,0,0,0.08);
+  }
+  #cubert-bar-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: bold;
+    color: #000080;
+    white-space: nowrap;
+  }
+  #cubert-input {
+    flex: 1;
+    background: #ffffff;
+    border-top: 1px solid var(--win95-dark);
+    border-left: 1px solid var(--win95-dark);
+    border-right: 1px solid var(--win95-light);
+    border-bottom: 1px solid var(--win95-light);
+    box-shadow: inset 1px 1px 0 var(--win95-darker), inset -1px -1px 0 var(--win95-midlight);
+    color: #000000;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 3px 6px;
+    outline: none;
+  }
+  #cubert-input:focus {
+    outline: 1px dotted #000080;
   }
   #request-bar-row {
     display: flex;
@@ -1046,6 +1088,22 @@
     font-size: 11px;
   }
   dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+  /* Help Dialog Side-by-Side Layout with Cubert */
+  #modal-help {
+    width: 420px;
+    max-width: 90vw;
+    z-index: 960;
+  }
+  #modal-help.beside-cubert {
+    position: fixed;
+    top: 50%;
+    left: calc(50% - 180px);
+    transform: translate(-50%, -50%);
+    width: 400px;
+    max-width: calc(50vw - 80px);
+    z-index: 960;
+    box-shadow: 2px 2px 12px rgba(0,0,0,0.35);
+  }
   .win95-dialog-titlebar {
     display: flex;
     justify-content: space-between;
@@ -1494,7 +1552,7 @@
             <span class="cubert-status-pill" id="cubert-panel-status">Standby</span>
           </div>
           <div class="dock-sub-body win95-sunken cubert-dock-body" id="cubert-static-container">
-            <img id="cubert-static-img" src="assets/cubert/cubert_burntout.png" alt="Cubert" class="cubert-static-mascot" />
+            <img id="cubert-static-img" src="assets/cubert/cubert_cheerful.png" alt="Cubert" class="cubert-static-mascot" />
           </div>
         </div>
       </div>
@@ -1782,6 +1840,14 @@
 
   <!-- 5. Bottom: Request Bar Container & Active Command Bar -->
   <div id="request-bar-container">
+    <!-- Dedicated Cubert Conversation Bar (Active only when Cubert is summoned) -->
+    <div id="cubert-bar-row" style="display: none;">
+      <span class="request-label" id="cubert-bar-label">Talk to Cubert:</span>
+      <input type="text" id="cubert-input" placeholder="Explain what CAD feature you need..." autocomplete="off" spellcheck="false">
+      <button id="btn-submit-cubert" class="win95-btn">Send</button>
+      <button id="btn-dismiss-cubert-bar" class="win95-btn" title="Dismiss Cubert" onclick="hideCubertPopup()">✕ Dismiss</button>
+    </div>
+
     <div id="request-bar-row">
       <span class="request-label">Request:</span>
       <input type="text" id="request-input" placeholder="Type polite request (e.g., 'Can I box' or 'Can I sphere')..." autocomplete="off" spellcheck="false">
@@ -1921,7 +1987,7 @@
 <dialog id="modal-help">
   <h2>
     <span class="win95-dialog-title">Help Index</span>
-    <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
+    <button class="win95-btn-caption btn-caption-close" onclick="closeHelpWindow()" title="Close">✕</button>
   </h2>
   <div style="margin-bottom:8px;">
     <input type="text" id="help-search" class="prop-input" placeholder="Filter help commands..." style="width:100%; height:22px;">
@@ -1930,7 +1996,7 @@
     <!-- Filled by JS -->
   </ul>
   <div class="dialog-actions">
-    <button class="btn-dialog btn-secondary" id="btn-close-help">Close</button>
+    <button class="btn-dialog btn-secondary" id="btn-close-help" onclick="closeHelpWindow()">Close</button>
   </div>
 </dialog>
 
@@ -6319,11 +6385,18 @@ function enforceSingleCubertInvariant() {
     if (staticImg) staticImg.style.display = "none";
     if (popup) popup.style.display = "flex";
     if (popupImg) popupImg.style.display = "block";
-  } else {
-    // Standby or Break: central popup hidden completely; bottom-left Cubert visible
+  } else if (cubertMode === CUBERT_MODES.BREAK) {
+    // Break: central popup hidden completely; bottom-left burnt-out Cubert visible
     if (popup) popup.style.display = "none";
     if (staticImg) {
       staticImg.src = CUBERT_EXPRESSIONS.burntout;
+      staticImg.style.display = "block";
+    }
+  } else {
+    // Standby: central popup hidden completely; bottom-left cheerful Cubert visible
+    if (popup) popup.style.display = "none";
+    if (staticImg) {
+      staticImg.src = CUBERT_EXPRESSIONS.cheerful;
       staticImg.style.display = "block";
     }
   }
@@ -6336,6 +6409,9 @@ function setCubertMode(mode, options = {}) {
   const tipSelector = document.getElementById("cubert-tip-selector");
   const staticImg = document.getElementById("cubert-static-img");
   const panelStatus = document.getElementById("cubert-panel-status");
+  const cubertBarRow = document.getElementById("cubert-bar-row");
+  const cubertInput = document.getElementById("cubert-input");
+  const requestInput = document.getElementById("request-input");
 
   cubertMode = mode;
 
@@ -6363,6 +6439,15 @@ function setCubertMode(mode, options = {}) {
     if (panelStatus) {
       panelStatus.textContent = "Active";
     }
+    // 4. Show Dedicated Cubert Conversation Bar & focus it
+    if (cubertBarRow) {
+      cubertBarRow.style.display = "flex";
+    }
+    if (cubertInput) {
+      setTimeout(() => {
+        try { cubertInput.focus(); } catch (e) {}
+      }, 50);
+    }
     cubertPopupVisible = true;
     cubertState = "ACTIVE";
   } else if (mode === CUBERT_MODES.BREAK) {
@@ -6372,6 +6457,13 @@ function setCubertMode(mode, options = {}) {
     }
     if (tipSelector) {
       tipSelector.style.display = "none";
+    }
+    // Hide Cubert Bar & restore focus to Request Bar
+    if (cubertBarRow) {
+      cubertBarRow.style.display = "none";
+    }
+    if (requestInput) {
+      try { requestInput.focus(); } catch (e) {}
     }
     cubertPopupVisible = false;
 
@@ -6389,15 +6481,23 @@ function setCubertMode(mode, options = {}) {
     // 1. Remove the centrally displayed Cubert and speech bubble
     if (popup) {
       popup.style.display = "none";
+      popup.classList.remove("beside-help");
     }
     if (tipSelector) {
       tipSelector.style.display = "none";
     }
+    // Hide Cubert Bar & restore focus to Request Bar
+    if (cubertBarRow) {
+      cubertBarRow.style.display = "none";
+    }
+    if (requestInput) {
+      try { requestInput.focus(); } catch (e) {}
+    }
     cubertPopupVisible = false;
 
-    // 2. Restore burnt-out Cubert in the bottom-left panel
+    // 2. Restore cheerful, smiling Cubert in the bottom-left panel
     if (staticImg) {
-      staticImg.src = CUBERT_EXPRESSIONS.burntout;
+      staticImg.src = CUBERT_EXPRESSIONS.cheerful;
       staticImg.style.display = "block";
     }
     if (panelStatus) {
@@ -6442,7 +6542,85 @@ function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey 
 
 function hideCubertPopup() {
   stopCubertVoiceover();
+  const popup = document.getElementById("cubert-popup");
+  if (popup) popup.classList.remove("beside-help");
   setCubertMode(CUBERT_MODES.STANDBY);
+}
+
+function openHelpWindow() {
+  const modalHelp = document.getElementById("modal-help");
+  const cubertPopup = document.getElementById("cubert-popup");
+  if (!modalHelp) return;
+
+  // Open Help dialog without modal backdrop inerting the rest of the page
+  if (!modalHelp.open) {
+    if (typeof modalHelp.show === "function") {
+      modalHelp.show();
+    } else {
+      modalHelp.setAttribute("open", "");
+    }
+  }
+
+  modalHelp.classList.add("beside-cubert");
+  if (cubertPopup) {
+    cubertPopup.classList.add("beside-help");
+  }
+
+  // Summon Cubert beside Help window
+  showCubertPopup("How can I help you?", "cheerful");
+  cubertConvStage = "AWAITING_DESCRIPTION";
+}
+
+function closeHelpWindow() {
+  const modalHelp = document.getElementById("modal-help");
+  const cubertPopup = document.getElementById("cubert-popup");
+  if (modalHelp && modalHelp.open) {
+    modalHelp.close();
+  }
+  if (modalHelp) modalHelp.classList.remove("beside-cubert");
+  if (cubertPopup) cubertPopup.classList.remove("beside-help");
+}
+
+function handleCubertConversationSubmit(raw) {
+  const inputEl = document.getElementById("cubert-input");
+  const text = (raw !== undefined ? raw : (inputEl ? inputEl.value : "")).trim();
+  if (!text) return;
+
+  if (inputEl) inputEl.value = "";
+
+  addLog(`> (To Cubert) ${text}`, "log-user");
+
+  // 1. Profanity check
+  if (containsProfanity(text)) {
+    showCubertPopup("Watch your fucking language.", "scolding");
+    addLog("Cubert: 'Watch your fucking language.'", "log-nope");
+    status("Cubert: 'Watch your fucking language.'");
+    if (inputEl) inputEl.focus();
+    return;
+  }
+
+  // 2. Stage AWAITING_DESCRIPTION: User explained what they want
+  // Cubert issues retry instruction
+  if (cubertConvStage === "AWAITING_DESCRIPTION" || cubertConvStage === "IDLE") {
+    cubertConvStage = "AWAITING_RETRY";
+    showCubertPopup("Please remain calm and try to type that request again a little more carefully.", "confused");
+    status("Cubert: 'Please remain calm and try to type that request again a little more carefully.'");
+    addLog("Cubert: 'Please remain calm and try to type that request again a little more carefully.'", "log-info");
+    if (inputEl) inputEl.focus();
+    return;
+  }
+
+  // 3. Stage AWAITING_RETRY or Follow-up Messages:
+  // "Follow-up messages remain in the Cubert conversation instead of being parsed as CAD commands."
+  // Cubert offers a randomized bad suggestion and prompts for a tip
+  const suggestionKey = getRandomCubertSuggestion(text);
+  const suggestionItem = CUBERT_VOICE_MANIFEST[suggestionKey];
+  const suggestionCaption = suggestionItem ? suggestionItem.caption : `I know what you need! ${getRandomUnrelatedCommand(text)}!`;
+  showCubertPopup(suggestionCaption, "shrugging", true, suggestionKey);
+  cubertConvStage = "TIP_PROMPT";
+  status(`Cubert: '${suggestionCaption}'`);
+  addLog(`Cubert: '${suggestionCaption}'`, "log-info");
+  if (inputEl) inputEl.focus();
 }
 
 function triggerCubertBreak() {
@@ -9123,35 +9301,7 @@ function processRequest(raw) {
     showCubertPopup("Watch your fucking language.", "scolding");
     addLog("Cubert: 'Watch your fucking language.'", "log-nope");
     status("Cubert: 'Watch your fucking language.'");
-  }
-
-  // Cubert Conversation State Handling
-  if (cubertMode === CUBERT_MODES.ACTIVE && cubertConvStage === "AWAITING_DESCRIPTION") {
-    cubertConvStage = "AWAITING_RETRY";
-    showCubertPopup("Please remain calm and try to type that request again a little more carefully.", "confused");
-    status("Cubert: 'Please remain calm and try to type that request again a little more carefully.'");
     return;
-  }
-
-  if (cubertMode === CUBERT_MODES.ACTIVE && cubertConvStage === "AWAITING_RETRY") {
-    const politeMatch = text.match(/^can\s+i\s+(.*)$/i);
-    const retryCmd = politeMatch ? politeMatch[1].trim().toLowerCase() : text.trim().toLowerCase();
-
-    if (isRecognizedCadCommand(retryCmd)) {
-      hideCubertPopup();
-      cubertConsecutiveFailures = 0;
-      executeCommand(retryCmd);
-      return;
-    } else {
-      const suggestionKey = getRandomCubertSuggestion(retryCmd);
-      const suggestionItem = CUBERT_VOICE_MANIFEST[suggestionKey];
-      const suggestionCaption = suggestionItem ? suggestionItem.caption : `I know what you need! ${getRandomUnrelatedCommand(retryCmd)}!`;
-      showCubertPopup(suggestionCaption, "shrugging", true, suggestionKey);
-      cubertConvStage = "TIP_PROMPT";
-      status(`Cubert: '${suggestionCaption}'`);
-      cubertConsecutiveFailures = 0;
-      return;
-    }
   }
 
   // Check prefix 'Can I ' (case-insensitive)
@@ -9160,6 +9310,13 @@ function processRequest(raw) {
     addLog("Nope.", "log-nope");
     status("Nope. Request lacked polite prefix.");
     shakeRequestBar();
+    cubertConsecutiveFailures++;
+    if (cubertConsecutiveFailures >= 2) {
+      showCubertPopup("How can I help you?", "cheerful");
+      cubertConvStage = "AWAITING_DESCRIPTION";
+      status("Cubert: 'How can I help you?'");
+      addLog("Cubert triggered by consecutive command failures.", "log-info");
+    }
     return;
   }
 
@@ -9173,6 +9330,12 @@ function processRequest(raw) {
     status("Cubert: 'How can I help you?'");
     addLog("Cubert summoned.", "log-info");
     return;
+  }
+
+  // If Cubert was active and a recognized CAD command is submitted via Request Bar, dismiss Cubert!
+  if (cubertMode === CUBERT_MODES.ACTIVE && isRecognizedCadCommand(query)) {
+    hideCubertPopup();
+    cubertConsecutiveFailures = 0;
   }
 
   executeCommand(query);
@@ -9600,6 +9763,10 @@ function executeCommand(rawCmd) {
       break;
 
     case "help":
+      openHelpWindow();
+      addLog("Help index presented.", "log-success");
+      break;
+
     case "tutorial":
       document.getElementById("modal-onboarding").showModal();
       showCubertPopup("How can I help you?", "cheerful");
@@ -10388,6 +10555,12 @@ const debugTelemetry = {
 
 // Global key listeners
 window.addEventListener("keydown", (e) => {
+  if (e.key === "F1") {
+    e.preventDefault();
+    openHelpWindow();
+    return;
+  }
+
   const code = e.code || "";
   const key = e.key || "";
   const isInput = e.target && e.target.matches("input, textarea");
@@ -10736,7 +10909,7 @@ function renderHelpList(filter = "") {
         <div style="font-size:11px; color:#333; margin-top:2px;">${h.body}</div>
       `;
       li.onclick = () => {
-        modalHelp.close();
+        closeHelpWindow();
         ring(h.control);
       };
       list.appendChild(li);
@@ -10746,9 +10919,37 @@ renderHelpList();
 const helpSearch = document.getElementById("help-search");
 if (helpSearch) helpSearch.oninput = (e) => renderHelpList(e.target.value);
 const btnHelpOpen = document.getElementById("btn-help-open");
-if (btnHelpOpen && modalHelp) btnHelpOpen.onclick = () => modalHelp.showModal();
+if (btnHelpOpen) btnHelpOpen.onclick = () => openHelpWindow();
 const btnCloseHelp = document.getElementById("btn-close-help");
-if (btnCloseHelp && modalHelp) btnCloseHelp.onclick = () => modalHelp.close();
+if (btnCloseHelp) btnCloseHelp.onclick = () => closeHelpWindow();
+if (modalHelp) {
+  modalHelp.showModal = function() {
+    openHelpWindow();
+  };
+  modalHelp.addEventListener("close", () => {
+    closeHelpWindow();
+  });
+}
+
+// Cubert Bar Event Listeners
+const cubertInputEl = document.getElementById("cubert-input");
+const btnSubmitCubertEl = document.getElementById("btn-submit-cubert");
+if (cubertInputEl) {
+  cubertInputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleCubertConversationSubmit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      hideCubertPopup();
+    }
+  });
+}
+if (btnSubmitCubertEl) {
+  btnSubmitCubertEl.addEventListener("click", () => {
+    handleCubertConversationSubmit();
+  });
+}
 
 // Update Chip (Click forces complete cache purge & reload)
 const chipBtn = document.getElementById("chip");
@@ -11348,9 +11549,7 @@ function initWin95MenuBar() {
     "mitem-win-cascade": () => status("Viewports cascaded."),
 
     "mitem-help-topics": () => {
-      document.getElementById("modal-help").showModal();
-      showCubertPopup("How can I help you?", "cheerful");
-      cubertConvStage = "AWAITING_DESCRIPTION";
+      openHelpWindow();
     },
     "mitem-help-tutorial": () => {
       document.getElementById("modal-onboarding").showModal();
@@ -12540,7 +12739,7 @@ function runAllTests() {
     const cubertDock = document.getElementById("cubert-panel");
     const cubertStaticImg = document.getElementById("cubert-static-img");
     const oldPropsPanel = document.getElementById("properties-panel");
-    assertTest("Cubert Panel: Permanent panel replaces Object Properties in left dock", !!cubertDock && !oldPropsPanel && !!cubertStaticImg && (cubertStaticImg.getAttribute("src").includes("burntout") || cubertStaticImg.getAttribute("src") === "assets/cubert/cubert.png"));
+    assertTest("Cubert Panel: Permanent panel replaces Object Properties in left dock", !!cubertDock && !oldPropsPanel && !!cubertStaticImg && (cubertStaticImg.getAttribute("src").includes("burntout") || cubertStaticImg.getAttribute("src").includes("cheerful") || cubertStaticImg.getAttribute("src") === "assets/cubert/cubert.png"));
 
     // Test 57b: Cubert Panel has status pill initialized to Standby or Idle
     const cubertStatusPill = document.getElementById("cubert-panel-status");
@@ -12633,6 +12832,65 @@ function runAllTests() {
     // Test 59e: Missing audio key falls back gracefully without errors or UI disruption
     const nullAudio = playCubertVoiceover("nonexistent_voice_key_xyz");
     assertTest("Cubert Voiceover: Nonexistent audio key degrades gracefully to null without throwing", nullAudio === null);
+
+    // =========================================================================
+    // Checkpoint A: Cubert and Help Integration & Standby Correction
+    // =========================================================================
+    // Test 60a: Standby uses cheerful blue cube mascot, Break uses burntout smoking cube
+    setCubertMode(CUBERT_MODES.STANDBY);
+    const standbyImgSrc = cubertStaticImg.getAttribute("src") || cubertStaticImg.src;
+    const standbyIsCheerful = standbyImgSrc.includes("cheerful") || standbyImgSrc === "assets/cubert/cubert.png";
+    triggerCubertBreak();
+    const breakImgSrc = cubertStaticImg.getAttribute("src") || cubertStaticImg.src;
+    const breakIsBurntout = breakImgSrc.includes("burntout");
+    endCubertBreak();
+    assertTest("Checkpoint A: Standby displays cheerful mascot, Break displays burntout artwork", standbyIsCheerful && breakIsBurntout && getVisibleCubertCount() === 1);
+
+    // Test 60b: openHelpWindow summons Cubert beside Help window
+    openHelpWindow();
+    const helpEl = document.getElementById("modal-help");
+    const helpOpen = helpEl && helpEl.open && helpEl.classList.contains("beside-cubert");
+    const cubertBesideHelp = cubertPopup && cubertPopup.style.display !== "none" && cubertPopup.classList.contains("beside-help");
+    const bubbleSaysHelp = bubbleText && bubbleText.textContent.includes("How can I help you?");
+    assertTest("Checkpoint A: openHelpWindow displays Help and Cubert side-by-side with greeting", helpOpen && cubertBesideHelp && bubbleSaysHelp && getVisibleCubertCount() === 1);
+
+    // Test 60c: Closing Help closes modal and cleans up beside classes
+    closeHelpWindow();
+    const helpClosed = !helpEl.open && !helpEl.classList.contains("beside-cubert");
+    const cubertUnshifted = !cubertPopup.classList.contains("beside-help");
+    hideCubertPopup();
+    assertTest("Checkpoint A: closeHelpWindow removes beside layout and maintains single Cubert invariant", helpClosed && cubertUnshifted && getVisibleCubertCount() === 1);
+
+    // =========================================================================
+    // Checkpoint B: Dedicated Cubert Conversation Bar ("Talk to Cubert:")
+    // =========================================================================
+    // Test 61a: Cubert Bar appears when Cubert is active, hides when dismissed, and restores Request Bar
+    const cubertBarEl = document.getElementById("cubert-bar-row");
+    const cubertBarInput = document.getElementById("cubert-input");
+    const reqInputEl = document.getElementById("request-input");
+    showCubertPopup("How can I help you?", "cheerful");
+    const barVisibleWhenActive = cubertBarEl && cubertBarEl.style.display !== "none";
+    hideCubertPopup();
+    const barHiddenWhenStandby = cubertBarEl && cubertBarEl.style.display === "none";
+    assertTest("Checkpoint B: Dedicated Cubert Bar appears when active and hides when dismissed", barVisibleWhenActive && barHiddenWhenStandby);
+
+    // Test 61b: Submitting via Cubert Bar processes explanation and retry instruction without ad counter increment
+    showCubertPopup("How can I help you?", "cheerful");
+    cubertConvStage = "AWAITING_DESCRIPTION";
+    const initialAdCount = modelingCommandCount;
+    handleCubertConversationSubmit("I need to bevel edges");
+    const retriedStage = cubertConvStage === "AWAITING_RETRY";
+    const retrySpeech = bubbleText && bubbleText.textContent.includes("Please remain calm");
+    const adCountUnchanged1 = modelingCommandCount === initialAdCount;
+    assertTest("Checkpoint B: Cubert Bar receives explanation and issues retry instruction without ad impact", retriedStage && retrySpeech && adCountUnchanged1);
+
+    // Test 61c: Follow-up message in Cubert Bar produces bad suggestion and tip selector without CAD collision
+    handleCubertConversationSubmit("I still do not understand");
+    const tipStage = cubertConvStage === "TIP_PROMPT";
+    const tipSelectorVisible = tipSelector && tipSelector.style.display !== "none";
+    const adCountUnchanged2 = modelingCommandCount === initialAdCount;
+    hideCubertPopup();
+    assertTest("Checkpoint B: Follow-up in Cubert Bar yields bad suggestion and tip prompt without ad impact", tipStage && tipSelectorVisible && adCountUnchanged2);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
