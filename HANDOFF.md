@@ -1907,4 +1907,5 @@ python3 scripts/get_test_results.py
 
 ### 22.6 Git & Deployment Status
 - Implemented and verified on branch `dev`.
-- Merged into `main` and pushed to `origin/dev` and `origin/main` upon explicit user acceptance.
+- Merged into `main` and pushed to `origin/dev` and `origin/main` upon explicit user acceptance (commit `5043e03`).
+- Formally reviewed and accepted by user. Live application deployed at GitHub Pages.
