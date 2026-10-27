@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-015`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-017`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -27,6 +27,10 @@
 |---|:---:|:---:|:---:|:---:|---|
 | **Checkpoint A (v0.16): About Window Repair** | **YES** | **YES** | **YES** | **YES** | Sizing, flexbox collapse, and overflow fix for `#modal-about`. Styled at full size (~540px height, 640px width, `box-sizing: border-box`), scrollable inner container `#about-dialog-content` (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), authentic sunken panel, unclipped credits, technology audit, bibliography citations, and Lake Superior billing address. Responsive and ready for Chinese localization. **Accepted by user; merged into `main`.** |
 | **Checkpoint B (v0.16): Cubert Tip Buttons ($1, $5, $10, $0)** | **YES** | **YES** | **YES** | **YES** | Fixed disconnect where tips referenced undefined `fictionalBalance`. Integrated with `creditBalance` and `updateEconomyDisplay()`. Immediate single-click deduction for $1, $5, $10 with localStorage persistence, dismisses Cubert, and restores smiling standby mascot. $0 tip deducts $0.00 and dismisses. Duplicate-click lock (`isProcessingCubertTip`) prevents double deductions. Insufficient credits rejects charge ($0 deducted), logs warning, and triggers 'Broke ass.' speech bubble & audio. **Accepted by user; merged into `main`.** |
+| **Checkpoint C (v0.16): Redesign Blue Header Branding** | **YES** | **YES** | **YES** | **YES** | Removed old standalone SVG icon. Enlarge official white-backed CADNTLogo inside `.win95-title-logo-badge` to occupy header height (badge 38px, logo 32px) with minimal padding, preserving full aspect ratio, black serif letters, and blue cube. Added italicized subtitle `Computer Aided Design Noncompliance Technology` immediately adjacent to the right. Preserved retro Windows 95 title bar appearance. **Accepted by user; merged into `main`.** |
+| **Checkpoint D (v0.16): Consolidate Top Toolbar** | **YES** | **YES** | **YES** | **YES** | Completely removed first text-menu row (`#win95-menu-bar`). Moved `#win95-standard-toolbar` directly beneath blue title bar with zero blank strip. Preserved all toolbar button behaviors, credits, and `+ Buy More`. Added `#btn-crash-open` ("Crash") for accessible crash report opening. **Accepted by user; merged into `main`.** |
+| **Checkpoint E (v0.16): Replace Browser Tab Branding** | **YES** | **YES** | **YES** | **YES** | Replaced old icon with new isometric blue cube favicons derived from official `CADNTLogo.png` (`assets/brand/favicon-32x32.png`, `assets/brand/favicon-192x192.png`, `assets/brand/apple-touch-icon.png`, and blueprint vector `icon.svg`). Updated `<head>` favicon declarations with cache busters (`?v=17`), updated `manifest.webmanifest`, and bumped `sw.js` cache to `v00000-017`. **Accepted by user; merged into `main`.** |
+| **Checkpoint F (v0.16): Full Chinese Interface Mode** | **YES** | **YES** | **YES** | **YES** | Full localization architecture with `locales/en.json` and `locales/zh-Hans-CN.json` (mirrored in `window.I18N_DICTIONARIES`). Request Bar commands `can i chinese` switches application to Simplified Chinese (`zh-Hans-CN`), and `切换英文` / `can i english` restores English. Translates all UI text (toolbar, FeatureManager, viewports, Request Bar, Cubert status, bottom bar, About modal) while preserving user geometry and identifiers. English CAD commands (`Can I box`, etc.) remain 100% operational in Chinese mode. Language selection persists in localStorage. **Accepted by user; merged into `main`.** |
 | **Checkpoint A: Cubert & Help Integration + Standby Mascot** | **YES** | **YES** | **YES** | **YES** | Side-by-side non-overlapping Help and Cubert layout; cheerful standby dock mascot; burnt-out break mascot; single Cubert invariant strictly enforced across all states. **Accepted by user; merged into `main` (commit `3bcb9a3`).** |
 | **Checkpoint B: Dedicated Cubert Conversation Bar ("Talk to Cubert:")** | **YES** | **YES** | **YES** | **YES** | Clean separation of Request Bar (CAD commands only) and dedicated Cubert Bar. Multi-turn dialogue, retry instruction, randomized bad suggestion + tip prompt, zero ad command frequency impact. **Accepted by user; merged into `main` (commit `3bcb9a3`).** |
 | **Checkpoint C: Dismiss Cubert (`Can you leave Cubert`)** | **YES** | **YES** | **YES** | **YES** | Recognized command `Can you leave Cubert` (and variations/case-insensitive/punctuation) dismisses Cubert from Request Bar and Cubert Bar. Immediately stops voiceover, hides popup & speech bubble, hides Cubert Bar, resets conversation mode, restores cheerful standby mascot, preserves geometry and fictional balance ($0.00 deducted). 190 automated tests passing. **Accepted by user; merged into `main`.** |
@@ -1829,13 +1833,78 @@ python3 scripts/get_test_results.py
      - `checkpoint_b_02_tipped_1_dollar.png` (and `_dpr2.png`)
      - `checkpoint_b_03_tipped_0_dollars.png` (and `_dpr2.png`)
      - `checkpoint_b_04_insufficient_funds_broke_ass.png` (and `_dpr2.png`)
+---
 
+## 22. Checkpoints C, D, E, F (v0.16): Header Redesign, Consolidated Toolbar, Cube Favicon & Chinese Localization
 
+### 22.1 Checkpoint C — Redesign the Blue Header Branding
+1. **Asset & Icon Clean Up**:
+   - Completely removed the old standalone SVG draft cube icon from `#win95-title-bar`.
+   - Preserved and enlarged the official white-backed `CADNTLogo.png` asset inside `.win95-title-logo-badge`.
+2. **Dimension & Typography Tuning**:
+   - Set `.win95-title-logo-badge` to `height: 38px` (occupying nearly the entire 44px title bar with minimal 3px vertical padding).
+   - Enlarged `#cadnt-official-logo` to `height: 32px; width: auto; object-fit: contain`, preserving the full original 3.19 aspect ratio, black serif letters, and blue cube replacing the apostrophe.
+   - Added italicized supporting text directly to the right: `<span class="win95-title-subtext">Computer Aided Design Noncompliance Technology</span>`.
+   - Scaled typography smaller than the logo font size, maintaining the classic Windows 95 title bar appearance.
 
+### 22.2 Checkpoint D — Consolidate the Top Toolbar
+1. **Menu Bar Removal**:
+   - Completely removed the redundant top text-menu row (`#win95-menu-bar` containing File, Edit, View, Insert, Tools, Window, Help).
+   - Repositioned the primary button toolbar (`#win95-standard-toolbar`) directly beneath `#win95-title-bar` with zero blank strip gap (`top: 44px; margin: 0; padding: 3px 6px;`).
+2. **Functionality Preservation & Crash Report Accessibility**:
+   - Preserved all standard action buttons (New, Open, Save, Print, Import, Export, Tutorial, Help, About).
+   - Preserved right-aligned Fictional Economy display (`#economy-display`, `#credit-val`, and `+ Buy More` button).
+   - Added `#btn-crash-open` ("Crash") to the toolbar to ensure full accessibility for the crash report dialog previously available under the Help menu.
 
+### 22.3 Checkpoint E — Replace Browser Tab Branding (Blue Cube Favicon)
+1. **Asset Generation from Official Artwork**:
+   - Extracted exact coordinates of the blue isometric cube from `CADNTLogo.png` (`x: 530-612, y: 44-120`).
+   - Generated optimized high-contrast pixel assets:
+     - `assets/brand/favicon-32x32.png`: 32x32 transparent PNG for standard desktop browser tabs.
+     - `assets/brand/favicon-192x192.png`: 192x192 PNG for high-density displays and PWA app icons.
+     - `assets/brand/apple-touch-icon.png`: 180x180 PNG with white background for iOS home screen bookmarks.
+     - `icon.svg`: Re-authored vector icon featuring the authentic blue cube on a crisp blueprint grid.
+2. **Cache Busting & PWA Integration**:
+   - Updated `<head>` favicon references with cache-busting query strings (`?v=17`).
+   - Updated `manifest.webmanifest` icon declarations to reference the new assets.
+   - Incremented Service Worker cache version in `sw.js` to `v00000-017`.
 
+### 22.4 Checkpoint F — Full Chinese Interface Mode (`zh-Hans-CN`)
+1. **Localization Architecture**:
+   - Centralized dictionaries created in `locales/en.json` and `locales/zh-Hans-CN.json`, and mirrored in `window.I18N_DICTIONARIES` for instant offline and `file://` availability.
+   - Reactive translation functions: `t(key, fallback)`, `applyLocale(locale)`, and `getLocalizedCubertDialogue(enText)`.
+   - Data attributes (`data-i18n`, `data-i18n-title`, `data-i18n-placeholder`) wired throughout toolbar buttons, sidebar headings, viewports, Request Bar, Cubert status, bottom bar, and dialog modals.
+   - Persists user language selection in `localStorage` under `cadnt_locale`.
+   - Dynamically updates `<html lang="zh-Hans-CN">` and `<html lang="en">`.
+2. **Command Dispatch & Restoration**:
+   - Request Bar commands `can i chinese` (case-insensitive, whitespace-tolerant) switches the entire UI to Simplified Chinese.
+   - Request Bar commands `切换英文` or `can i english` restores the full English interface.
+   - Also supported within the Cubert Conversation Bar.
+3. **Critical CAD Parser Invariant**:
+   - UI language switching does **not** alter command IDs, internal geometry, coordinates, or project data.
+   - Original English CAD modeling requests (`Can I box`, `Can I sphere`, `Can I line`, `Can I move`, etc.) remain 100% operational in Chinese mode.
+4. **Cubert Localization**:
+   - Cubert captions, speech bubbles, and tip requests translate dynamically into Simplified Chinese.
+   - Voiceovers remain original English MP3 recordings (no synthetic external TTS).
 
+### 22.5 Automated Testing & Visual Verification
+1. **Automated Unit Tests**:
+   - Suite expanded to **200 passing tests (0 failures)**:
+     - Test 67a: Checkpoint C — Redesigned Title Bar Logo & Subtitle.
+     - Test 67b: Checkpoint D — Consolidated Toolbar Directly Beneath Title Bar.
+     - Test 67c: Checkpoint E — Favicon & Touch Icon Brand Declarations.
+     - Test 67d: Checkpoint F — Full Chinese Interface Switching (`can i chinese`), CAD Parser Invariant (`Can I box`), and Restoration (`切换英文`).
+   - Verified via `python3 scripts/get_test_results.py` -> `total: 200 failures: 0`.
+2. **Visual Evidence Artifacts**:
+   - Created [`scripts/verify_checkpoints_c_d_e_f_v16.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoints_c_d_e_f_v16.py).
+   - Tested and verified in headless Chromium at DPR 1.0 and DPR 2.0 (Retina), saving to `screenshots/` and copying to `~/Desktop/`:
+     - `checkpoint_c_01_enlarged_header_logo.png` (and `_dpr2.png`)
+     - `checkpoint_d_01_consolidated_toolbar.png` (and `_dpr2.png`)
+     - `checkpoint_e_01_cube_favicons.png` (and `_dpr2.png`)
+     - `checkpoint_f_01_chinese_interface_full.png` (and `_dpr2.png`)
+     - `checkpoint_f_02_chinese_modals_cubert.png` (and `_dpr2.png`)
+     - `checkpoint_f_03_english_restored.png` (and `_dpr2.png`)
 
-
-
-
+### 22.6 Git & Deployment Status
+- Implemented and verified on branch `dev`.
+- Merged into `main` and pushed to `origin/dev` and `origin/main` upon explicit user acceptance.

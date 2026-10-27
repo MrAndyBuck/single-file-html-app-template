@@ -3,3 +3,4 @@ tools/
 scratch_chrome_profile_*/
 CADNT_Screenshots/
 *.json
+!locales/*.json

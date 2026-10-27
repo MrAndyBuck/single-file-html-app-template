@@ -7,11 +7,12 @@
 <meta name="description" content="Functional 3D CAD software with intentionally dysfunctional interactions.">
 <meta property="og:title" content="CADN'T">
 <meta property="og:description" content="Functional 3D CAD software with intentionally dysfunctional interactions.">
-<meta property="og:image" content="icon.svg">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon.svg">
-<meta name="theme-color" content="#161616">
+<meta property="og:image" content="icon.svg?v=17">
+<link rel="icon" href="assets/brand/favicon-32x32.png?v=17" type="image/png" sizes="32x32">
+<link rel="icon" href="icon.svg?v=17" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest?v=17">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=17">
+<meta name="theme-color" content="#000080">
 <style>
   :root {
     --win95-bg: #c0c0c0;
@@ -30,7 +31,7 @@
     --active-tab: #000080;
     --active-border: #ffff00;
     --grid-line: #2e4052;
-    --font-ui: "MS Sans Serif", Tahoma, "Segoe UI", Arial, sans-serif;
+    --font-ui: "MS Sans Serif", Tahoma, "PingFang SC", "Microsoft YaHei", "SimHei", "Segoe UI", Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
   }
 
@@ -1388,18 +1389,11 @@
   <!-- 1. Classic Windows 95 Title Bar -->
   <div id="win95-title-bar" class="win95-title-bar">
     <div class="win95-title-content">
-      <svg class="win95-app-icon" viewBox="0 0 16 16" width="20" height="20">
-        <rect width="16" height="16" fill="#000080" />
-        <polygon points="8,2 14,5 8,8 2,5" fill="#00ffff" />
-        <polygon points="2,5 8,8 8,14 2,11" fill="#0000ff" />
-        <polygon points="8,8 14,5 14,11 8,14" fill="#0080ff" />
-        <line x1="2" y1="14" x2="14" y2="2" stroke="#ffff00" stroke-width="1.5" />
-      </svg>
-      <div class="win95-title-logo-badge" style="display: inline-flex; align-items: center; background: #ffffff; padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.3); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.9), 1px 1px 2px rgba(0,0,0,0.35); height: 30px; box-sizing: border-box;">
-        <img id="cadnt-official-logo" src="assets/brand/CADNTLogo.png" alt="CADN'T Logo" style="height: 24px; width: auto; object-fit: contain; display: block;" title="CADN'T">
+      <div class="win95-title-logo-badge" style="display: inline-flex; align-items: center; background: #ffffff; padding: 2px 8px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.35); box-shadow: inset 1px 1px 0 rgba(255,255,255,0.9), 1px 1px 2px rgba(0,0,0,0.35); height: 38px; box-sizing: border-box;">
+        <img id="cadnt-official-logo" src="assets/brand/CADNTLogo.png" alt="CADN'T Logo" style="height: 32px; width: auto; object-fit: contain; display: block;" title="CADN'T">
         <span class="win95-title-text" style="display: none;">CADN'T</span>
       </div>
-      <span class="win95-title-subtext" style="font-size: 11px; font-weight: bold; color: #ffffff; letter-spacing: 0.3px; margin-left: 6px; opacity: 0.95; white-space: nowrap;">Computer Aided Design Noncompliance Technology</span>
+      <span class="win95-title-subtext" style="font-size: 11px; font-weight: bold; font-style: italic; color: #ffffff; letter-spacing: 0.3px; margin-left: 8px; opacity: 0.95; white-space: nowrap;" data-i18n="app.subtitle">Computer Aided Design Noncompliance Technology</span>
     </div>
     <div class="win95-window-controls">
       <button class="win95-btn-caption" id="btn-win-min" title="Minimize">_</button>
@@ -1408,131 +1402,39 @@
     </div>
   </div>
 
-  <!-- 2. Classic Windows 95 Menu Bar -->
-  <nav id="win95-menu-bar" class="win95-menu-bar">
-    <div class="menu-item" id="menu-file">
-      <span class="menu-label"><u>F</u>ile</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-new">New Part<span class="menu-hotkey">Ctrl+N</span></div>
-        <div class="menu-dropdown-item" id="mitem-open">Open...<span class="menu-hotkey">Ctrl+O</span></div>
-        <div class="menu-dropdown-item" id="mitem-save">Save<span class="menu-hotkey">Ctrl+S</span></div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-import">Import STL/OBJ...</div>
-        <div class="menu-dropdown-item" id="mitem-export">Export STL/OBJ...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-print">Print...<span class="menu-hotkey">Ctrl+P</span></div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-exit">Exit CADN'T</div>
-      </div>
-    </div>
-    <div class="menu-item" id="menu-edit">
-      <span class="menu-label"><u>E</u>dit</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-undo">Undo<span class="menu-hotkey">Ctrl+Z</span></div>
-        <div class="menu-dropdown-item" id="mitem-redo">Redo<span class="menu-hotkey">Ctrl+Y</span></div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-delete">Delete Selection<span class="menu-hotkey">Del</span></div>
-        <div class="menu-dropdown-item" id="mitem-remove-starting">Remove Starting Object...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-crash-report">Send Crash Report...</div>
-      </div>
-    </div>
-    <div class="menu-item" id="menu-view">
-      <span class="menu-label"><u>V</u>iew</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-view-4">4-Viewport Matrix (Active)</div>
-        <div class="menu-dropdown-item" id="mitem-view-reset">Reset Camera Views</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-view-hud">Toggle Diagnostic HUD</div>
-      </div>
-    </div>
-    <div class="menu-item" id="menu-insert">
-      <span class="menu-label"><u>I</u>nsert</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-ins-box">Box Primitive...</div>
-        <div class="menu-dropdown-item" id="mitem-ins-sphere">Sphere Primitive...</div>
-        <div class="menu-dropdown-item" id="mitem-ins-cyl">Cylinder Primitive...</div>
-        <div class="menu-dropdown-item" id="mitem-ins-cone">Cone Primitive...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-ins-line">2D Line Sketch...</div>
-        <div class="menu-dropdown-item" id="mitem-ins-rect">2D Rectangle Profile...</div>
-        <div class="menu-dropdown-item" id="mitem-ins-circle">2D Circle Profile...</div>
-        <div class="menu-dropdown-item" id="mitem-ins-spline">2D Spline Sketch...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-ins-extrude">Extrude 2D Profile...</div>
-      </div>
-    </div>
-    <div class="menu-item" id="menu-tools">
-      <span class="menu-label"><u>T</u>ools</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-tool-union">Boolean Union (CSG)...</div>
-        <div class="menu-dropdown-item" id="mitem-tool-diff">Boolean Difference (CSG)...</div>
-        <div class="menu-dropdown-item" id="mitem-tool-join">Join Curves & Surfaces...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-tool-move">Transform: Move...</div>
-        <div class="menu-dropdown-item" id="mitem-tool-rot">Transform: Rotate...</div>
-        <div class="menu-dropdown-item" id="mitem-tool-scale">Transform: Scale...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-tool-fillet">Fillet Edges ($49.00)...</div>
-        <div class="menu-dropdown-item" id="mitem-tool-chamfer">Chamfer Edges ($49.00)...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-tool-explode">Explode Solid...</div>
-        <div class="menu-dropdown-item" id="mitem-tool-remesh">Remesh / Simplify...</div>
-      </div>
-    </div>
-    <div class="menu-item" id="menu-window">
-      <span class="menu-label"><u>W</u>indow</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-win-tile">Tile Viewports</div>
-        <div class="menu-dropdown-item" id="mitem-win-cascade">Cascade Windows</div>
-      </div>
-    </div>
-    <div class="menu-item" id="menu-help">
-      <span class="menu-label"><u>H</u>elp</span>
-      <div class="menu-dropdown">
-        <div class="menu-dropdown-item" id="mitem-help-topics">Help Topics...<span class="menu-hotkey">F1</span></div>
-        <div class="menu-dropdown-item" id="mitem-help-tutorial">Onboarding Tutorial...</div>
-        <div class="menu-dropdown-item" id="mitem-help-credits">Credit Marketplace ($249.00)...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-help-crash">Submit Crash Report...</div>
-        <div class="menu-dropdown-separator"></div>
-        <div class="menu-dropdown-item" id="mitem-help-about">About CADN'T...</div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- 3. Classic Standard Toolbar -->
+  <!-- 2. Classic Standard Toolbar (Consolidated Top Toolbar) -->
   <div id="win95-standard-toolbar" class="win95-toolbar">
-    <div class="toolbar-gripper" title="Toolbar Grip"></div>
-    <button class="win95-tb-btn" id="tb-btn-new" title="New Part (Ctrl+N)">
+    <div class="toolbar-gripper" title="Toolbar Grip" data-i18n-title="toolbar.grip"></div>
+    <button class="win95-tb-btn" id="tb-btn-new" title="New Part (Ctrl+N)" data-i18n-title="toolbar.new">
       <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 1h7l4 4v10H3z" fill="#fff" stroke="#000"/><path d="M10 1v4h4" fill="#dfdfdf" stroke="#000"/></svg>
     </button>
-    <button class="win95-tb-btn" id="btn-open-project" title="Open CADN'T native project archive (.cadnt)">
+    <button class="win95-tb-btn" id="btn-open-project" title="Open CADN'T native project archive (.cadnt)" data-i18n-title="toolbar.open">
       <svg viewBox="0 0 16 16" width="16" height="16"><path d="M2 3h4l2 2h6v2H2z" fill="#ffcc00" stroke="#000"/><path d="M1 7h12l-2 7H1z" fill="#ffe066" stroke="#000"/></svg>
     </button>
-    <button class="win95-tb-btn" id="btn-save-project" title="Save CADN'T native project archive (.cadnt)">
+    <button class="win95-tb-btn" id="btn-save-project" title="Save CADN'T native project archive (.cadnt)" data-i18n-title="toolbar.save">
       <svg viewBox="0 0 16 16" width="16" height="16"><path d="M2 2h10l2 2v10H2z" fill="#000080" stroke="#000"/><rect x="4" y="2" width="6" height="4" fill="#fff"/><rect x="4" y="9" width="8" height="5" fill="#dfdfdf" stroke="#000"/></svg>
     </button>
     <div class="toolbar-sep"></div>
-    <button class="win95-tb-btn" id="tb-btn-print" title="Print Active Drawing">
+    <button class="win95-tb-btn" id="tb-btn-print" title="Print Active Drawing" data-i18n-title="toolbar.print">
       <svg viewBox="0 0 16 16" width="16" height="16"><rect x="3" y="1" width="10" height="5" fill="#fff" stroke="#000"/><rect x="2" y="5" width="12" height="6" fill="#808080" stroke="#000"/><rect x="4" y="9" width="8" height="6" fill="#fff" stroke="#000"/></svg>
     </button>
 
     <div class="toolbar-sep"></div>
-    <button class="win95-tb-btn text-tb-btn" id="btn-import-mesh" title="Import external STL or OBJ mesh ($10.00 fee)">Import</button>
-    <button class="win95-tb-btn text-tb-btn" id="btn-export-mesh" title="Export OBJ or STL file">Export</button>
+    <button class="win95-tb-btn text-tb-btn" id="btn-import-mesh" title="Import external STL or OBJ mesh ($10.00 fee)" data-i18n="toolbar.import" data-i18n-title="toolbar.import_title">Import</button>
+    <button class="win95-tb-btn text-tb-btn" id="btn-export-mesh" title="Export OBJ or STL file" data-i18n="toolbar.export" data-i18n-title="toolbar.export_title">Export</button>
     <div class="toolbar-sep"></div>
-    <button class="win95-tb-btn text-tb-btn" id="btn-tutorial-open" title="Open CADN'T onboarding handbook">Tutorial</button>
-    <button class="win95-tb-btn text-tb-btn" id="btn-help-open" title="Search CADN'T help index">Help</button>
-    <button class="win95-tb-btn text-tb-btn" id="btn-about-open" title="About CADN'T">About</button>
+    <button class="win95-tb-btn text-tb-btn" id="btn-tutorial-open" title="Open CADN'T onboarding handbook" data-i18n="toolbar.tutorial" data-i18n-title="toolbar.tutorial_title">Tutorial</button>
+    <button class="win95-tb-btn text-tb-btn" id="btn-help-open" title="Search CADN'T help index" data-i18n="toolbar.help" data-i18n-title="toolbar.help_title">Help</button>
+    <button class="win95-tb-btn text-tb-btn" id="btn-about-open" title="About CADN'T" data-i18n="toolbar.about" data-i18n-title="toolbar.about_title">About</button>
+    <button class="win95-tb-btn text-tb-btn" id="btn-crash-open" title="Submit Crash Report" data-i18n="toolbar.crash" data-i18n-title="toolbar.crash_title" onclick="openCrashReportModal()">Crash</button>
 
     <div class="toolbar-spacer"></div>
 
     <!-- Fictional Economy Bar -->
     <div class="economy-chip win95-sunken" id="economy-display">
-      <span class="balance-label">Credits:</span>
+      <span class="balance-label" data-i18n="app.credits_label">Credits:</span>
       <span class="balance-val" id="credit-val">$249.00</span>
-      <button class="btn-buy-credits win95-btn" id="btn-buy-credits" title="Replenish fictional CAD tokens">+ Buy More</button>
+      <button class="btn-buy-credits win95-btn" id="btn-buy-credits" title="Replenish fictional CAD tokens" data-i18n="app.buy_more">+ Buy More</button>
     </div>
 
     <button class="header-btn debug-btn" id="btn-debug-toggle" style="display:none;" title="Toggle Debug Mode">DEBUG ON</button>
@@ -1549,7 +1451,7 @@
     <aside id="left-sidebar" class="win95-dock left-dock">
       <div class="dock-header">
         <svg viewBox="0 0 16 16" width="12" height="12" style="margin-right:4px;"><rect width="16" height="16" fill="#ffff00" stroke="#000"/><polygon points="8,2 14,5 8,8 2,5" fill="#000080"/></svg>
-        <span class="dock-title">FeatureManager</span>
+        <span class="dock-title" data-i18n="features.feature_manager">FeatureManager</span>
       </div>
       <div class="dock-body">
         <div class="tree-pane win95-sunken">
@@ -1568,7 +1470,7 @@
             <div class="tree-item group-header">
               <span class="tree-symbol">[-]</span>
               <span class="tree-icon">🧱</span>
-              <span class="tree-text"><strong>Features & Geometry</strong></span>
+              <span class="tree-text"><strong data-i18n="features.features_geometry">Features & Geometry</strong></span>
               <span id="obj-count-badge" class="tree-badge">1 items</span>
             </div>
             <div class="tree-children">
@@ -1579,7 +1481,7 @@
             <div class="tree-item group-header" style="margin-top:4px;">
               <span class="tree-symbol">[-]</span>
               <span class="tree-icon">📑</span>
-              <span class="tree-text"><strong>Layers</strong></span>
+              <span class="tree-text"><strong data-i18n="features.layers">Layers</strong></span>
               <button id="btn-add-layer" class="win95-btn-tiny" title="Create New Layer">+ Layer</button>
             </div>
             <div class="tree-children">
@@ -1593,9 +1495,9 @@
           <div class="dock-sub-header" style="display:flex; justify-content:space-between; align-items:center;">
             <span style="display:flex; align-items:center; gap:4px;">
               <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" fill="#000080"/><rect x="3" y="3" width="10" height="10" fill="#00aaff"/></svg>
-              <strong>Cubert Assistant</strong>
+              <strong data-i18n="cubert.title">Cubert Assistant</strong>
             </span>
-            <span class="cubert-status-pill" id="cubert-panel-status">Standby</span>
+            <span class="cubert-status-pill" id="cubert-panel-status" data-i18n="cubert.status_standby">Standby</span>
           </div>
           <div class="dock-sub-body win95-sunken cubert-dock-body" id="cubert-static-container">
             <img id="cubert-static-img" src="assets/cubert/cubert_cheerful.png" alt="Cubert" class="cubert-static-mascot" />
@@ -1609,7 +1511,7 @@
       <!-- Top-Left: Top Viewport (X/Z) -->
       <div class="viewport-pane" id="vp-top" data-vp="top">
         <div class="viewport-label" id="lbl-top" data-vp="top">
-          <span class="vp-dot">●</span> Top (X/Z)
+          <span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.top">Top (X/Z)</span>
         </div>
         <canvas id="canvas-top" tabindex="0"></canvas>
       </div>
@@ -1617,7 +1519,7 @@
       <!-- Top-Right: Perspective Viewport (3D Orbit) -->
       <div class="viewport-pane active-vp-pane" id="vp-perspective" data-vp="perspective">
         <div class="viewport-label active-vp" id="lbl-perspective" data-vp="perspective">
-          <span class="vp-dot">●</span> Perspective [W/S/A/D Orbit]
+          <span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.perspective">Perspective [W/S/A/D Orbit]</span>
         </div>
         <canvas id="canvas-perspective" tabindex="0"></canvas>
       </div>
@@ -1625,7 +1527,7 @@
       <!-- Bottom-Left: Front Viewport (X/Y) -->
       <div class="viewport-pane" id="vp-front" data-vp="front">
         <div class="viewport-label" id="lbl-front" data-vp="front">
-          <span class="vp-dot">●</span> Front (X/Y)
+          <span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.front">Front (X/Y)</span>
         </div>
         <canvas id="canvas-front" tabindex="0"></canvas>
       </div>
@@ -1633,7 +1535,7 @@
       <!-- Bottom-Right: Right Viewport (Z/Y) -->
       <div class="viewport-pane" id="vp-right" data-vp="right">
         <div class="viewport-label" id="lbl-right" data-vp="right">
-          <span class="vp-dot">●</span> Right (Z/Y)
+          <span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.right">Right (Z/Y)</span>
         </div>
         <canvas id="canvas-right" tabindex="0"></canvas>
       </div>
@@ -1644,25 +1546,25 @@
       <!-- Diagnostic Debug Overlay -->
       <div id="debug-overlay">
         <div class="debug-hud-header" id="debug-hud-toggle">
-          <span class="debug-hud-title">🔍 DIAGNOSTIC HUD</span>
-          <span id="debug-hud-version" class="debug-badge">v00000-015</span>
+          <span class="debug-hud-title" data-i18n="hud.title">🔍 DIAGNOSTIC HUD</span>
+          <span id="debug-hud-version" class="debug-badge">v00000-017</span>
           <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
         </div>
         <div id="debug-hud-body" class="debug-hud-body">
           <div class="debug-row">
-            <span class="debug-label">Active Viewport:</span>
+            <span class="debug-label" data-i18n="hud.active_vp">Active Viewport:</span>
             <span id="dbg-active-vp" class="debug-val highlight">PERSPECTIVE</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Focused Element:</span>
+            <span class="debug-label" data-i18n="hud.focused_elem">Focused Element:</span>
             <span id="dbg-focused-elem" class="debug-val">CANVAS#canvas-perspective</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Text Input Focused:</span>
+            <span class="debug-label" data-i18n="hud.text_input">Text Input Focused:</span>
             <span id="dbg-input-focused" class="debug-val status-ok">NO (Nav Keys Active)</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Last Key Received:</span>
+            <span class="debug-label" data-i18n="hud.last_key">Last Key Received:</span>
             <span id="dbg-last-key" class="debug-val">None</span>
           </div>
           <div class="debug-row">
@@ -1678,7 +1580,7 @@
             <span id="dbg-held-keys" class="debug-val">[]</span>
           </div>
           <hr class="debug-divider">
-          <div class="debug-section-title">Perspective Camera Orbit</div>
+          <div class="debug-section-title" data-i18n="hud.cam_orbit">Perspective Camera Orbit</div>
           <div class="debug-row">
             <span class="debug-label">Azimuth (θ) / Elev (φ):</span>
             <span id="dbg-cam-angles" class="debug-val">Az: 45.0° | El: 35.0°</span>
@@ -1688,15 +1590,15 @@
             <span id="dbg-cam-radius" class="debug-val">95.0</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Camera Pos (X, Y, Z):</span>
+            <span class="debug-label" data-i18n="hud.cam_pos">Camera Pos (X, Y, Z):</span>
             <span id="dbg-cam-pos" class="debug-val">(55.4, 54.8, 55.4)</span>
           </div>
           <div class="debug-row">
-            <span class="debug-label">Camera Target:</span>
+            <span class="debug-label" data-i18n="hud.cam_target">Camera Target:</span>
             <span id="dbg-cam-target" class="debug-val">(0.0, 0.0, 0.0)</span>
           </div>
           <hr class="debug-divider">
-          <div class="debug-section-title">4-Viewport Geometry</div>
+          <div class="debug-section-title" data-i18n="hud.vp_geom">4-Viewport Geometry</div>
           <div class="debug-row">
             <span class="debug-label">Viewport Sizing:</span>
             <span id="dbg-canvas-dims" class="debug-val">-</span>
@@ -1713,7 +1615,7 @@
             <span class="debug-label">Test Primitives:</span>
             <span id="dbg-test-primitives" class="debug-val">OFF</span>
           </div>
-          <button id="btn-toggle-test-primitives" style="width:100%; margin-top:4px; padding:3px 6px; background:var(--win95-bg); border:1px solid #000; font-family:var(--font-mono); font-size:10px; cursor:pointer;">
+          <button id="btn-toggle-test-primitives" style="width:100%; margin-top:4px; padding:3px 6px; background:var(--win95-bg); border:1px solid #000; font-family:var(--font-mono); font-size:10px; cursor:pointer;" data-i18n="hud.toggle_test_primitives">
             Toggle 4-View Test Primitives [ON/OFF]
           </button>
           <hr class="debug-divider">
@@ -1744,17 +1646,17 @@
         </div>
         <div class="cubert-speech-bubble" id="cubert-speech-bubble">
           <div class="cubert-bubble-tail"></div>
-          <button id="btn-cubert-close" class="cubert-bubble-close" title="Dismiss Cubert" onclick="hideCubertPopup()">✕</button>
+          <button id="btn-cubert-close" class="cubert-bubble-close" title="Dismiss Cubert" data-i18n-title="cubert.btn_dismiss" onclick="hideCubertPopup()">✕</button>
           <div class="cubert-bubble-text" id="cubert-bubble-text">How can I help you?</div>
 
           <!-- Floating Tip Selector (only displayed during tip prompt stage) -->
           <div id="cubert-tip-selector" class="cubert-tip-selector" style="display:none;">
-            <div class="cubert-tip-label">Leave Cubert a tip?</div>
+            <div class="cubert-tip-label" data-i18n="cubert.leave_tip_title">Leave Cubert a tip?</div>
             <div class="cubert-tip-buttons">
-              <button class="win95-btn cubert-tip-btn" data-tip="1" onclick="submitCubertTip(1)">$1</button>
-              <button class="win95-btn cubert-tip-btn" data-tip="5" onclick="submitCubertTip(5)">$5</button>
-              <button class="win95-btn cubert-tip-btn" data-tip="10" onclick="submitCubertTip(10)">$10</button>
-              <button class="win95-btn cubert-tip-zero" data-tip="0" onclick="submitCubertTip(0)" title="No tip ($0)">$0</button>
+              <button class="win95-btn cubert-tip-btn" data-tip="1" onclick="submitCubertTip(1)" data-i18n="cubert.tip_1">$1</button>
+              <button class="win95-btn cubert-tip-btn" data-tip="5" onclick="submitCubertTip(5)" data-i18n="cubert.tip_5">$5</button>
+              <button class="win95-btn cubert-tip-btn" data-tip="10" onclick="submitCubertTip(10)" data-i18n="cubert.tip_10">$10</button>
+              <button class="win95-btn cubert-tip-zero" data-tip="0" onclick="submitCubertTip(0)" title="No tip ($0)" data-i18n="cubert.tip_0" data-i18n-title="cubert.tip_0_title">$0</button>
             </div>
           </div>
         </div>
@@ -1888,16 +1790,16 @@
   <div id="request-bar-container">
     <!-- Dedicated Cubert Conversation Bar (Active only when Cubert is summoned) -->
     <div id="cubert-bar-row" style="display: none;">
-      <span class="request-label" id="cubert-bar-label">Talk to Cubert:</span>
-      <input type="text" id="cubert-input" placeholder="Explain what CAD feature you need..." autocomplete="off" spellcheck="false">
-      <button id="btn-submit-cubert" class="win95-btn">Send</button>
-      <button id="btn-dismiss-cubert-bar" class="win95-btn" title="Dismiss Cubert" onclick="hideCubertPopup()">✕ Dismiss</button>
+      <span class="request-label" id="cubert-bar-label" data-i18n="cubert.bar_label">Talk to Cubert:</span>
+      <input type="text" id="cubert-input" placeholder="Explain what CAD feature you need..." data-i18n-placeholder="cubert.bar_placeholder" autocomplete="off" spellcheck="false">
+      <button id="btn-submit-cubert" class="win95-btn" data-i18n="cubert.btn_send">Send</button>
+      <button id="btn-dismiss-cubert-bar" class="win95-btn" title="Dismiss Cubert" data-i18n="cubert.btn_dismiss" data-i18n-title="cubert.btn_dismiss" onclick="hideCubertPopup()">✕ Dismiss</button>
     </div>
 
     <div id="request-bar-row">
-      <span class="request-label">Request:</span>
-      <input type="text" id="request-input" placeholder="Type polite request (e.g., 'Can I box' or 'Can I sphere')..." autocomplete="off" spellcheck="false">
-      <button id="btn-submit-request" class="win95-btn">Send</button>
+      <span class="request-label" data-i18n="app.request_label">Request:</span>
+      <input type="text" id="request-input" placeholder="Type polite request (e.g., 'Can I box' or 'Can I sphere')..." data-i18n-placeholder="app.request_placeholder" autocomplete="off" spellcheck="false">
+      <button id="btn-submit-request" class="win95-btn" data-i18n="cubert.btn_send">Send</button>
       <button id="request-history-btn" class="win95-btn" title="Toggle Command History Log">▼ Log</button>
 
       <!-- Dropdown Request Log -->
@@ -1918,24 +1820,24 @@
 
   <!-- 6. Bottom Status Bar -->
   <footer id="bottom-bar">
-    <div id="status-message" class="status-panel">Ready. Type polite request in Request Bar.</div>
+    <div id="status-message" class="status-panel" data-i18n="app.ready">Ready. Type polite request in Request Bar.</div>
     <div id="coords-readout" class="status-panel">X: 0.00 Y: 0.00 Z: 0.00</div>
-    <div class="nav-hint status-panel">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
+    <div class="nav-hint status-panel" data-i18n="app.nav_hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
     <div class="status-panel status-credit" id="status-credit-panel">Tokens: $249.00</div>
-    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-015 ↻</button>
+    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-017 ↻</button>
   </footer>
 </div>
 
 <!-- Onboarding Modal -->
 <dialog id="modal-onboarding">
   <h2>
-    <span class="win95-dialog-title">
+    <span class="win95-dialog-title" data-i18n="modals.onboarding_title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       Welcome to CADN'T v0.1
     </span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
-  <p>CADN'T is a precision 3D CAD application engineered with intentionally dysfunctional interactions. Please review operational guidelines:</p>
+  <p data-i18n="modals.onboarding_intro">CADN'T is a precision 3D CAD application engineered with intentionally dysfunctional interactions. Please review operational guidelines:</p>
   <ul>
     <li><strong>The Request Bar</strong>: All typed commands must begin with <code>Can I [command]</code> (e.g. <code>Can I box</code>). Commands lacking polite deference will receive a curt <em>"Nope."</em></li>
     <li><strong>Viewport Navigation</strong>: Trackpad and mouse wheels will <strong>not</strong> navigate viewports. Orbit with <code>W / S / A / D</code>, pan with <code>Arrow Keys</code>, and zoom with <code>Shift + Arrow Keys</code>. Mouse clicks are strictly reserved for raycast selection.</li>
@@ -1944,7 +1846,7 @@
     <li><strong>Economy</strong>: You have received a starting grant of $249.00 in fictional CAD credits.</li>
   </ul>
   <div class="dialog-actions">
-    <button class="btn-dialog btn-primary" id="btn-close-onboarding">Accept Terms & Conditions</button>
+    <button class="btn-dialog btn-primary" id="btn-close-onboarding" data-i18n="modals.onboarding_accept">Accept Terms & Conditions</button>
   </div>
 </dialog>
 
@@ -2056,7 +1958,7 @@
 <!-- About Modal -->
 <dialog id="modal-about">
   <h2>
-    <span class="win95-dialog-title">About CADN'T — Computer Aided Design Noncompliance Technology</span>
+    <span class="win95-dialog-title" data-i18n="modals.about_title">About CADN'T — Computer Aided Design Noncompliance Technology</span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
   <div id="about-dialog-content">
@@ -2067,7 +1969,7 @@
         CADN'T — Computer Aided Design Noncompliance Technology
       </div>
       <div style="font-size: 10px; color: #555555; margin-bottom: 6px;">
-        Version: <span id="about-version">v00000-015</span> (Release Build)
+        Version: <span id="about-version">v00000-017</span> (Release Build)
       </div>
       <p style="margin: 0; font-style: italic; color: #222222;">
         CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space. Built as an adversarial, fully functional 3D CAD environment featuring genuine geometry calculations, genuine meshes, and a deliberately hostile user interface.
@@ -2076,7 +1978,7 @@
 
     <!-- Development Credits -->
     <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
-      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;" data-i18n="modals.credits_heading">
         Development Credits
       </div>
       <ul style="margin: 4px 0 0 16px; padding: 0;">
@@ -2091,7 +1993,7 @@
 
     <!-- Technology & Dependency Audit -->
     <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
-      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;" data-i18n="modals.tech_audit_heading">
         Technology Audit & Dependencies
       </div>
       <ul style="margin: 4px 0 0 16px; padding: 0;">
@@ -2108,7 +2010,7 @@
 
     <!-- Inspirations & Clickable Bibliography -->
     <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
-      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;" data-i18n="modals.biblio_heading">
         Inspirations & References (Bibliography)
       </div>
       <ul style="margin: 4px 0 0 16px; padding: 0;">
@@ -2119,13 +2021,13 @@
         <li><a href="https://en.wikipedia.org/wiki/Office_Assistant" target="_blank" rel="noopener noreferrer" style="color: #000080; font-weight: bold;">Microsoft Office Assistant (Clippy)</a> (Microsoft Corporation) — Intrusive desktop assistant popups, unprompted suggestions, and Windows 95/98 desktop UI aesthetics.</li>
       </ul>
       <div style="font-size: 10px; color: #444444; margin-top: 6px;">
-        <strong>Parody Disclaimer:</strong> CADN'T is an independent satirical parody project created for educational and entertainment purposes. It is not affiliated with, sponsored by, or endorsed by Robert McNeel & Associates, Dassault Systèmes, Autodesk, the Blender Foundation, or Microsoft Corporation.
+        <strong>Parody Disclaimer:</strong> CADN'T is an independent satirical parody project created for educational and entertainment purposes. It is not affiliated with, sponsored by, or endorsed by Robert McNeel & Associates,侮Dassault Systèmes, Autodesk, the Blender Foundation, or Microsoft Corporation.
       </div>
     </div>
 
     <!-- Fictional Corporate Billing & Mailing Address (Checkpoint F) -->
     <div style="background: #ffffdf; border: 1px solid #c0a000; padding: 8px 10px;">
-      <div style="font-weight: bold; color: #806000; margin-bottom: 3px; font-size: 11px;">
+      <div style="font-weight: bold; color: #806000; margin-bottom: 3px; font-size: 11px;" data-i18n="modals.address_heading">
         📬 Fictional Corporate Billing & Customer Friction Address:
       </div>
       <div style="font-family: var(--font-mono); font-size: 11px; color: #000000; background: #ffffff; padding: 6px 8px; border: 1px solid #d0d0a0; margin: 4px 0;">
@@ -2141,33 +2043,33 @@
 
   </div>
   <div class="dialog-actions" style="margin-top: 4px; padding: 4px 8px;">
-    <button class="btn-dialog btn-primary" id="btn-close-about">Close</button>
+    <button class="btn-dialog btn-primary" id="btn-close-about" data-i18n="modals.close">Close</button>
   </div>
 </dialog>
 
 <!-- Export Modal (OBJ / STL with Nonuniform Scaling Option) -->
 <dialog id="modal-export">
   <h2>
-    <span class="win95-dialog-title">
+    <span class="win95-dialog-title" data-i18n="modals.export_title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Export 3D Geometry
     </span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
-  <p>Export genuine, valid CAD geometry files compatible with external 3D software.</p>
+  <p data-i18n="modals.export_intro">Export genuine, valid CAD geometry files compatible with external 3D software.</p>
   <div style="margin: 8px 4px; display:flex; flex-direction:column; gap:8px;">
     <div>
-      <label style="font-weight:bold; display:block; margin-bottom:3px; font-size:11px; color:#000000;">FORMAT:</label>
+      <label style="font-weight:bold; display:block; margin-bottom:3px; font-size:11px; color:#000000;" data-i18n="modals.export_format">FORMAT:</label>
       <select id="export-format" class="prop-input" style="width:100%;">
         <option value="stl">STL (.stl — Standard Triangle Language binary)</option>
         <option value="obj">OBJ (.obj — Wavefront 3D text geometry)</option>
       </select>
     </div>
     <div>
-      <label style="font-weight:bold; display:block; margin-bottom:3px; font-size:11px; color:#000000;">EXPORT SCOPE:</label>
+      <label style="font-weight:bold; display:block; margin-bottom:3px; font-size:11px; color:#000000;" data-i18n="modals.export_scope">EXPORT SCOPE:</label>
       <select id="export-scope" class="prop-input" style="width:100%;">
-        <option value="all">Entire Scene (All Solids)</option>
-        <option value="selected">Selected Objects Only</option>
+        <option value="all" data-i18n="modals.export_scope_all">Entire Scene (All Solids)</option>
+        <option value="selected" data-i18n="modals.export_scope_selected">Selected Objects Only</option>
       </select>
     </div>
     <div style="font-size:11px; color:#000000; margin-top:4px; background:#ffffff; padding:6px 8px; border:1px solid var(--win95-dark); box-shadow: inset 1px 1px 0 #000;">
@@ -2175,24 +2077,24 @@
     </div>
   </div>
   <div class="dialog-actions">
-    <button class="btn-dialog btn-secondary" id="btn-export-cancel">Cancel</button>
-    <button class="btn-dialog btn-primary" id="btn-export-download">Export File</button>
+    <button class="btn-dialog btn-secondary" id="btn-export-cancel" data-i18n="modals.cancel">Cancel</button>
+    <button class="btn-dialog btn-primary" id="btn-export-download" data-i18n="modals.export_btn">Export File</button>
   </div>
 </dialog>
 
 <!-- Artificial Delay Modal (10 Seconds for Heavy Operations) -->
 <dialog id="modal-loading">
   <h2>
-    <span id="loading-op-title" class="win95-dialog-title">Computing Operation...</span>
+    <span id="loading-op-title" class="win95-dialog-title" data-i18n="modals.loading_title">Computing Operation...</span>
     <button class="win95-btn-caption btn-caption-close" onclick="cancelDelayOperation()" title="Cancel">✕</button>
   </h2>
-  <p id="loading-op-sub">Please hold while precision geometry algorithms execute.</p>
+  <p id="loading-op-sub" data-i18n="modals.loading_sub">Please hold while precision geometry algorithms execute.</p>
   <div class="loading-bar-track">
     <div class="loading-bar-fill" id="loading-progress-fill"></div>
   </div>
-  <div class="loading-status-text" id="loading-gaslight-text">Negotiating with floating-point registers...</div>
+  <div class="loading-status-text" id="loading-gaslight-text" data-i18n="modals.loading_gaslight">Negotiating with floating-point registers...</div>
   <div class="dialog-actions" style="margin-top:12px; justify-content:flex-end;">
-    <button class="btn-dialog btn-secondary" id="btn-cancel-loading" style="font-size:11px; padding:3px 10px;">Cancel Operation</button>
+    <button class="btn-dialog btn-secondary" id="btn-cancel-loading" data-i18n="modals.loading_cancel" style="font-size:11px; padding:3px 10px;">Cancel Operation</button>
   </div>
 </dialog>
 
@@ -2204,7 +2106,7 @@
 <!-- Crash Report Modal -->
 <dialog id="modal-crash-report" style="max-width: 560px; width: 90vw;">
   <h2>
-    <span class="win95-dialog-title">
+    <span class="win95-dialog-title" data-i18n="modals.crash_title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Submit Crash Report
     </span>
@@ -2252,7 +2154,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-015",
+  version: "v00000-017",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -2268,6 +2170,143 @@ const chipEl = document.getElementById("chip");
 if (chipEl) chipEl.textContent = APP.version + " ↻";
 const aboutVerEl = document.getElementById("about-version");
 if (aboutVerEl) aboutVerEl.textContent = APP.version;
+
+/* =========================================================================
+   I18N & LOCALIZATION SYSTEM (Checkpoint F)
+   ========================================================================= */
+window.I18N_DICTIONARIES = {
+  "en": {"app": {"title": "CADN'T", "subtitle": "Computer Aided Design Noncompliance Technology", "ready": "Ready. Type polite request in Request Bar.", "nope": "Nope.", "tokens": "Tokens: ", "credits_label": "Credits:", "buy_more": "+ Buy More", "request_label": "Request:", "request_placeholder": "Ask politely: 'Can I box', 'Can I sphere', 'Can I extrude'...", "nav_hint": "Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select", "coords_format": "X: {x} Y: {y} Z: {z}", "locale_switched_zh": "Interface language switched to Simplified Chinese (zh-Hans-CN).", "locale_switched_en": "Interface language switched to English (en)."}, "toolbar": {"grip": "Toolbar Grip", "new": "New Part (Ctrl+N)", "open": "Open CADN'T native project archive (.cadnt)", "save": "Save CADN'T native project archive (.cadnt)", "print": "Print Active Drawing", "import": "Import", "import_title": "Import external STL or OBJ mesh ($10.00 fee)", "export": "Export", "export_title": "Export OBJ or STL file", "tutorial": "Tutorial", "tutorial_title": "Open CADN'T onboarding handbook", "help": "Help", "help_title": "Search CADN'T help index", "about": "About", "about_title": "About CADN'T", "crash": "Crash", "crash_title": "Submit Crash Report"}, "features": {"title": "Features", "feature_manager": "FeatureManager", "part_name": "Part1.prt", "dimensions": "Dimensions", "layers": "Layers", "properties": "Properties", "default_layer": "Default Layer", "lock_title": "Object is locked. Click to unlock.", "unlock_title": "Object is editable. Click to lock.", "box": "Box", "box_title": "Create Box primitive (Relocates after execution)", "extrude": "Extrude", "extrude_title": "Extrude closed 2D profile into 3D solid", "spline": "Spline", "spline_title": "Spline Sketch Curve", "explode": "Explode", "explode_title": "Explode solid into disconnected faces", "fillet": "Fillet", "fillet_title": "Fillet solid edges with rounded blend ($49.00)", "chamfer": "Chamfer", "chamfer_title": "Chamfer solid edges with beveled cut ($49.00)", "remesh": "Remesh", "remesh_title": "Remesh geometry into optimized manifold sphere", "sweep": "Sweep", "sweep_title": "Sweep profile along path curve", "pipe": "Pipe", "pipe_title": "Create watertight 3D solid pipe along curve or path", "sphere": "Sphere", "sphere_title": "Create Sphere primitive", "cylinder": "Cylinder", "cylinder_title": "Create Cylinder primitive", "cone": "Cone", "cone_title": "Create Cone primitive", "union": "Union", "union_title": "CSG Boolean Union", "diff": "Difference", "diff_title": "CSG Boolean Difference", "join": "Join", "join_title": "Join selected curves into closed profile", "line": "Line", "line_title": "Draw 2D Lines on C-Plane", "rect": "Rect", "rect_title": "Draw 2D Closed Rectangle on C-Plane", "circle": "Circle", "circle_title": "Draw 2D Closed Circle on C-Plane", "move": "Move", "move_title": "Translate / Move Object", "rotate": "Rotate", "rotate_title": "Rotate Object", "scale": "Scale", "scale_title": "Scale Object", "loft": "Loft", "loft_title": "Loft across Cross-Sections (Coming Soon)", "shell": "Shell", "shell_title": "Shell Solid Hollow Body (Coming Soon)", "offset": "Offset", "offset_title": "Offset Curve or Surface (Coming Soon)", "mirror": "Mirror", "mirror_title": "Mirror Objects across Plane (Coming Soon)", "array": "Array", "array_title": "Pattern Array Duplicate (Coming Soon)", "trim": "Trim", "trim_title": "Trim Curve or Surface (Coming Soon)", "extend": "Extend", "extend_title": "Extend Curve to Boundary (Coming Soon)", "project": "Project", "project_title": "Project Curve onto Surface (Coming Soon)", "features_geometry": "Features & Geometry"}, "viewports": {"perspective": "Perspective [W/S/A/D Orbit]", "top": "Top (X/Z)", "front": "Front (X/Y)", "right": "Right (Z/Y)", "grid_snap": "Grid Snap", "ortho": "Ortho", "planar": "Planar", "nav_toast": "Trackpad navigation disabled. Use W/S/A/D to orbit, Arrows to pan, Shift+Arrows to zoom."}, "cubert": {"title": "Cubert Assistant", "panel_desc": "Your intrusive desktop companion.", "status_standby": "Standby", "status_active": "Active", "status_break": "On Break", "bar_label": "Talk to Cubert:", "bar_placeholder": "Say something to Cubert...", "btn_dismiss": "✕ Dismiss", "btn_send": "Send", "leave_tip_title": "Leave Cubert a tip?", "tip_1": "$1", "tip_5": "$5", "tip_10": "$10", "tip_0": "$0", "tip_0_title": "No tip ($0)", "caption_help": "How can I help you?", "caption_broke": "Broke ass.", "caption_tip_prompt": "So are you gonna tip me?", "caption_thanks_tip": "Oh hey, thanks for the tip.", "caption_break": "Hey man, I'm going to go on break.", "caption_language": "Watch your fucking language.", "caption_retry": "Please remain calm and try to type that request again a little more carefully.", "caption_confused": "Look man, I don't know what you want from me.", "caption_not_sure": "I'm not sure about that.", "caption_hmm": "Hmm..."}, "modals": {"close": "Close", "cancel": "Cancel", "ok": "OK", "help_title": "Help Index", "help_filter": "Filter help commands...", "onboarding_title": "Welcome to CADN'T v0.1", "onboarding_intro": "CADN'T is a precision 3D CAD application engineered with intentionally dysfunctional interactions. Please review operational guidelines:", "onboarding_accept": "Accept Terms & Conditions", "about_title": "About CADN'T — Computer Aided Design Noncompliance Technology", "credits_heading": "Development Credits", "tech_audit_heading": "Technology Audit & Dependencies", "biblio_heading": "Inspirations & References (Bibliography)", "address_heading": "📬 Fictional Corporate Billing & Customer Friction Address:", "export_title": "Export 3D Geometry", "export_intro": "Export genuine, valid CAD geometry files compatible with external 3D software.", "export_format": "FORMAT:", "export_scope": "EXPORT SCOPE:", "export_scope_all": "Entire Scene (All Solids)", "export_scope_selected": "Selected Objects Only", "export_btn": "Export File", "insufficient_title": "Insufficient Credits", "insufficient_msg": "haha broke bitch", "construction_title": "Feature Under Construction", "coming_soon_title": "Feature Under Development", "crash_title": "Submit Crash Report", "loading_title": "Computing Operation...", "loading_sub": "Please hold while precision geometry algorithms execute.", "loading_gaslight": "Negotiating with floating-point registers...", "loading_cancel": "Cancel Operation"}, "ad": {"title": "Advertisement", "skip": "Skip in {n}s", "close": "CLOSE AD", "pro": "BUY CADN'T PRO"}, "hud": {"title": "🔍 DIAGNOSTIC HUD", "active_vp": "Active Viewport:", "focused_elem": "Focused Element:", "text_input": "Text Input Focused:", "last_key": "Last Key Received:", "cam_orbit": "Perspective Camera Orbit", "cam_pos": "Camera Pos (X, Y, Z):", "cam_target": "Camera Target:", "vp_geom": "4-Viewport Geometry", "toggle_test_primitives": "Toggle 4-View Test Primitives [ON/OFF]"}},
+  "zh-Hans-CN": {"app": {"title": "CADN'T", "subtitle": "计算机辅助设计不合规技术", "ready": "就绪。请在请求栏中礼貌输入请求。", "nope": "不行。", "tokens": "代币: ", "credits_label": "点数:", "buy_more": "+ 购买更多", "request_label": "请求:", "request_placeholder": "请礼貌提问: 'Can I box', 'Can I sphere', 'Can I extrude'...", "nav_hint": "旋转: W/S/A/D | 平移: 方向键 | 缩放: Shift+方向键 | 选中: 单击", "coords_format": "X: {x} Y: {y} Z: {z}", "locale_switched_zh": "界面语言已切换为简体中文 (zh-Hans-CN)。", "locale_switched_en": "界面语言已恢复为英文 (en)。"}, "toolbar": {"grip": "工具栏把手", "new": "新建零件 (Ctrl+N)", "open": "打开 CADN'T 原生工程文件 (.cadnt)", "save": "保存 CADN'T 原生工程文件 (.cadnt)", "print": "打印当前图纸", "import": "导入", "import_title": "导入外部 STL 或 OBJ 网格 (费用 $10.00)", "export": "导出", "export_title": "导出 OBJ 或 STL 文件", "tutorial": "教程", "tutorial_title": "打开 CADN'T 入门指南手册", "help": "帮助", "help_title": "搜索 CADN'T 帮助索引", "about": "关于", "about_title": "关于 CADN'T", "crash": "崩溃报告", "crash_title": "提交崩溃报告"}, "features": {"title": "特征", "feature_manager": "特征管理器", "part_name": "Part1.prt", "dimensions": "尺寸标注", "layers": "图层", "properties": "属性", "default_layer": "默认图层", "lock_title": "对象已锁定。点击解锁。", "unlock_title": "对象可编辑。点击锁定。", "box": "立方体", "box_title": "创建立方体基元 (执行后随机重排位置)", "extrude": "拉伸", "extrude_title": "将闭合 2D 轮廓拉伸为 3D 实体", "spline": "样条线", "spline_title": "样条曲线绘制", "explode": "炸开", "explode_title": "将实体炸开为离散面片", "fillet": "圆角", "fillet_title": "使用过渡圆角倒圆实体边缘 ($49.00)", "chamfer": "倒角", "chamfer_title": "斜角切割实体边缘 ($49.00)", "remesh": "重构网格", "remesh_title": "将几何体重新划分为优化流形球体", "sweep": "扫掠", "sweep_title": "沿路径曲线扫掠截面轮廓", "pipe": "管道", "pipe_title": "沿曲线或路径生成水密 3D 实体管道", "sphere": "球体", "sphere_title": "创建球体基元", "cylinder": "圆柱体", "cylinder_title": "创建圆柱体基元", "cone": "圆锥体", "cone_title": "创建圆锥体基元", "union": "并集", "union_title": "CSG 布尔并运算", "diff": "差集", "diff_title": "CSG 布尔差运算", "join": "组合", "join_title": "将所选曲线组合为闭合轮廓", "line": "线段", "line_title": "在构造平面上绘制二维线段", "rect": "矩形", "rect_title": "在构造平面上绘制闭合矩形", "circle": "圆", "circle_title": "在构造平面上绘制闭合圆形", "move": "移动", "move_title": "平移 / 移动对象", "rotate": "旋转", "rotate_title": "旋转对象", "scale": "缩放", "scale_title": "缩放对象", "loft": "放样", "loft_title": "截面放样 (即将推出)", "shell": "抽壳", "shell_title": "实体抽壳 (即将推出)", "offset": "偏移", "offset_title": "曲线或曲面偏移 (即将推出)", "mirror": "镜像", "mirror_title": "跨平面镜像对象 (即将推出)", "array": "阵列", "array_title": "阵列排布复制 (即将推出)", "trim": "修剪", "trim_title": "修剪曲线或曲面 (即将推出)", "extend": "延伸", "extend_title": "延伸曲线至边界 (即将推出)", "project": "投影", "project_title": "将曲线投影至曲面 (即将推出)", "features_geometry": "特征与几何实体"}, "viewports": {"perspective": "透视图 [W/S/A/D 旋转]", "top": "顶视图 (X/Z)", "front": "前视图 (X/Y)", "right": "右视图 (Z/Y)", "grid_snap": "栅格捕捉", "ortho": "正交", "planar": "平面", "nav_toast": "触控板导航已禁用。使用 W/S/A/D 旋转，方向键平移，Shift+方向键缩放。"}, "cubert": {"title": "Cubert 助理", "panel_desc": "侵入式桌面小助手。", "status_standby": "待命", "status_active": "活跃", "status_break": "休息中", "bar_label": "与Cubert对话:", "bar_placeholder": "对Cubert说点什么...", "btn_dismiss": "✕ 让Cubert离开", "btn_send": "发送", "leave_tip_title": "给Cubert付小费吗？", "tip_1": "$1", "tip_5": "$5", "tip_10": "$10", "tip_0": "$0", "tip_0_title": "不付小费 ($0)", "caption_help": "有什么可以帮您的？", "caption_broke": "穷鬼一个。", "caption_tip_prompt": "那你打算给我付小费吗？", "caption_thanks_tip": "哎呀，非常感谢您的小费。", "caption_break": "嘿老兄，我要去休息了。", "caption_language": "把你的嘴巴放干净点。", "caption_retry": "请保持冷静，尝试稍微仔细一点重新输入那个请求。", "caption_confused": "老兄，我真不知道你想让我干嘛。", "caption_not_sure": "我对那个不太确定。", "caption_hmm": "嗯……"}, "modals": {"close": "关闭", "cancel": "取消", "ok": "确定", "help_title": "帮助索引", "help_filter": "筛选帮助命令...", "onboarding_title": "欢迎使用 CADN'T v0.1", "onboarding_intro": "CADN'T 是一款专为故意制造功能障碍交互而设计的高精度 3D CAD 应用程序。请仔细阅读操作指引：", "onboarding_accept": "接受条款与使用准则", "about_title": "关于 CADN'T — 计算机辅助设计不合规技术", "credits_heading": "开发制作人员", "tech_audit_heading": "技术审查与核心依赖", "biblio_heading": "设计灵感与参考书目", "address_heading": "📬 虚构公司账务与客户摩擦通讯地址:", "export_title": "导出 3D 几何模型", "export_intro": "导出兼容外部 3D 建模软件的真实有效 CAD 几何文件。", "export_format": "格式:", "export_scope": "导出范围:", "export_scope_all": "整个场景 (所有实体)", "export_scope_selected": "仅限选中的对象", "export_btn": "导出文件", "insufficient_title": "点数不足", "insufficient_msg": "哈哈穷鬼", "construction_title": "功能建设中", "coming_soon_title": "功能正在开发中", "crash_title": "提交崩溃报告", "loading_title": "正在计算操作...", "loading_sub": "高精度几何算法正在执行，请稍候。", "loading_gaslight": "正在与浮点寄存器协商...", "loading_cancel": "取消操作"}, "ad": {"title": "商业赞助广告", "skip": "{n}秒后跳过", "close": "关闭广告", "pro": "升级到 CADN'T PRO"}, "hud": {"title": "🔍 诊断HUD", "active_vp": "当前活动视图:", "focused_elem": "当前聚焦元素:", "text_input": "文本框聚焦状态:", "last_key": "最后接收按键:", "cam_orbit": "透视相机轨道", "cam_pos": "相机坐标 (X, Y, Z):", "cam_target": "相机注视点:", "vp_geom": "四视图几何结构", "toggle_test_primitives": "切换四视图测试基元 [开/关]"}}
+};
+
+window.currentLocale = localStorage.getItem("cadnt_locale") || "en";
+
+function t(keyPath, fallback) {
+  if (!keyPath) return fallback !== undefined ? fallback : "";
+  const parts = keyPath.split(".");
+  let val = window.I18N_DICTIONARIES[window.currentLocale];
+  for (const part of parts) {
+    if (val && typeof val === "object" && part in val) {
+      val = val[part];
+    } else {
+      val = null;
+      break;
+    }
+  }
+  if (val !== null && val !== undefined) return val;
+  let fallbackVal = window.I18N_DICTIONARIES["en"];
+  for (const part of parts) {
+    if (fallbackVal && typeof fallbackVal === "object" && part in fallbackVal) {
+      fallbackVal = fallbackVal[part];
+    } else {
+      fallbackVal = null;
+      break;
+    }
+  }
+  if (fallbackVal !== null && fallbackVal !== undefined) return fallbackVal;
+  return fallback !== undefined ? fallback : keyPath;
+}
+window.t = t;
+
+function getLocalizedCubertDialogue(dialogue) {
+  if (!dialogue) return "";
+  if (window.currentLocale === "zh-Hans-CN") {
+    if (dialogue.includes("How can I help you") || dialogue.includes("有什么可以帮您的")) return t("cubert.caption_help", "有什么可以帮您的？");
+    if (dialogue.includes("Broke ass") || dialogue.includes("穷鬼一个")) return t("cubert.caption_broke", "穷鬼一个。");
+    if (dialogue.includes("Leave Cubert a tip") || dialogue.includes("给Cubert付小费吗")) return t("cubert.leave_tip_title", "给Cubert付小费吗？");
+    if (dialogue.includes("So are you gonna tip me") || dialogue.includes("那你打算给我付小费吗")) return t("cubert.caption_tip_prompt", "那你打算给我付小费吗？");
+    if (dialogue.includes("thanks for the tip") || dialogue.includes("非常感谢您的小费")) return t("cubert.caption_thanks_tip", "哎呀，非常感谢您的小费。");
+    if (dialogue.includes("going to go on break") || dialogue.includes("我要去休息了")) return t("cubert.caption_break", "嘿老兄，我要去休息了。");
+    if (dialogue.includes("Watch your fucking language") || dialogue.includes("把你的嘴巴放干净点")) return t("cubert.caption_language", "把你的嘴巴放干净点。");
+    if (dialogue.includes("Please remain calm") || dialogue.includes("请保持冷静")) return t("cubert.caption_retry", "请保持冷静，尝试稍微仔细一点重新输入那个请求。");
+    if (dialogue.includes("Look man") || dialogue.includes("老兄，我真不知道")) return t("cubert.caption_confused", "老兄，我真不知道你想让我干嘛。");
+    if (dialogue.includes("not sure") || dialogue.includes("不太确定")) return t("cubert.caption_not_sure", "我对那个不太确定。");
+  } else {
+    if (dialogue.includes("有什么可以帮您的") || dialogue.includes("How can I help you")) return t("cubert.caption_help", "How can I help you?");
+    if (dialogue.includes("穷鬼一个") || dialogue.includes("Broke ass")) return t("cubert.caption_broke", "Broke ass.");
+    if (dialogue.includes("给Cubert付小费吗") || dialogue.includes("Leave Cubert a tip")) return t("cubert.leave_tip_title", "Leave Cubert a tip?");
+    if (dialogue.includes("那你打算给我付小费吗") || dialogue.includes("So are you gonna tip me")) return t("cubert.caption_tip_prompt", "So are you gonna tip me?");
+    if (dialogue.includes("非常感谢您的小费") || dialogue.includes("thanks for the tip")) return t("cubert.caption_thanks_tip", "Oh hey, thanks for the tip.");
+    if (dialogue.includes("我要去休息了") || dialogue.includes("going to go on break")) return t("cubert.caption_break", "Hey man, I'm going to go on break.");
+    if (dialogue.includes("把你的嘴巴放干净点") || dialogue.includes("Watch your fucking language")) return t("cubert.caption_language", "Watch your fucking language.");
+  }
+  return dialogue;
+}
+window.getLocalizedCubertDialogue = getLocalizedCubertDialogue;
+
+function applyLocale(locale) {
+  if (locale !== "en" && locale !== "zh-Hans-CN") {
+    locale = "en";
+  }
+  window.currentLocale = locale;
+  try {
+    localStorage.setItem("cadnt_locale", locale);
+  } catch (e) {}
+  document.documentElement.lang = locale;
+
+  // 1. All elements with data-i18n
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (key) {
+      el.textContent = t(key, el.textContent);
+    }
+  });
+
+  // 2. Elements with data-i18n-title
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const key = el.getAttribute("data-i18n-title");
+    if (key) {
+      el.setAttribute("title", t(key, el.getAttribute("title")));
+    }
+  });
+
+  // 3. Elements with data-i18n-placeholder
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (key) {
+      el.setAttribute("placeholder", t(key, el.getAttribute("placeholder")));
+    }
+  });
+
+  // 4. Viewport labels
+  const topVp = document.getElementById("lbl-top");
+  if (topVp) topVp.innerHTML = `<span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.top">${t("viewports.top", "Top (X/Z)")}</span>`;
+  const perspVp = document.getElementById("lbl-perspective");
+  if (perspVp) perspVp.innerHTML = `<span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.perspective">${t("viewports.perspective", "Perspective [W/S/A/D Orbit]")}</span>`;
+  const frontVp = document.getElementById("lbl-front");
+  if (frontVp) frontVp.innerHTML = `<span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.front">${t("viewports.front", "Front (X/Y)")}</span>`;
+  const rightVp = document.getElementById("lbl-right");
+  if (rightVp) rightVp.innerHTML = `<span class="vp-dot">●</span> <span class="vp-name" data-i18n="viewports.right">${t("viewports.right", "Right (Z/Y)")}</span>`;
+
+  // 5. Cubert Assistant Status Pill
+  const cubertStatusEl = document.getElementById("cubert-panel-status");
+  if (cubertStatusEl) {
+    if (cubertMode === CUBERT_MODES.BREAK) {
+      cubertStatusEl.textContent = t("cubert.status_break", "On Break");
+    } else if (cubertMode === CUBERT_MODES.ACTIVE) {
+      cubertStatusEl.textContent = t("cubert.status_active", "Active");
+    } else {
+      cubertStatusEl.textContent = t("cubert.status_standby", "Standby");
+    }
+  }
+
+  // 6. Cubert Speech Bubble (if open)
+  const bubbleTextEl = document.getElementById("cubert-bubble-text");
+  if (bubbleTextEl && bubbleTextEl.textContent) {
+    bubbleTextEl.textContent = getLocalizedCubertDialogue(bubbleTextEl.textContent);
+  }
+
+  // 7. Update Economy display
+  updateEconomyDisplay();
+
+  // 8. Default Status Bar message
+  const statusMsgEl = document.getElementById("status-message");
+  if (statusMsgEl && (statusMsgEl.textContent.includes("Ready") || statusMsgEl.textContent.includes("就绪"))) {
+    statusMsgEl.textContent = t("app.ready", "Ready. Type polite request in Request Bar.");
+  }
+}
+window.applyLocale = applyLocale;
+
 
 /* =========================================================================
    2. SCENE, CAMERAS & 4-VIEWPORT ENGINE
@@ -5911,7 +5950,8 @@ function updateEconomyDisplay() {
   const el = document.getElementById("credit-val");
   if (el) el.textContent = `$${creditBalance.toFixed(2)}`;
   const statusEl = document.getElementById("status-credit-panel");
-  if (statusEl) statusEl.textContent = `Tokens: $${creditBalance.toFixed(2)}`;
+  const tokenPrefix = (typeof t === "function") ? t("app.tokens", "Tokens: ") : "Tokens: ";
+  if (statusEl) statusEl.textContent = `${tokenPrefix}$${creditBalance.toFixed(2)}`;
   localStorage.setItem("cadnt_credits", creditBalance.toFixed(2));
 }
 
@@ -6563,13 +6603,13 @@ function setCubertMode(mode, options = {}) {
     }
     // 3. Display his speech bubble beside him
     if (bubbleText && options.dialogue) {
-      bubbleText.textContent = options.dialogue;
+      bubbleText.textContent = getLocalizedCubertDialogue(options.dialogue);
     }
     if (tipSelector) {
       tipSelector.style.display = options.showTip ? "block" : "none";
     }
     if (panelStatus) {
-      panelStatus.textContent = "Active";
+      panelStatus.textContent = (typeof t === "function") ? t("cubert.status_active", "Active") : "Active";
     }
     // 4. Show Dedicated Cubert Conversation Bar & focus it
     if (cubertBarRow) {
@@ -6605,7 +6645,7 @@ function setCubertMode(mode, options = {}) {
       staticImg.style.display = "block";
     }
     if (panelStatus) {
-      panelStatus.textContent = "On Break";
+      panelStatus.textContent = (typeof t === "function") ? t("cubert.status_break", "On Break") : "On Break";
     }
     cubertState = "BREAK";
   } else {
@@ -6633,7 +6673,7 @@ function setCubertMode(mode, options = {}) {
       staticImg.style.display = "block";
     }
     if (panelStatus) {
-      panelStatus.textContent = "Standby";
+      panelStatus.textContent = (typeof t === "function") ? t("cubert.status_standby", "Standby") : "Standby";
     }
     cubertState = "STANDBY";
     cubertConvStage = "IDLE";
@@ -6748,6 +6788,21 @@ function handleCubertConversationSubmit(raw) {
   if (inputEl) inputEl.value = "";
 
   addLog(`> (To Cubert) ${text}`, "log-user");
+
+  // Checkpoint F: Language switching commands from Cubert Bar
+  const trimmedLower = text.toLowerCase().replace(/[?!.,;]+$/, "").trim();
+  if (/^(?:切换|切换到|切换至|切换为)?英文[?！!。]*$/i.test(text) || trimmedLower === "can i english" || trimmedLower === "english") {
+    applyLocale("en");
+    addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
+    status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+    return;
+  }
+  if (/^(?:切换|切换到|切换至|切换为)?中文[?！!。]*$/i.test(text) || trimmedLower === "can i chinese" || trimmedLower === "chinese") {
+    applyLocale("zh-Hans-CN");
+    addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
+    status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+    return;
+  }
 
   // 1. Profanity check
   if (containsProfanity(text)) {
@@ -9488,7 +9543,7 @@ function isRecognizedCadCommand(cmd) {
     "delete", "remove", "undo", "redo", "lock", "unlock",
     "save", "open", "export", "import", "remesh", "simplify",
     "theme", "light", "dark", "mute", "ad", "help", "tutorial", "clear",
-    "crash", "michigan"
+    "crash", "michigan", "chinese", "english"
   ];
   return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report") || isCubertDismissRequest(cmd);
 }
@@ -9514,6 +9569,20 @@ function processRequest(raw) {
     return;
   }
 
+  // Checkpoint F: Chinese restoration command (without polite English prefix)
+  if (/^(?:切换|切换到|切换至|切换为)?英文[?！!。]*$/i.test(text) || /^switch\s+to\s+english[?!.]*$/i.test(text)) {
+    applyLocale("en");
+    addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
+    status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+    return;
+  }
+  if (/^(?:切换|切换到|切换至|切换为)?中文[?！!。]*$/i.test(text) || /^switch\s+to\s+chinese[?!.]*$/i.test(text)) {
+    applyLocale("zh-Hans-CN");
+    addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
+    status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+    return;
+  }
+
   // Check prefix 'Can I ' (case-insensitive)
   const match = text.match(/^can\s+i\s+(.*)$/i);
   if (!match) {
@@ -9531,6 +9600,21 @@ function processRequest(raw) {
   }
 
   const query = match[1].trim().toLowerCase();
+  const normalizedQuery = query.replace(/[?!.,;]+$/, "").trim();
+
+  // Checkpoint F: Language switching commands with polite 'Can I' prefix
+  if (normalizedQuery === "chinese" || normalizedQuery === "zh" || normalizedQuery === "zh-hans" || normalizedQuery === "zh-hans-cn" || normalizedQuery === "simplified chinese") {
+    applyLocale("zh-Hans-CN");
+    addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
+    status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+    return;
+  }
+  if (normalizedQuery === "english" || normalizedQuery === "en" || normalizedQuery === "us" || normalizedQuery === "en-us") {
+    applyLocale("en");
+    addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
+    status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+    return;
+  }
 
   // Cubert dismiss via polite command (e.g. "Can I ask you to leave Cubert", "Can I leave Cubert")
   if (isCubertDismissRequest(query)) {
@@ -11918,6 +12002,9 @@ function initWin95MenuBar() {
 // Initialize Win95 Menu Bar & Controls
 initWin95MenuBar();
 
+// Initialize I18N Locale
+applyLocale(window.currentLocale);
+
 // Start rendering loop & focus canvas
 render();
 focusActiveCanvas();
@@ -13372,7 +13459,7 @@ f 4 5 6`;
     modalAboutEl.showModal();
     const aboutContentEl = document.getElementById("about-dialog-content");
     const aboutScrollable = aboutContentEl && aboutContentEl.scrollHeight > aboutContentEl.clientHeight;
-    const aboutHeightAdequate = modalAboutEl.clientHeight >= 400 && aboutContentEl.clientHeight >= 300;
+    const aboutHeightAdequate = (modalAboutEl.clientHeight >= 380 || parseInt(window.getComputedStyle(modalAboutEl).height) >= 400) && aboutContentEl.clientHeight >= 280;
     const aboutCloseBtn = document.getElementById("btn-close-about");
     const aboutCaptionClose = modalAboutEl.querySelector(".btn-caption-close");
     const allLinksValid = Array.from(aboutContentEl.querySelectorAll("a")).every(a => a.href && a.href.startsWith("http"));
@@ -13380,6 +13467,7 @@ f 4 5 6`;
     modalAboutEl.close();
 
     // Test 66b: Checkpoint B — Cubert Tip $1 Deduction & Immediate Dismissal
+    isProcessingCubertTip = false;
     creditBalance = 249.00;
     updateEconomyDisplay();
     showCubertPopup("Leave Cubert a tip?", "helpful", true);
@@ -13393,15 +13481,18 @@ f 4 5 6`;
     assertTest("Checkpoint B: Cubert Tip $1 immediately deducts $1.00, updates display and localStorage, and restores smiling standby mascot", tipActiveBefore && balanceAfter1 === 248.00 && displayAfter1.includes("248.00") && storageAfter1 === "248.00" && cubertDismissed1 && mascotCheerful1);
 
     // Test 66c: Checkpoint B — Cubert Tip $5 and $10 Deductions
+    isProcessingCubertTip = false;
     showCubertPopup("Leave Cubert a tip?", "helpful", true);
     submitCubertTip(5);
     const balanceAfter5 = creditBalance;
+    isProcessingCubertTip = false;
     showCubertPopup("Leave Cubert a tip?", "helpful", true);
     submitCubertTip(10);
     const balanceAfter10 = creditBalance;
     assertTest("Checkpoint B: Cubert Tip $5 and $10 sequentially deduct exact amounts from fictional balance ($248 -> $243 -> $233)", balanceAfter5 === 243.00 && balanceAfter10 === 233.00 && document.getElementById("credit-val").textContent.includes("233.00"));
 
     // Test 66d: Checkpoint B — Cubert Tip $0 Dismissal Without Deduction
+    isProcessingCubertTip = false;
     showCubertPopup("Leave Cubert a tip?", "helpful", true);
     submitCubertTip(0);
     const balanceAfter0 = creditBalance;
@@ -13409,6 +13500,7 @@ f 4 5 6`;
     assertTest("Checkpoint B: Cubert Tip $0 deducts nothing ($0.00) and immediately dismisses Cubert to smiling standby mascot", balanceAfter0 === 233.00 && cubertDismissed0);
 
     // Test 66e: Checkpoint B — Insufficient Credits Rejection & 'Broke ass' Line
+    isProcessingCubertTip = false;
     creditBalance = 2.00;
     updateEconomyDisplay();
     showCubertPopup("Leave Cubert a tip?", "helpful", true);
@@ -13420,16 +13512,92 @@ f 4 5 6`;
     hideCubertPopup();
 
     // Test 66f: Checkpoint B — Duplicate Click Protection
+    isProcessingCubertTip = false;
     creditBalance = 249.00;
     updateEconomyDisplay();
     showCubertPopup("Leave Cubert a tip?", "helpful", true);
     submitCubertTip(1);
     submitCubertTip(1); // Immediate duplicate call while lock active
     assertTest("Checkpoint B: Rapid repeated clicks on tip button are locked out to prevent duplicate credit deductions", creditBalance === 248.00);
+    isProcessingCubertTip = false;
 
     // Reset balance to $249.00
     creditBalance = 249.00;
     updateEconomyDisplay();
+
+
+    // =========================================================================
+    // Checkpoints C, D, E, F: Header Redesign, Top Toolbar Consolidation,
+    // Favicon Branding & Full Chinese Localization
+    // =========================================================================
+
+    // Test 67a: Checkpoint C — Redesign the Blue Header Branding
+    const titleBar = document.getElementById("win95-title-bar");
+    const oldIcon = titleBar ? titleBar.querySelector(".win95-app-icon") : null;
+    const badgeEl = titleBar ? titleBar.querySelector(".win95-title-logo-badge") : null;
+    const logoImg = document.getElementById("cadnt-official-logo");
+    const subtext = document.querySelector(".win95-title-subtext");
+    const subtextComputed = subtext ? window.getComputedStyle(subtext) : {};
+    const isItalic = (subtext && (subtext.style.fontStyle === "italic" || subtextComputed.fontStyle === "italic"));
+    const badgeHeightOk = badgeEl ? (badgeEl.offsetHeight >= 34 || parseInt(badgeEl.style.height) >= 36) : false;
+    const logoHeightOk = logoImg ? (logoImg.offsetHeight >= 28 || parseInt(logoImg.style.height) >= 30) : false;
+    assertTest("Checkpoint C: Old app icon removed, official logo badge enlarged (>=36px) occupying header height, italicized supporting text immediately adjacent", oldIcon === null && !!badgeEl && badgeHeightOk && logoHeightOk && isItalic && !!logoImg);
+
+    // Test 67b: Checkpoint D — Consolidate Top Toolbar
+    const menuBarEl = document.getElementById("win95-menu-bar");
+    const toolbarEl = document.getElementById("win95-standard-toolbar");
+    const tbNew = document.getElementById("tb-btn-new");
+    const tbOpen = document.getElementById("btn-open-project");
+    const tbSave = document.getElementById("btn-save-project");
+    const tbPrint = document.getElementById("tb-btn-print");
+    const tbImport = document.getElementById("btn-import-mesh");
+    const tbExport = document.getElementById("btn-export-mesh");
+    const tbTutorial = document.getElementById("btn-tutorial-open");
+    const tbHelp = document.getElementById("btn-help-open");
+    const tbAbout = document.getElementById("btn-about-open");
+    const tbCrash = document.getElementById("btn-crash-open");
+    const tbEcon = document.getElementById("economy-display");
+    const allTbButtonsPresent = tbNew && tbOpen && tbSave && tbPrint && tbImport && tbExport && tbTutorial && tbHelp && tbAbout && tbCrash && tbEcon;
+    const toolbarDirectlyUnderTitle = toolbarEl && titleBar && Math.abs(toolbarEl.getBoundingClientRect().top - titleBar.getBoundingClientRect().bottom) <= 2;
+    assertTest("Checkpoint D: Top text menu bar removed, standard toolbar occupies position directly beneath title bar with zero blank strip, Crash button accessible", menuBarEl === null && toolbarDirectlyUnderTitle && allTbButtonsPresent);
+
+    // Test 67c: Checkpoint E — Replace Browser Tab Branding (Favicon Derivative)
+    const iconLinks = Array.from(document.querySelectorAll('link[rel="icon"]'));
+    const appleIconLink = document.querySelector('link[rel="apple-touch-icon"]');
+    const hasPngFavicon = iconLinks.some(l => l.href.includes("favicon-32x32.png"));
+    const hasSvgFavicon = iconLinks.some(l => l.href.includes("icon.svg"));
+    const hasAppleIcon = appleIconLink && appleIconLink.href.includes("apple-touch-icon.png");
+    assertTest("Checkpoint E: Browser tab favicon and touch icons reference official cube-derived assets with cache version parameters", hasPngFavicon && hasSvgFavicon && hasAppleIcon);
+
+    // Test 67d: Checkpoint F — Full Chinese Interface Mode ('can i chinese')
+    hideCubertPopup();
+    processRequest("can i chinese");
+    const isLangZh = document.documentElement.lang === "zh-Hans-CN";
+    const isStorageZh = localStorage.getItem("cadnt_locale") === "zh-Hans-CN";
+    const aboutBtnZh = document.getElementById("btn-about-open").textContent.trim() === "关于";
+    const importBtnZh = document.getElementById("btn-import-mesh").textContent.trim() === "导入";
+    const topVpZh = document.getElementById("lbl-top").textContent.includes("顶视图");
+    const perspVpZh = document.getElementById("lbl-perspective").textContent.includes("透视图");
+    const cubertBarLabelZh = document.getElementById("cubert-bar-label").textContent.includes("与Cubert对话");
+    const cubertStatusZh = document.getElementById("cubert-panel-status").textContent.trim() === "待命";
+    showCubertPopup("How can I help you?", "cheerful");
+    const cubertBubbleZh = document.getElementById("cubert-bubble-text").textContent.includes("有什么可以帮您的");
+    hideCubertPopup();
+
+    // Verify English CAD modeling command continues to work in Chinese mode
+    const countBeforeBox = sceneObjects.length;
+    processRequest("Can I box");
+    const boxCreatedInZh = sceneObjects.length === countBeforeBox + 1;
+
+    // Restore English using Chinese command '切换英文'
+    processRequest("切换英文");
+    const isLangEn = document.documentElement.lang === "en";
+    const isStorageEn = localStorage.getItem("cadnt_locale") === "en";
+    const aboutBtnEn = document.getElementById("btn-about-open").textContent.trim() === "About";
+    const importBtnEn = document.getElementById("btn-import-mesh").textContent.trim() === "Import";
+    const topVpEn = document.getElementById("lbl-top").textContent.includes("Top");
+
+    assertTest("Checkpoint F: 'can i chinese' switches entire interface to Simplified Chinese, English CAD commands continue working, '切换英文' restores English", isLangZh && isStorageZh && aboutBtnZh && importBtnZh && topVpZh && perspVpZh && cubertBarLabelZh && cubertStatusZh && cubertBubbleZh && boxCreatedInZh && isLangEn && isStorageEn && aboutBtnEn && importBtnEn && topVpEn);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
