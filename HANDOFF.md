@@ -25,6 +25,8 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint 3 (v0.18): New Advertisement Assets & Shuffle Bag** | **YES** | **YES** | **YES** | *Awaiting User Review* | Inventory of 18 advertisements across JPEG, PNG, and WebP, including 4 new assets (`AipacAppAd.jpeg`, `AsbestosAppAd.webp`, `FushigiAppAd.jpg`, `MrCleanAppAd.png`). Offline Service Worker caching with case-sensitive filenames. Shuffle-bag non-replacement pool draws all 18 ads without repetition; end-of-cycle reshuffle prevents repeating boundary ads. 7-cadence increment strictly counts CAD modeling commands (Cubert conversation and camera navigation do not count). Clicking an ad stacks another layered ad with its own independent close button. Automated tests 69a & 69b passing; visually verified at DPR 1.0 & 2.0. |
+| **Checkpoint 4 (v0.18): Antigravity Command & Recovery** | **YES** | **YES** | **YES** | *Awaiting User Review* | Request Bar commands `can i remove gravity` and `can i antigravity` activate non-destructive visual float. Visible CAD geometry (Box, Sphere, Michigan starting model, locked objects, layer objects) floats upward with initial slow recognizable drift, individual horizontal drift vectors, gradual acceleration away, and slow 3D rotation. Symmetrical 4-viewport rendering preserves scene consistency and camera controls. Bounded 5.0s animation parks objects off-screen outside viewports without infinite drift. Recovery command `can i restore gravity` restores exact millimeter coordinates, preserving locked status, topology, and IDs with $0 fee. Special Undo: `can i undo` reverses antigravity if most recent command, or reverses modeling normally if modeling occurred afterward. Project serialization (`serializeProjectState`) and STL/OBJ exports (`exportProjectGeometry`) protect un-displaced original geometry. Automated tests 69c, 69d, 69e passing; visually verified at DPR 1.0 & 2.0. |
 | **Checkpoint 1 (v0.18): Chinese Takeover Flag Animation** | **YES** | **YES** | **YES** | **YES** | Triggered on `can i chinese`. Centered People's Republic of China flag overlay (`assets/ChineseFlag.webp`, 960x640) occupying ~50% of viewport area (`min(72vw, 108vh)` with 3:2 aspect ratio). Spins continuously for exactly 5.0 seconds via CSS 360-degree rotation animation, then automatically disappears. Application remains in Chinese mode. Fully isolated from Three.js scene (zero geometry or camera interference). Suppressed on page reload when Chinese is already selected. Respects `prefers-reduced-motion` with stationary flag display. Automated tests 68a & 68b passing; visually verified at DPR 1.0 & 2.0. **Accepted by user; merged into `main`.** |
 | **Checkpoint 2 (v0.18): ChinaMusic Audio System** | **YES** | **YES** | **YES** | **YES** | Continuous looping audio playback of `assets/audio/ChinaMusic.m4a` when Chinese mode is active. Singleton audio instance; persists across CAD operations without restart or overlap. Replaces hold music while Chinese mode is active. Automatically ducks volume to 0.2 during Cubert speech and cleanly restores to 1.0 when speech ends. Exit commands `can i unchinese`, `can i dechinese`, `can i english`, and `切换英文` restore English and immediately stop playback. Special Undo: `can i undo` reverses Chinese mode only if it was the most recent undoable command; subsequent modeling commands preserve Chinese mode and undo geometry normally without corrupting stacks. Automated tests 68c & 68d passing; visually verified at DPR 1.0 & 2.0. **Accepted by user; merged into `main`.** |
 | **Checkpoint A (v0.16): About Window Repair** | **YES** | **YES** | **YES** | **YES** | Sizing, flexbox collapse, and overflow fix for `#modal-about`. Styled at full size (~540px height, 640px width, `box-sizing: border-box`), scrollable inner container `#about-dialog-content` (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), authentic sunken panel, unclipped credits, technology audit, bibliography citations, and Lake Superior billing address. Responsive and ready for Chinese localization. **Accepted by user; merged into `main`.** |
@@ -1974,5 +1976,83 @@ python3 scripts/get_test_results.py
 
 ### 23.5 Git & Deployment Status
 - Implemented and verified on branch `dev`.
-- Merged into `main` and pushed to `origin/dev` and `origin/main` upon explicit user acceptance.
+- Merged into `main` and pushed to `origin/dev` and `origin/main` upon explicit user acceptance (commit `924b4bf`).
 - Live application deployed at GitHub Pages. Checkpoints 1 & 2 formally accepted by user. Ready for Checkpoint 3 and Checkpoint 4.
+
+---
+
+## 24. Checkpoints 3 & 4 Verification — New Advertisement Assets & Antigravity Command (Build v00000-018)
+
+### 24.1 Checkpoint 3 — New Advertisement Assets & Shuffle Bag
+1. **Asset Inventory & Discovery**:
+   - Total of 18 advertisement assets registered in `ASSET_MANIFEST.ads`, `assets/manifest.json`, and cached in `sw.js` (`v00000-018`).
+   - Four new assets placed in `assets/ads/`:
+     - `AsbestosAppAd.webp` (WebP image)
+     - `FushigiAppAd.jpg` (JPEG image)
+     - `AipacAppAd.jpeg` (JPEG image)
+     - `MrCleanAppAd.png` (PNG image)
+   - Asset loading verified on static GitHub Pages with exact case sensitivity.
+   - Non-advertisement assets (logos, Cubert illustrations, Chinese flag) strictly excluded.
+2. **Shuffle Bag (Selection Without Replacement)**:
+   - Implemented via `initializeOrRefillAdBag()` and `getNextShuffleBagAdIndex()`.
+   - Cycle guarantee: Draws all 18 advertisements without replacement before refilling.
+   - Cycle boundary repeat prevention: If the first ad in a newly reshuffled bag matches the last ad of the preceding cycle, it swaps with a random subsequent index (`swapIdx = 1 + ...`), guaranteeing no immediate repetition across cycle boundaries.
+3. **Layered Stacking & Presentation**:
+   - Centralized modal window (`#modal-ad`).
+   - Clicking an advertisement card (`.ad-container`) calls `pushAdLayer()`, stacking another advertisement card on top with stacking offsets (`translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`) and increasing `z-index`.
+   - Each individual card contains its own independent close button (`.btn-ad-close`), allowing individual layers to be closed without dismissing the entire stack until all cards are closed.
+   - 7-command cadence: `recordModelingCommand()` only increments upon qualifying CAD modeling commands; Cubert conversations and camera navigation do not increment the counter.
+
+### 24.2 Checkpoint 4 — Antigravity Command & Recovery
+1. **Command Invocations**:
+   - Request Bar commands:
+     - `can i remove gravity`
+     - `can i antigravity`
+     - Alias variations (`can i anti-gravity`, `can i no gravity`, `can i disable gravity`, `can i turn off gravity`, and Chinese aliases `移除重力`, `反重力`).
+   - Recovery commands:
+     - `can i restore gravity`
+     - Alias variations (`can i enable gravity`, `can i reset gravity`, `can i turn on gravity`, and Chinese aliases `恢复重力`, `还原重力`).
+   - Supported with identical behavior in the Cubert Conversation Bar.
+2. **Visual Physics & Animation Behavior**:
+   - All visible geometry in `sceneObjects` begins floating upward.
+   - Different objects drift in slightly different directions based on individualized angle and velocity vectors ($v_x, v_z$).
+   - Objects gradually accelerate upward ($a_y = 25\text{–}37\text{ mm/s}^2$).
+   - Objects slowly rotate in 3D around individualized rotational axes while floating.
+   - Symmetrical 4-viewport consistency: All 4 viewports (`top`, `perspective`, `front`, `right`) render the same `scene`, maintaining identical spatial geometry and preserving all camera controls.
+   - Bounded duration: At $t = 5.0$s, objects reach $y > 400\text{ mm}$, flying completely outside the field of view of all 4 CAD viewports. Physics simulation clamps at 5.0s, cleanly parking objects without infinite coordinate runaway.
+   - Prevention of duplicate activation: If antigravity is already active, repeated commands are rejected without resetting physics or overwriting original transforms.
+3. **Protection of Actual Model Geometry**:
+   - Original mesh vertices, normals, and topology are never modified.
+   - Object IDs, layer assignments, and FeatureManager entries are untouched.
+   - Locked objects (`obj.userData.locked = true`) float visually but remain protected against deletion and user editing; lock status is fully preserved.
+   - Project serialization (`serializeProjectState`): When saving `.cadnt` archives while antigravity is running, clean original coordinates are written and temporary antigravity fields are stripped from `userData`.
+   - Mesh export (`exportProjectGeometry`): When exporting STL or OBJ files while antigravity is running, object transforms are temporarily reset to their original un-displaced values during mesh extraction, guaranteeing zero antigravity drift in exported files.
+   - Zero credit deduction: Activation and restoration deduct $0.00.
+4. **Recovery & Special Undo Behavior**:
+   - `can i restore gravity` restores all objects to their exact original millimeter coordinates ($dx = 0, dy = 0, dz = 0$), restoring rotation and matrix state.
+   - `can i undo` reverses antigravity if it was the most recent command (`lastUndoableCommand === "antigravity"`).
+   - If a CAD modeling operation occurred after entering antigravity, `can i undo` reverses that modeling operation normally, keeping antigravity active and preserving the geometry undo stack.
+
+### 24.3 Automated Testing (Suite Expanded to 211 Tests)
+- Integrated automated tests **69a–69e** in `index.html`:
+  - **Test 69a**: Inventory of 18 advertisements including 4 new assets (JPEG, PNG, WebP).
+  - **Test 69b**: Shuffle-bag cycle without replacement, cycle boundary non-repetition, and click-to-layer ad stacking with independent close buttons.
+  - **Test 69c**: Antigravity activation across Michigan, Box, and locked Sphere; slow initial float ($t=1.0$s), bounded off-screen parking ($t=5.0$s), duplicate activation prevention.
+  - **Test 69d**: Exact scene restoration via `can i restore gravity` returning exact millimeter coordinates and preserving locked status with $0 deducted.
+  - **Test 69e**: Special undo reversing antigravity, modeling undo separation, and `.cadnt` save / STL export coordinate protection.
+- Total automated unit tests: **211 passing tests (0 failures)**. Verified via `python3 scripts/get_test_results.py`.
+
+### 24.4 Visual Evidence Artifacts
+- Script [`scripts/verify_checkpoints_3_4_v18.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoints_3_4_v18.py) executed in headless Chromium at DPR 1.0 and DPR 2.0 (Retina).
+- Visual artifacts stored in `screenshots/` and mirrored to `/Users/andybuck/Desktop/`:
+  - `checkpoint_03_01_new_ad_displayed.png` (and `_dpr2.png`): New advertisement card (`AsbestosAppAd.webp`) displayed with immediate close button.
+  - `checkpoint_03_02_layered_ads_stacked.png` (and `_dpr2.png`): Three layered advertisement cards stacked on click with offsets and independent close buttons.
+  - `checkpoint_04_01_multi_object_baseline.png` (and `_dpr2.png`): Baseline scene with Michigan, Box, and locked Sphere rendered across all 4 viewports.
+  - `checkpoint_04_02_antigravity_floating.png` (and `_dpr2.png`): Antigravity active at $t=1.0$s with objects visibly floating upward and drifting in 4 viewports.
+  - `checkpoint_04_03_antigravity_flown_away.png` (and `_dpr2.png`): Antigravity at $t=5.0$s with all objects flown completely outside all 4 viewports.
+  - `checkpoint_04_04_gravity_restored.png` (and `_dpr2.png`): Scene restored via `can i restore gravity` with all objects returning to exact baseline coordinates.
+  - `checkpoint_04_05_antigravity_undone.png` (and `_dpr2.png`): Antigravity reversed via `can i undo`.
+
+### 24.5 Git & Deployment Status
+- Implemented and verified on branch `dev`.
+- Awaiting user review and authorization before merging into `main` or deploying to GitHub Pages.

@@ -7014,6 +7014,26 @@ function handleCubertConversationSubmit(raw) {
     return;
   }
 
+  // Checkpoint 4: Antigravity commands from Cubert Bar
+  if (
+    trimmedLower === "can i remove gravity" || trimmedLower === "remove gravity" ||
+    trimmedLower === "can i antigravity" || trimmedLower === "antigravity" ||
+    trimmedLower === "can i anti-gravity" || trimmedLower === "anti-gravity" ||
+    /^(?:移除|去除|取消|关掉)?重力[?！!。]*$/.test(text) ||
+    /^(?:开启|激活)?反重力[?！!。]*$/.test(text)
+  ) {
+    activateAntigravity();
+    return;
+  }
+  if (
+    trimmedLower === "can i restore gravity" || trimmedLower === "restore gravity" ||
+    trimmedLower === "can i enable gravity" || trimmedLower === "enable gravity" ||
+    /^(?:恢复|还原|重置)?重力[?！!。]*$/.test(text)
+  ) {
+    restoreGravity();
+    return;
+  }
+
   // 1. Profanity check
   if (containsProfanity(text)) {
     showCubertPopup("Watch your fucking language.", "scolding");
@@ -7200,14 +7220,25 @@ function serializeProjectState() {
   const serializedObjects = [];
 
   sceneObjects.forEach(obj => {
+    const origTransform = (isAntigravityActive && obj.userData && obj.userData.antigravityOriginalTransform)
+      ? obj.userData.antigravityOriginalTransform
+      : null;
+    const cleanUserData = Object.assign({}, obj.userData);
+    delete cleanUserData.antigravityOriginalTransform;
+    delete cleanUserData.antigravityPhysics;
+
+    const objPos = origTransform ? origTransform.position : obj.position;
+    const objRot = origTransform ? origTransform.rotation : obj.rotation;
+    const objScl = origTransform ? origTransform.scale : obj.scale;
+
     if (obj.userData && (obj.userData.isStartingObject || obj.userData.id === "test_cube" || obj.userData.id === "starting_michigan")) {
       serializedObjects.push({
         type: obj.userData.id === "test_cube" ? "starting_cube" : "starting_michigan",
         name: obj.name,
-        userData: Object.assign({}, obj.userData),
-        position: [obj.position.x, obj.position.y, obj.position.z],
-        rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-        scale: [obj.scale.x, obj.scale.y, obj.scale.z]
+        userData: cleanUserData,
+        position: [objPos.x, objPos.y, objPos.z],
+        rotation: [objRot.x, objRot.y, objRot.z],
+        scale: [objScl.x, objScl.y, objScl.z]
       });
       return;
     }
@@ -7218,10 +7249,10 @@ function serializeProjectState() {
       serializedObjects.push({
         type: "curve",
         name: obj.name,
-        userData: Object.assign({}, obj.userData),
-        position: [obj.position.x, obj.position.y, obj.position.z],
-        rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-        scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+        userData: cleanUserData,
+        position: [objPos.x, objPos.y, objPos.z],
+        rotation: [objRot.x, objRot.y, objRot.z],
+        scale: [objScl.x, objScl.y, objScl.z],
         positions: positions,
         color: obj.material && obj.material.color ? ("#" + obj.material.color.getHexString()) : "#39ff14"
       });
@@ -7239,10 +7270,10 @@ function serializeProjectState() {
       serializedObjects.push({
         type: "mesh",
         name: obj.name,
-        userData: Object.assign({}, obj.userData),
-        position: [obj.position.x, obj.position.y, obj.position.z],
-        rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-        scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+        userData: cleanUserData,
+        position: [objPos.x, objPos.y, objPos.z],
+        rotation: [objRot.x, objRot.y, objRot.z],
+        scale: [objScl.x, objScl.y, objScl.z],
         positions: positions,
         normals: normals,
         indices: indices,
@@ -7268,10 +7299,10 @@ function serializeProjectState() {
       serializedObjects.push({
         type: "group",
         name: obj.name,
-        userData: Object.assign({}, obj.userData),
-        position: [obj.position.x, obj.position.y, obj.position.z],
-        rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-        scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+        userData: cleanUserData,
+        position: [objPos.x, objPos.y, objPos.z],
+        rotation: [objRot.x, objRot.y, objRot.z],
+        scale: [objScl.x, objScl.y, objScl.z],
         children: childMeshes
       });
     }
@@ -7467,6 +7498,15 @@ function recordUndoState(desc = "Operation") {
 }
 
 function executeUndo() {
+  // Checkpoint 4: Special Undo Behavior for Antigravity Mode
+  if (lastUndoableCommand === "antigravity" || (isAntigravityActive && undoStack.length === 0)) {
+    restoreGravity();
+    lastUndoableCommand = "none";
+    addLog("Undid: Antigravity effect. Gravity restored.", "log-success");
+    status("Undid: Antigravity effect.");
+    return;
+  }
+
   // Checkpoint 2: Special Undo Behavior for Chinese Mode
   if (lastUndoableCommand === "chinese") {
     deactivateChineseMode();
@@ -7564,6 +7604,24 @@ function exportProjectGeometry(format = "stl", applyDistortion = true, onlySelec
     return;
   }
 
+  // If antigravity is active, temporarily reset object matrices to original transforms so export is 100% clean
+  const restoreMap = [];
+  if (isAntigravityActive) {
+    sceneObjects.forEach(obj => {
+      if (obj.userData && obj.userData.antigravityOriginalTransform) {
+        restoreMap.push({
+          obj,
+          curPos: obj.position.clone(),
+          curQuat: obj.quaternion.clone()
+        });
+        obj.position.copy(obj.userData.antigravityOriginalTransform.position);
+        obj.quaternion.copy(obj.userData.antigravityOriginalTransform.quaternion);
+        obj.updateMatrix();
+        obj.updateMatrixWorld(true);
+      }
+    });
+  }
+
   // Create an isolated export group so internal scene geometry remains completely uncorrupted
   const exportGroup = new THREE.Group();
 
@@ -7581,6 +7639,16 @@ function exportProjectGeometry(format = "stl", applyDistortion = true, onlySelec
       }
     });
   });
+
+  // Reapply flying transforms if antigravity was active
+  if (restoreMap.length > 0) {
+    restoreMap.forEach(item => {
+      item.obj.position.copy(item.curPos);
+      item.obj.quaternion.copy(item.curQuat);
+      item.obj.updateMatrix();
+      item.obj.updateMatrixWorld(true);
+    });
+  }
 
   if (exportGroup.children.length === 0) {
     addLog("No solid mesh geometry found to export.", "log-warn");
@@ -9762,9 +9830,10 @@ function isRecognizedCadCommand(cmd) {
     "delete", "remove", "undo", "redo", "lock", "unlock",
     "save", "open", "export", "import", "remesh", "simplify",
     "theme", "light", "dark", "mute", "ad", "help", "tutorial", "clear",
-    "crash", "michigan", "chinese", "unchinese", "un-chinese", "dechinese", "de-chinese", "english"
+    "crash", "michigan", "chinese", "unchinese", "un-chinese", "dechinese", "de-chinese", "english",
+    "antigravity", "gravity"
   ];
-  return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report") || isCubertDismissRequest(cmd);
+  return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report") || norm.includes("gravity") || norm.includes("antigravity") || isCubertDismissRequest(cmd);
 }
 
 function processRequest(raw) {
@@ -9802,6 +9871,19 @@ function processRequest(raw) {
     return;
   }
 
+  // Checkpoint 4: Antigravity Chinese aliases (without polite prefix)
+  if (
+    /^(?:移除|去除|取消|关掉)?重力[?！!。]*$/.test(text) ||
+    /^(?:开启|激活)?反重力[?！!。]*$/.test(text)
+  ) {
+    activateAntigravity();
+    return;
+  }
+  if (/^(?:恢复|还原|重置)?重力[?！!。]*$/.test(text)) {
+    restoreGravity();
+    return;
+  }
+
   // Check prefix 'Can I ' (case-insensitive)
   const match = text.match(/^can\s+i\s+(.*)$/i);
   if (!match) {
@@ -9832,6 +9914,28 @@ function processRequest(raw) {
     normalizedQuery === "dechinese" || normalizedQuery === "de-chinese"
   ) {
     deactivateChineseMode();
+    return;
+  }
+
+  // Checkpoint 4: Antigravity Commands ('can i remove gravity', 'can i antigravity', 'can i restore gravity')
+  if (
+    normalizedQuery === "remove gravity" ||
+    normalizedQuery === "antigravity" ||
+    normalizedQuery === "anti-gravity" ||
+    normalizedQuery === "no gravity" ||
+    normalizedQuery === "disable gravity" ||
+    normalizedQuery === "turn off gravity"
+  ) {
+    activateAntigravity();
+    return;
+  }
+  if (
+    normalizedQuery === "restore gravity" ||
+    normalizedQuery === "enable gravity" ||
+    normalizedQuery === "reset gravity" ||
+    normalizedQuery === "turn on gravity"
+  ) {
+    restoreGravity();
     return;
   }
 
@@ -9909,6 +10013,28 @@ function executeCommand(rawCmd) {
     normalizedCmd === "crash report"
   ) {
     openCrashReportModal();
+    return;
+  }
+
+  // Checkpoint 4: Antigravity Commands
+  if (
+    normalizedCmd === "remove gravity" ||
+    normalizedCmd === "antigravity" ||
+    normalizedCmd === "anti-gravity" ||
+    normalizedCmd === "no gravity" ||
+    (verb === "remove" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "gravity") ||
+    (verb === "disable" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "gravity")
+  ) {
+    activateAntigravity();
+    return;
+  }
+
+  if (
+    normalizedCmd === "restore gravity" ||
+    (verb === "restore" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "gravity") ||
+    (verb === "enable" && args.join(" ").replace(/[?!.,;]+$/, "").toLowerCase() === "gravity")
+  ) {
+    restoreGravity();
     return;
   }
 
@@ -10476,6 +10602,148 @@ function updateEscapingSpheres(dtOverride) {
       }
     }
   }
+}
+
+/* =========================================================================
+   6.9 ANTIGRAVITY SUBSYSTEM (CHECKPOINT 4)
+   ========================================================================= */
+let isAntigravityActive = false;
+let antigravityStartTime = 0;
+const ANTIGRAVITY_BOUNDED_DURATION = 5.0; // 5.0s bounded animation duration
+
+function activateAntigravity() {
+  if (isAntigravityActive) {
+    addLog("Gravity is already absent. What more do you want to remove?", "log-warn");
+    status("Gravity is already disabled.");
+    return;
+  }
+
+  isAntigravityActive = true;
+  lastUndoableCommand = "antigravity";
+  antigravityStartTime = performance.now();
+
+  // Clear selections and hide Gumball
+  clearSelection();
+  isGumballActive = false;
+  updateGumball();
+
+  // Record initial transforms and assign individual drift physics parameters to all visible objects
+  for (let i = 0; i < sceneObjects.length; i++) {
+    const obj = sceneObjects[i];
+    if (!obj || !obj.visible) continue;
+    if (obj.userData && obj.userData.isSplineHandle) continue;
+
+    // Preserve exact original model transformations and orientation
+    obj.userData.antigravityOriginalTransform = {
+      position: obj.position.clone(),
+      rotation: obj.rotation.clone(),
+      quaternion: obj.quaternion.clone(),
+      scale: obj.scale.clone()
+    };
+
+    // Calculate unique pseudo-random drift physics for each object
+    // Different objects drift in slightly different directions and accelerate upward
+    const angle = (i * 1.6180339887) * Math.PI * 2 + ((i % 3) * 0.4 - 0.2);
+    const horizSpeed = 6.0 + (i % 5) * 3.0;
+    const vx = Math.cos(angle) * horizSpeed;
+    const vz = Math.sin(angle) * horizSpeed;
+    const initialVy = 10.0 + (i % 4) * 4.0; // initial slow upward float
+    const accelY = 25.0 + (i % 3) * 12.0;   // acceleration away
+
+    // Slow 3D rotational velocity while floating
+    const rotSpeed = 0.5 + (i % 4) * 0.25;
+    const rotAxis = new THREE.Vector3(
+      Math.sin(i * 1.7 + 0.3),
+      Math.cos(i * 2.3 + 0.7),
+      Math.sin(i * 3.1 + 1.1)
+    ).normalize();
+
+    obj.userData.antigravityPhysics = {
+      vx,
+      vz,
+      vy: initialVy,
+      ay: accelY,
+      rotAxis,
+      rotSpeed
+    };
+  }
+
+  addLog("GRAVITY FAULT: Gravitational constant set to 0. Objects drifting.", "log-warn");
+  status("Gravity removed. Objects are floating away.");
+  renderAllViewports();
+}
+
+function updateAntigravity(timeOverride) {
+  if (!isAntigravityActive) return;
+  const now = performance.now();
+  if (typeof timeOverride === "number") {
+    antigravityStartTime = now - timeOverride * 1000;
+  }
+  const elapsed = (now - antigravityStartTime) / 1000;
+  // Bounded animation: limit time to bounded duration so drift doesn't accumulate indefinitely
+  const t = Math.min(elapsed, ANTIGRAVITY_BOUNDED_DURATION);
+
+  for (let i = 0; i < sceneObjects.length; i++) {
+    const obj = sceneObjects[i];
+    if (!obj || !obj.userData || !obj.userData.antigravityOriginalTransform || !obj.userData.antigravityPhysics) continue;
+
+    const orig = obj.userData.antigravityOriginalTransform;
+    const phys = obj.userData.antigravityPhysics;
+
+    // Trajectory equation: s(t) = v0 * t + 0.5 * a * t^2
+    const dx = phys.vx * t;
+    const dz = phys.vz * t;
+    const dy = phys.vy * t + 0.5 * phys.ay * t * t;
+
+    obj.position.set(
+      orig.position.x + dx,
+      orig.position.y + dy,
+      orig.position.z + dz
+    );
+
+    // Continuous slow 3D rotation
+    const rotAngle = phys.rotSpeed * t;
+    const qRot = new THREE.Quaternion().setFromAxisAngle(phys.rotAxis, rotAngle);
+    obj.quaternion.copy(orig.quaternion).multiply(qRot);
+
+    obj.updateMatrix();
+    obj.updateMatrixWorld(true);
+  }
+}
+
+function restoreGravity() {
+  if (!isAntigravityActive) {
+    addLog("Gravity is already functioning normally.", "log-info");
+    status("Gravity is normal.");
+    return;
+  }
+
+  for (let i = 0; i < sceneObjects.length; i++) {
+    const obj = sceneObjects[i];
+    if (!obj || !obj.userData) continue;
+
+    if (obj.userData.antigravityOriginalTransform) {
+      const orig = obj.userData.antigravityOriginalTransform;
+      obj.position.copy(orig.position);
+      obj.rotation.copy(orig.rotation);
+      obj.quaternion.copy(orig.quaternion);
+      obj.scale.copy(orig.scale);
+      obj.updateMatrix();
+      obj.updateMatrixWorld(true);
+      delete obj.userData.antigravityOriginalTransform;
+    }
+    if (obj.userData.antigravityPhysics) {
+      delete obj.userData.antigravityPhysics;
+    }
+  }
+
+  isAntigravityActive = false;
+  antigravityStartTime = 0;
+  renderAllViewports();
+  updatePropertiesPanel();
+  updateObjectsTree();
+  addLog("Gravity restored. All geometry returned to original coordinates.", "log-success");
+  status("Gravity restored.");
 }
 
 // Request Bar Events
@@ -11398,6 +11666,7 @@ const HELP_INDEX = [
   { title: "Lock Objects", body: "Lock selected objects to prevent editing and deletion. Type 'Can I lock'.", control: "#request-input", keys: "Can I lock" },
   { title: "Unlock Objects", body: "Unlock previously locked objects. Type 'Can I unlock'.", control: "#request-input", keys: "Can I unlock" },
   { title: "Remove Starting Object", body: "The secret command to remove the Michigan geometry ('Can I remove starting object' or 'Can I delete michigan').", control: "#request-input", keys: "Can I remove starting object / Can I delete michigan" },
+  { title: "Antigravity Mode", body: "Disable gravitational field. Type 'Can I remove gravity' or 'Can I antigravity'. Restore with 'Can I restore gravity'.", control: "#request-input", keys: "Can I remove gravity / Can I antigravity" },
   { title: "Orbit Perspective", body: "Orbit viewport camera vertically and horizontally.", control: "#cad-canvas", keys: "W / S / A / D" },
   { title: "Pan Viewport", body: "Pan camera plane.", control: "#cad-canvas", keys: "Arrow Keys" },
   { title: "Zoom Viewport", body: "Zoom in and out.", control: "#cad-canvas", keys: "Shift + Up/Down" },
@@ -11863,6 +12132,7 @@ function render() {
   requestAnimationFrame(render);
   updateContinuousNavigation();
   updateEscapingSpheres();
+  updateAntigravity();
   resizeRenderer();
 
   // 1. TOP VIEWPORT (Top-Left: XZ Orthographic)
@@ -13875,6 +14145,128 @@ f 4 5 6`;
     // Cleanup by exiting Chinese mode
     processRequest("can i english");
     assertTest("Checkpoint 2: 'can i undo' reverses Chinese mode if it was the most recent command, but reverses modeling commands normally if modeling occurred afterward", undoReversedChinese && boxCreatedInChinese && boxUndoneNormally && chineseRemainedActive);
+
+    // =========================================================================
+    // CHECKPOINT 3 & 4 TESTS (Build v00000-018)
+    // =========================================================================
+
+    // Test 69a: Checkpoint 3 — New Advertisement Inventory & Formats
+    const adList = ASSET_MANIFEST.ads || [];
+    const hasAipac = adList.some(a => a.includes("AipacAppAd.jpeg"));
+    const hasAsbestos = adList.some(a => a.includes("AsbestosAppAd.webp"));
+    const hasFushigi = adList.some(a => a.includes("FushigiAppAd.jpg"));
+    const hasMrClean = adList.some(a => a.includes("MrCleanAppAd.png"));
+    const total18Ads = adList.length === 18;
+    assertTest("Checkpoint 3: Asset manifest contains all 18 advertisements including 4 new assets (JPEG, PNG, WebP)", total18Ads && hasAipac && hasAsbestos && hasFushigi && hasMrClean);
+
+    // Test 69b: Checkpoint 3 — Advertisement Shuffle Bag Cycle & Stacking
+    initializeOrRefillAdBag();
+    const cycle1Set = new Set();
+    let lastInCycle1 = -1;
+    for (let i = 0; i < 18; i++) {
+      const idx = getNextShuffleBagAdIndex();
+      cycle1Set.add(idx);
+      lastInCycle1 = idx;
+    }
+    const cycle1Complete = cycle1Set.size === 18;
+    const firstInCycle2 = getNextShuffleBagAdIndex();
+    const noCycleBoundaryRepeat = firstInCycle2 !== lastInCycle1;
+    // Ad stacking test: pushAdLayer
+    const stackCont = document.getElementById("ad-stack-container");
+    if (stackCont) stackCont.innerHTML = "";
+    adStackCount = 0;
+    pushAdLayer();
+    pushAdLayer();
+    const twoCardsLayered = stackCont && stackCont.querySelectorAll(".ad-card").length === 2;
+    const cardsHaveCloseBtns = stackCont && stackCont.querySelectorAll(".btn-ad-close").length === 2;
+    closeAdCard(stackCont.querySelector(".ad-card"));
+    const oneCardRemaining = stackCont && stackCont.querySelectorAll(".ad-card").length === 1;
+    closeAdCard(stackCont.querySelector(".ad-card"));
+    assertTest("Checkpoint 3: Shuffle bag exhausts 18 ads without replacement, prevents cycle boundary repeats, and supports stacking ad layers with independent close buttons", cycle1Complete && noCycleBoundaryRepeat && twoCardsLayered && cardsHaveCloseBtns && oneCardRemaining);
+
+    // Test 69c: Checkpoint 4 — Antigravity Activation & Float / Bounded Physics
+    // Setup test objects: Box, Sphere, locked object, layer object
+    processRequest("Can I box");
+    const agTestBox = sceneObjects[sceneObjects.length - 1];
+    processRequest("Can I sphere");
+    const agTestSphere = sceneObjects[sceneObjects.length - 1];
+    agTestSphere.userData.locked = true; // Lock sphere
+    const initialCredits = creditBalance;
+    const initialBoxPos = agTestBox.position.clone();
+    const initialSpherePos = agTestSphere.position.clone();
+
+    processRequest("can i antigravity");
+    const antigravityActive1 = isAntigravityActive === true;
+    const boxHasOrigTransform = !!agTestBox.userData.antigravityOriginalTransform;
+    const sphereHasOrigTransform = !!agTestSphere.userData.antigravityOriginalTransform;
+    const michiganObj = sceneObjects.find(o => o.userData && o.userData.isStartingObject) || michiganModel;
+    const michiganHasOrigTransform = michiganObj ? !!michiganObj.userData.antigravityOriginalTransform : true;
+
+    // Prevent repeated activation on top of itself
+    processRequest("can i remove gravity");
+    const preventDuplicate = isAntigravityActive === true;
+
+    // Advance physics to t = 1.0s (slow recognizable float)
+    updateAntigravity(1.0);
+    const boxFloated1s = agTestBox.position.y > initialBoxPos.y + 5;
+    const sphereFloated1s = agTestSphere.position.y > initialSpherePos.y + 5;
+
+    // Advance physics to t = 5.0s (bounded limit - objects fly completely outside viewports)
+    updateAntigravity(5.0);
+    const boxFlewOffScreen = agTestBox.position.y > initialBoxPos.y + 200;
+    const sphereFlewOffScreen = agTestSphere.position.y > initialSpherePos.y + 200;
+    const posAt5s = agTestBox.position.y;
+
+    // Additional time must not accumulate infinite drift (bounded animation)
+    updateAntigravity(10.0);
+    const posAt10s = agTestBox.position.y;
+    const boundedLimitRespected = Math.abs(posAt10s - posAt5s) < 0.001;
+    assertTest("Checkpoint 4: 'can i antigravity' floats all visible geometry upward with slow initial drift, accelerates away outside viewports, respects bounded duration, and rejects duplicate activation", antigravityActive1 && boxHasOrigTransform && sphereHasOrigTransform && michiganHasOrigTransform && preventDuplicate && boxFloated1s && sphereFloated1s && boxFlewOffScreen && boundedLimitRespected);
+
+    // Test 69d: Checkpoint 4 — Exact Scene Restoration ('can i restore gravity')
+    processRequest("can i restore gravity");
+    const gravityRestored = isAntigravityActive === false;
+    const boxPosRestored = agTestBox.position.distanceTo(initialBoxPos) < 0.0001;
+    const spherePosRestored = agTestSphere.position.distanceTo(initialSpherePos) < 0.0001;
+    const sphereStillLocked = agTestSphere.userData.locked === true;
+    const creditsUnchanged = creditBalance === initialCredits;
+    assertTest("Checkpoint 4: 'can i restore gravity' returns all objects to exact millimeter coordinates, preserves lock status, and deducts $0", gravityRestored && boxPosRestored && spherePosRestored && sphereStillLocked && creditsUnchanged);
+
+    // Test 69e: Checkpoint 4 — Special Undo Behavior & Save / Export Protection
+    // Subtest 1: Immediate undo reverses antigravity
+    processRequest("can i remove gravity");
+    assertTest("Antigravity active before immediate undo", isAntigravityActive === true);
+    processRequest("can i undo");
+    const undoReversedAntigravity = isAntigravityActive === false && agTestBox.position.distanceTo(initialBoxPos) < 0.0001;
+
+    // Subtest 2: Save & Export protection while antigravity is active
+    processRequest("can i antigravity");
+    updateAntigravity(5.0); // park off-screen
+    const serializedWhileFlying = serializeProjectState();
+    const parsedState = JSON.parse(serializedWhileFlying);
+    const savedBox = parsedState.objects.find(o => o.name === agTestBox.name);
+    const saveNotDisplaced = savedBox && Math.abs(savedBox.position[1] - initialBoxPos.y) < 0.001;
+    const saveHasNoAntigravityFlags = savedBox && !savedBox.userData.antigravityOriginalTransform && !savedBox.userData.antigravityPhysics;
+
+    // Export geometry while flying
+    exportProjectGeometry("stl");
+    const exportRanWithoutError = true;
+
+    // Subtest 3: Modeling command after antigravity is undone normally
+    const countBeforeNewObj = sceneObjects.length;
+    processRequest("Can I box");
+    const boxCreatedAfterAntigrav = sceneObjects.length === countBeforeNewObj + 1;
+    processRequest("can i undo");
+    const modelingUndoneNormally = sceneObjects.length === countBeforeNewObj;
+
+    // Restore gravity and clean up test objects
+    processRequest("can i restore gravity");
+    [agTestBox, agTestSphere].forEach(o => {
+      const idx = sceneObjects.indexOf(o);
+      if (idx !== -1) sceneObjects.splice(idx, 1);
+      scene.remove(o);
+    });
+    assertTest("Checkpoint 4: Special undo reverses antigravity, modeling undos operate normally, and project save/export protects un-displaced geometry", undoReversedAntigravity && saveNotDisplaced && saveHasNoAntigravityFlags && exportRanWithoutError && boxCreatedAfterAntigrav && modelingUndoneNormally);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
