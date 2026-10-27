@@ -25,6 +25,8 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint A (v0.16): About Window Repair** | **YES** | **YES** | **YES** | *Awaiting Visual Review* | Sizing, flexbox collapse, and overflow fix for `#modal-about`. Styled at full size (~540px height, 640px width, `box-sizing: border-box`), scrollable inner container `#about-dialog-content` (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), authentic sunken panel, unclipped credits, technology audit, bibliography citations, and Lake Superior billing address. Responsive and ready for Chinese localization. |
+| **Checkpoint B (v0.16): Cubert Tip Buttons ($1, $5, $10, $0)** | **YES** | **YES** | **YES** | *Awaiting Visual Review* | Fixed disconnect where tips referenced undefined `fictionalBalance`. Integrated with `creditBalance` and `updateEconomyDisplay()`. Immediate single-click deduction for $1, $5, $10 with localStorage persistence, dismisses Cubert, and restores smiling standby mascot. $0 tip deducts $0.00 and dismisses. Duplicate-click lock (`isProcessingCubertTip`) prevents double deductions. Insufficient credits rejects charge ($0 deducted), logs warning, and triggers 'Broke ass.' speech bubble & audio. |
 | **Checkpoint A: Cubert & Help Integration + Standby Mascot** | **YES** | **YES** | **YES** | **YES** | Side-by-side non-overlapping Help and Cubert layout; cheerful standby dock mascot; burnt-out break mascot; single Cubert invariant strictly enforced across all states. **Accepted by user; merged into `main` (commit `3bcb9a3`).** |
 | **Checkpoint B: Dedicated Cubert Conversation Bar ("Talk to Cubert:")** | **YES** | **YES** | **YES** | **YES** | Clean separation of Request Bar (CAD commands only) and dedicated Cubert Bar. Multi-turn dialogue, retry instruction, randomized bad suggestion + tip prompt, zero ad command frequency impact. **Accepted by user; merged into `main` (commit `3bcb9a3`).** |
 | **Checkpoint C: Dismiss Cubert (`Can you leave Cubert`)** | **YES** | **YES** | **YES** | **YES** | Recognized command `Can you leave Cubert` (and variations/case-insensitive/punctuation) dismisses Cubert from Request Bar and Cubert Bar. Immediately stops voiceover, hides popup & speech bubble, hides Cubert Bar, resets conversation mode, restores cheerful standby mascot, preserves geometry and fictional balance ($0.00 deducted). 190 automated tests passing. **Accepted by user; merged into `main`.** |
@@ -1754,6 +1756,80 @@ python3 scripts/get_test_results.py
    - Logo image (`#cadnt-official-logo`) configured with `height: 24px; width: auto; object-fit: contain`, preserving the exact original 3.19 aspect ratio without distortion or blur.
    - Supporting branding text: `<span class="win95-title-subtext">Computer Aided Design Noncompliance Technology</span>` positioned strictly to the right in white bold retro typography.
    - Backward-compatibility preserved: retains hidden `<span class="win95-title-text" style="display:none;">CADN'T</span>` ensuring Test 18i passes smoothly alongside new Test 65.
+
+---
+
+## 21. Checkpoints A & B (v0.16): About Window Repair & Cubert Tip Buttons
+
+### 21.1 Checkpoint A — About Window Repair
+1. **Root Cause Analysis**:
+   - `#modal-about` previously lacked an explicit height and `box-sizing: border-box`, causing its child container with `flex: 1; overflow-y: auto` to collapse to 0px height in WebKit/Safari and Chromium dialog flex contexts.
+   - As a result, the dialog opened as a shallow, empty ~50px horizontal strip showing only the titlebar and close button, hiding the entire body of content.
+2. **CSS Dimension & Flexbox Repair**:
+   - Configured `#modal-about` with:
+     - `width: 640px; max-width: 92vw;`
+     - `height: 540px; max-height: 85vh;`
+     - `display: flex; flex-direction: column; box-sizing: border-box; padding: 3px; z-index: 1000;`
+   - Added `#about-dialog-content`:
+     - `flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;`
+     - Sunken retro panel styling with white background, inset border, and smooth vertical scrolling.
+   - Pinned titlebar (`<h2>`) and bottom action bar (`.dialog-actions`) with `flex-shrink: 0;` ensuring close controls are never squeezed or clipped.
+3. **Verified Content & Responsive Behavior**:
+   - Title & Manifesto unclipped.
+   - Development Credits (Andy Buck, Google Antigravity, ChatGPT).
+   - Technology Audit (Three.js r128, CSG BSP, discrete manifold engine; no proprietary CAD kernels).
+   - Clickable bibliography links (Rhino, SOLIDWORKS, Fusion, Blender, Clippy) with active `_blank` hyperlinks.
+   - Fictional Lake Superior corporate billing address unclipped.
+   - Flexible text wrapping ready to support future Chinese localization without clipping.
+
+### 21.2 Checkpoint B — Cubert Tip Buttons ($1, $5, $10, $0)
+1. **Root Cause Analysis**:
+   - `submitCubertTip(amount)` previously attempted to deduct from an undeclared `fictionalBalance` variable and called a non-existent `updateBalanceDisplay()` function, causing silent ReferenceErrors or failed checks (`undefined >= amount`).
+2. **Economy Integration & Direct Processing**:
+   - Bound directly to `creditBalance` and `updateEconomyDisplay()`.
+   - **$1, $5, $10 Tips**:
+     - Deducts exact amount: `creditBalance = Math.max(0, creditBalance - numAmount)`.
+     - Immediately updates `#credit-val` and `#status-credit-panel`.
+     - Persists new balance to `localStorage.setItem("cadnt_credits", ...)`.
+     - Plays thank you voiceover (`playCubertVoiceover("thanks_tip")`).
+     - Dismisses Cubert and restores cheerful smiling mascot in bottom-left panel (`hideCubertPopup(false)`).
+   - **$0 Tip**:
+     - Deducts nothing ($0.00). Fictional balance is completely untouched.
+     - Immediately dismisses Cubert and restores cheerful smiling standby mascot (`hideCubertPopup(true)`).
+     - Tiny $0 button styling preserved (`.cubert-tip-zero`).
+   - **Zero Friction**: Single-click processing without secondary confirmation dialogs or typed commands.
+3. **Duplicate Click Protection**:
+   - Added `isProcessingCubertTip` boolean guard.
+   - All tip buttons (`.cubert-tip-btn`, `.cubert-tip-zero`) are immediately disabled (`disabled = true`, `pointerEvents = "none"`) upon click until dismissal completes.
+4. **Insufficient Funds Handling**:
+   - If user attempts a tip larger than their balance (`numAmount > creditBalance`):
+     - Charge is rejected (zero deduction).
+     - Logs warning: `Insufficient credits for tip ($X.XX). Cubert: 'Broke ass.'`.
+     - Updates status bar: `Insufficient credits for tip.`.
+     - Triggers Cubert's muffled `broke_ass` voice recording (`playCubertVoiceover("broke_ass")`).
+     - Displays `"Broke ass."` in speech bubble with shrugging expression.
+     - Does not dismiss Cubert, allowing user to see and hear rejection.
+
+### 21.3 Automated Testing & Visual Verification
+1. **Automated Unit Tests**:
+   - Suite expanded to **196 passing tests (0 failures)**:
+     - Test 66a: Checkpoint A — About Dialog Sizing, Content Visibility & Vertical Scrolling.
+     - Test 66b: Checkpoint B — Cubert Tip $1 Deduction & Immediate Dismissal.
+     - Test 66c: Checkpoint B — Cubert Tip $5 and $10 Sequential Deductions.
+     - Test 66d: Checkpoint B — Cubert Tip $0 Dismissal Without Deduction.
+     - Test 66e: Checkpoint B — Insufficient Credits Rejection & 'Broke ass' Line.
+     - Test 66f: Checkpoint B — Duplicate Click Protection.
+   - Verified via `python3 scripts/get_test_results.py` $\rightarrow$ `total: 196 failures: 0`.
+2. **Visual Evidence Artifacts**:
+   - Created [`scripts/verify_checkpoints_a_b_v16.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoints_a_b_v16.py).
+   - Tested at DPR 1.0 and DPR 2.0 (Retina), saving to `screenshots/` and copying to `~/Desktop/`:
+     - `checkpoint_a_01_about_window_repaired.png` (and `_dpr2.png`)
+     - `checkpoint_a_02_about_window_scrolled.png` (and `_dpr2.png`)
+     - `checkpoint_b_01_tip_prompt_active.png` (and `_dpr2.png`)
+     - `checkpoint_b_02_tipped_1_dollar.png` (and `_dpr2.png`)
+     - `checkpoint_b_03_tipped_0_dollars.png` (and `_dpr2.png`)
+     - `checkpoint_b_04_insufficient_funds_broke_ass.png` (and `_dpr2.png`)
+
 
 
 

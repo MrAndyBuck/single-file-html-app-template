@@ -1105,14 +1105,46 @@
     box-shadow: 2px 2px 12px rgba(0,0,0,0.35);
   }
   #modal-about {
-    width: 620px;
+    width: 640px;
     max-width: 92vw;
+    height: 540px;
     max-height: 85vh;
     display: none;
     flex-direction: column;
+    box-sizing: border-box;
+    padding: 3px;
+    z-index: 1000;
   }
   #modal-about[open] {
     display: flex;
+  }
+  #modal-about h2 {
+    flex-shrink: 0;
+    margin-bottom: 2px;
+  }
+  #about-dialog-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #000000;
+    background: #ffffff;
+    border: 1px solid var(--win95-dark);
+    box-shadow: inset 1px 1px 0px #000000;
+    padding: 8px 10px;
+    box-sizing: border-box;
+  }
+  #modal-about .dialog-actions {
+    flex-shrink: 0;
+    margin-top: 4px;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: flex-end;
   }
   .win95-dialog-titlebar {
     display: flex;
@@ -2027,7 +2059,7 @@
     <span class="win95-dialog-title">About CADN'T — Computer Aided Design Noncompliance Technology</span>
     <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
   </h2>
-  <div style="padding: 6px 8px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; font-size: 11px; line-height: 1.45; color: #000000;">
+  <div id="about-dialog-content">
     
     <!-- Title & Manifesto -->
     <div style="background: #ffffff; border: 1px solid var(--win95-dark); box-shadow: inset 1px 1px 0 #000000; padding: 8px 10px;">
@@ -5878,6 +5910,8 @@ let creditBalance = parseFloat(localStorage.getItem("cadnt_credits") || "249.00"
 function updateEconomyDisplay() {
   const el = document.getElementById("credit-val");
   if (el) el.textContent = `$${creditBalance.toFixed(2)}`;
+  const statusEl = document.getElementById("status-credit-panel");
+  if (statusEl) statusEl.textContent = `Tokens: $${creditBalance.toFixed(2)}`;
   localStorage.setItem("cadnt_credits", creditBalance.toFixed(2));
 }
 
@@ -6638,8 +6672,8 @@ function showCubertPopup(dialogue = "How can I help you?", expressionOrVoiceKey 
   }
 }
 
-function hideCubertPopup() {
-  stopCubertVoiceover();
+function hideCubertPopup(stopAudio = true) {
+  if (stopAudio) stopCubertVoiceover();
   const popup = document.getElementById("cubert-popup");
   if (popup) popup.classList.remove("beside-help");
   setCubertMode(CUBERT_MODES.STANDBY);
@@ -6776,24 +6810,56 @@ function endCubertBreak() {
   addLog("Cubert returned to desk.", "log-info");
 }
 
+let isProcessingCubertTip = false;
+
 function submitCubertTip(amount) {
-  if (amount > 0) {
-    if (fictionalBalance >= amount) {
-      fictionalBalance -= amount;
-      updateBalanceDisplay();
-      addLog(`Tipped Cubert $${amount}. Remaining balance: $${fictionalBalance}.`, "log-success");
-      status(`Tipped Cubert $${amount}.`);
+  // Prevent duplicate execution from rapid clicks
+  if (isProcessingCubertTip) return;
+
+  const numAmount = Number(amount) || 0;
+
+  // Insufficient credits check: reject charge, play 'broke ass', and do not dismiss Cubert immediately
+  if (numAmount > 0 && creditBalance < numAmount) {
+    addLog(`Insufficient credits for tip ($${numAmount.toFixed(2)}). Cubert: 'Broke ass.'`, "log-warn");
+    status("Insufficient credits for tip. Cubert: 'Broke ass.'");
+    showCubertPopup("Broke ass.", "shrugging", false, "broke_ass");
+    return;
+  }
+
+  // Engage processing lock and disable all tip buttons to prevent duplicate deductions
+  isProcessingCubertTip = true;
+  const tipButtons = document.querySelectorAll(".cubert-tip-btn, .cubert-tip-zero");
+  tipButtons.forEach(btn => {
+    btn.disabled = true;
+    btn.style.pointerEvents = "none";
+  });
+
+  try {
+    if (numAmount > 0) {
+      // Deduct exact amount from fictional credit balance
+      creditBalance = Math.max(0, creditBalance - numAmount);
+      // Immediately update balance display and persist to localStorage
+      updateEconomyDisplay();
+      addLog(`Tipped Cubert $${numAmount.toFixed(2)}. Remaining balance: $${creditBalance.toFixed(2)}.`, "log-success");
+      status(`Tipped Cubert $${numAmount.toFixed(2)}.`);
+      // Play thank you voiceover
       playCubertVoiceover("thanks_tip");
-      hideCubertPopup();
+      // Dismiss Cubert and restore cheerful smiling standby mascot
+      hideCubertPopup(false);
     } else {
-      addLog("Insufficient funds for tip. Cubert: 'Broke ass.'", "log-warn");
-      status("Insufficient funds for tip. Cubert: 'Broke ass.'");
-      showCubertPopup("Broke ass.", "shrugging", false, "broke_ass");
+      // $0 tip: deduct nothing, dismiss Cubert, restore cheerful smiling standby mascot
+      addLog("Tip $0.00 selected. Cubert dismissed.", "log-info");
+      status("Cubert dismissed.");
+      hideCubertPopup(true);
     }
-  } else {
-    addLog("Tip $0 selected. Cubert dismissed.", "log-info");
-    status("Cubert dismissed.");
-    hideCubertPopup();
+  } finally {
+    setTimeout(() => {
+      isProcessingCubertTip = false;
+      tipButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.style.pointerEvents = "";
+      });
+    }, 400);
   }
 }
 
@@ -13298,6 +13364,72 @@ f 4 5 6`;
     const subtextStr = subtextEl ? subtextEl.textContent : "";
     const hasSupportingText = subtextStr.includes("Computer Aided Design Noncompliance Technology");
     assertTest("Checkpoint G: Official CADN'T Logo image integrated in top title bar with right-aligned supporting text", logoInTitle && logoSrc.includes("CADNTLogo.png") && hasSupportingText);
+
+    // =========================================================================
+    // Checkpoints A & B: About Window Repair & Cubert Tip Buttons
+    // =========================================================================
+    // Test 66a: Checkpoint A — About Dialog Sizing, Content Visibility & Vertical Scrolling
+    modalAboutEl.showModal();
+    const aboutContentEl = document.getElementById("about-dialog-content");
+    const aboutScrollable = aboutContentEl && aboutContentEl.scrollHeight > aboutContentEl.clientHeight;
+    const aboutHeightAdequate = modalAboutEl.clientHeight >= 400 && aboutContentEl.clientHeight >= 300;
+    const aboutCloseBtn = document.getElementById("btn-close-about");
+    const aboutCaptionClose = modalAboutEl.querySelector(".btn-caption-close");
+    const allLinksValid = Array.from(aboutContentEl.querySelectorAll("a")).every(a => a.href && a.href.startsWith("http"));
+    assertTest("Checkpoint A: About dialog opens with full height (>=400px), unclipped scrollable content, valid links, and working close controls", modalAboutEl.open && aboutScrollable && aboutHeightAdequate && !!aboutCloseBtn && !!aboutCaptionClose && allLinksValid);
+    modalAboutEl.close();
+
+    // Test 66b: Checkpoint B — Cubert Tip $1 Deduction & Immediate Dismissal
+    creditBalance = 249.00;
+    updateEconomyDisplay();
+    showCubertPopup("Leave Cubert a tip?", "helpful", true);
+    const tipActiveBefore = cubertMode === CUBERT_MODES.ACTIVE && document.getElementById("cubert-tip-selector").style.display !== "none";
+    submitCubertTip(1);
+    const balanceAfter1 = creditBalance;
+    const displayAfter1 = document.getElementById("credit-val").textContent;
+    const storageAfter1 = localStorage.getItem("cadnt_credits");
+    const cubertDismissed1 = cubertMode === CUBERT_MODES.STANDBY && document.getElementById("cubert-popup").style.display === "none";
+    const mascotCheerful1 = document.getElementById("cubert-static-img").src.includes("cheerful");
+    assertTest("Checkpoint B: Cubert Tip $1 immediately deducts $1.00, updates display and localStorage, and restores smiling standby mascot", tipActiveBefore && balanceAfter1 === 248.00 && displayAfter1.includes("248.00") && storageAfter1 === "248.00" && cubertDismissed1 && mascotCheerful1);
+
+    // Test 66c: Checkpoint B — Cubert Tip $5 and $10 Deductions
+    showCubertPopup("Leave Cubert a tip?", "helpful", true);
+    submitCubertTip(5);
+    const balanceAfter5 = creditBalance;
+    showCubertPopup("Leave Cubert a tip?", "helpful", true);
+    submitCubertTip(10);
+    const balanceAfter10 = creditBalance;
+    assertTest("Checkpoint B: Cubert Tip $5 and $10 sequentially deduct exact amounts from fictional balance ($248 -> $243 -> $233)", balanceAfter5 === 243.00 && balanceAfter10 === 233.00 && document.getElementById("credit-val").textContent.includes("233.00"));
+
+    // Test 66d: Checkpoint B — Cubert Tip $0 Dismissal Without Deduction
+    showCubertPopup("Leave Cubert a tip?", "helpful", true);
+    submitCubertTip(0);
+    const balanceAfter0 = creditBalance;
+    const cubertDismissed0 = cubertMode === CUBERT_MODES.STANDBY && document.getElementById("cubert-popup").style.display === "none";
+    assertTest("Checkpoint B: Cubert Tip $0 deducts nothing ($0.00) and immediately dismisses Cubert to smiling standby mascot", balanceAfter0 === 233.00 && cubertDismissed0);
+
+    // Test 66e: Checkpoint B — Insufficient Credits Rejection & 'Broke ass' Line
+    creditBalance = 2.00;
+    updateEconomyDisplay();
+    showCubertPopup("Leave Cubert a tip?", "helpful", true);
+    submitCubertTip(5); // Attempt $5 tip with only $2 balance
+    const balanceAfterRejection = creditBalance;
+    const speechTextAfterRejection = document.getElementById("cubert-bubble-text").textContent;
+    const exprAfterRejection = document.getElementById("cubert-popup-img").src;
+    assertTest("Checkpoint B: Insufficient credits rejects tip with $0 deducted, displaying 'Broke ass.' with shrugging expression", balanceAfterRejection === 2.00 && speechTextAfterRejection.includes("Broke ass") && exprAfterRejection.includes("shrugging"));
+    hideCubertPopup();
+
+    // Test 66f: Checkpoint B — Duplicate Click Protection
+    creditBalance = 249.00;
+    updateEconomyDisplay();
+    showCubertPopup("Leave Cubert a tip?", "helpful", true);
+    submitCubertTip(1);
+    submitCubertTip(1); // Immediate duplicate call while lock active
+    assertTest("Checkpoint B: Rapid repeated clicks on tip button are locked out to prevent duplicate credit deductions", creditBalance === 248.00);
+
+    // Reset balance to $249.00
+    creditBalance = 249.00;
+    updateEconomyDisplay();
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });
