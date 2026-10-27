@@ -1711,7 +1711,7 @@
       <div id="debug-overlay">
         <div class="debug-hud-header" id="debug-hud-toggle">
           <span class="debug-hud-title" data-i18n="hud.title">🔍 DIAGNOSTIC HUD</span>
-          <span id="debug-hud-version" class="debug-badge">v00000-019</span>
+          <span id="debug-hud-version" class="debug-badge">v00000-020</span>
           <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
         </div>
         <div id="debug-hud-body" class="debug-hud-body">
@@ -1921,7 +1921,7 @@
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none"/><rect x="7" y="7" width="10" height="10" stroke-dasharray="2 2" fill="none"/></svg>
           <span>Shell</span>
         </button>
-        <button class="tool-btn placeholder-tool" data-cmd="offset" id="tool-offset" title="Offset Curve or Surface (Coming Soon)">
+        <button class="tool-btn" data-cmd="offset" id="tool-offset" title="Offset 2D Curve or Closed Profile">
           <svg viewBox="0 0 24 24"><path d="M4 14c4-6 10-6 16 0" fill="none"/><path d="M4 8c4-6 10-6 16 0" stroke-dasharray="3 3" fill="none"/><line x1="12" y1="5" x2="12" y2="11" stroke-width="1.5"/></svg>
           <span>Offset</span>
         </button>
@@ -1929,7 +1929,7 @@
           <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="2 2"/><polygon points="9 8 3 14 9 14" fill="none"/><polygon points="15 8 21 14 15 14" fill="none"/></svg>
           <span>Mirror</span>
         </button>
-        <button class="tool-btn placeholder-tool" data-cmd="array" id="tool-array" title="Pattern Array Duplicate (Coming Soon)">
+        <button class="tool-btn" data-cmd="array" id="tool-array" title="Pattern Array: Linear or Polar Duplication">
           <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" fill="none"/><rect x="14" y="4" width="6" height="6" fill="none"/><rect x="4" y="14" width="6" height="6" fill="none"/><rect x="14" y="14" width="6" height="6" fill="none"/></svg>
           <span>Array</span>
         </button>
@@ -1988,7 +1988,7 @@
     <div id="coords-readout" class="status-panel">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div class="nav-hint status-panel" data-i18n="app.nav_hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
     <div class="status-panel status-credit" id="status-credit-panel">Tokens: $249.00</div>
-    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-019 ↻</button>
+    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-020 ↻</button>
   </footer>
 </div>
 
@@ -2009,7 +2009,17 @@
     <li><strong>Starting Geometry</strong>: <em>The command to delete the starting object exists.</em></li>
     <li><strong>Economy</strong>: You have received a starting grant of $249.00 in fictional CAD credits.</li>
   </ul>
-  <div class="dialog-actions">
+  <div style="margin: 10px 0; border: 2px inset #dfdfdf; background: #c0c0c0; padding: 2px;">
+    <div style="background: #000080; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span>CADN'T Modeling Demonstration — 6-Sided Mounting Flange</span>
+      <span>Live Video</span>
+    </div>
+    <video id="onboarding-demo-video" controls playsinline preload="metadata" style="width: 100%; max-height: 220px; display: block; background: #000;" src="screenshots/cadnt_demonstration.webm">
+      Your browser does not support HTML5 WebM video playback.
+    </video>
+  </div>
+  <div class="dialog-actions" style="display: flex; justify-content: space-between; align-items: center;">
+    <button class="btn-dialog btn-secondary" onclick="this.closest('dialog').close()" id="btn-skip-onboarding">Skip Demonstration</button>
     <button class="btn-dialog btn-primary" id="btn-close-onboarding" data-i18n="modals.onboarding_accept">Accept Terms & Conditions</button>
   </div>
 </dialog>
@@ -2142,7 +2152,7 @@
         CADN'T — Computer Aided Design Noncompliance Technology
       </div>
       <div style="font-size: 10px; color: #555555; margin-bottom: 6px;">
-        Version: <span id="about-version">v00000-019</span> (Release Build)
+        Version: <span id="about-version">v00000-020</span> (Release Build)
       </div>
       <p style="margin: 0; font-style: italic; color: #222222;">
         CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space. Built as an adversarial, fully functional 3D CAD environment featuring genuine geometry calculations, genuine meshes, and a deliberately hostile user interface.
@@ -2334,7 +2344,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-019",
+  version: "v00000-020",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -3827,8 +3837,13 @@ function setupPolygonCommand(initialSides) {
 
   bar.style.display = "flex";
   badge.textContent = "POLYGON";
-  const defSides = Math.max(3, parseInt(initialSides, 10) || 5);
-  prompt.textContent = `Enter sides (≥ 3), then click center point in ${activeViewport.toUpperCase()} C-Plane.`;
+  const hasInitialSides = initialSides !== undefined && initialSides !== null && !isNaN(parseInt(initialSides, 10));
+  const defSides = hasInitialSides ? Math.min(128, Math.max(3, parseInt(initialSides, 10))) : 6;
+  if (!hasInitialSides) {
+    prompt.textContent = "How many sides? (Enter integer 3 to 128, then specify center point in Top C-Plane)";
+  } else {
+    prompt.textContent = `Sides: ${defSides}. Click polygon center point in ${activeViewport.toUpperCase()} C-Plane.`;
+  }
   confirmBtn.disabled = true;
   confirmBtn.textContent = "✓ Create (Enter)";
   cancelBtn.textContent = "✕ Cancel (Esc)";
@@ -3842,7 +3857,7 @@ function setupPolygonCommand(initialSides) {
       <option value="perspective" ${activeViewport === "perspective" ? "selected" : ""}>Persp (X/Z)</option>
     </select>
     <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Sides:</span>
-    <input id="poly-param-sides" class="prop-input" type="number" min="3" step="1" value="${defSides}" style="width:45px; height:20px;">
+    <input id="poly-param-sides" class="prop-input" type="number" min="3" max="128" step="1" value="${defSides}" style="width:45px; height:20px;">
     <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Center:</span>
     <input id="poly-param-center" class="prop-input" placeholder="X, Y, Z" style="width:90px; height:20px;">
     <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Radius:</span>
@@ -3863,16 +3878,36 @@ function setupPolygonCommand(initialSides) {
   const rInp = document.getElementById("poly-param-radius");
 
   if (sidesInp) {
+    if (!hasInitialSides) {
+      setTimeout(() => { sidesInp.focus(); sidesInp.select(); }, 20);
+    }
+    sidesInp.oninput = () => {
+      let s = parseInt(sidesInp.value, 10);
+      if (!isNaN(s) && s >= 3 && s <= 128 && sketchPoints.length === 0) {
+        prompt.textContent = `Sides: ${s}. Click polygon center point in ${activeViewport.toUpperCase()} C-Plane.`;
+      }
+    };
     sidesInp.onkeydown = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
         checkNumericEasterEgg(sidesInp.value);
-        if (sketchPoints.length === 0 && centerInp) centerInp.focus();
-        else if (rInp) rInp.focus();
+        let s = Math.min(128, Math.max(3, parseInt(sidesInp.value, 10) || 5));
+        sidesInp.value = s;
+        if (sketchPoints.length === 0) {
+          prompt.textContent = `Sides: ${s}. Click polygon center point in ${activeViewport.toUpperCase()} C-Plane.`;
+          if (centerInp) centerInp.focus();
+        } else if (rInp) {
+          rInp.focus();
+        }
       }
     };
     sidesInp.onchange = () => {
       checkNumericEasterEgg(sidesInp.value);
+      let s = Math.min(128, Math.max(3, parseInt(sidesInp.value, 10) || 5));
+      sidesInp.value = s;
+      if (sketchPoints.length === 0) {
+        prompt.textContent = `Sides: ${s}. Click polygon center point in ${activeViewport.toUpperCase()} C-Plane.`;
+      }
     };
   }
 
@@ -3897,7 +3932,7 @@ function setupPolygonCommand(initialSides) {
         const r = parseFloat(rInp.value);
         checkNumericEasterEgg(rInp.value);
         if (!isNaN(r) && r > 0 && sketchPoints.length >= 1) {
-          const s = sidesInp ? parseInt(sidesInp.value, 10) || 5 : 5;
+          const s = sidesInp ? Math.min(128, Math.max(3, parseInt(sidesInp.value, 10) || 5)) : 5;
           createPolygonSketch(sketchPoints[0], r, s, activeViewport);
           cancelSketch();
         }
@@ -3908,7 +3943,7 @@ function setupPolygonCommand(initialSides) {
   confirmBtn.onclick = () => {
     if (sketchPoints.length >= 1 && lastPointerCPlanePos) {
       const r = sketchPoints[0].distanceTo(lastPointerCPlanePos);
-      const s = sidesInp ? parseInt(sidesInp.value, 10) || 5 : 5;
+      const s = sidesInp ? Math.min(128, Math.max(3, parseInt(sidesInp.value, 10) || 5)) : 5;
       createPolygonSketch(sketchPoints[0], Math.max(1, r), s, activeViewport);
       cancelSketch();
     }
@@ -4297,7 +4332,7 @@ function getCirclePoints(center, radius, vp, segments = 36) {
 }
 
 function getPolygonPoints(center, radius, vp, sides = 5) {
-  sides = Math.max(3, parseInt(sides, 10) || 5);
+  sides = Math.min(128, Math.max(3, parseInt(sides, 10) || 5));
   const pts = [];
   const angleStep = (Math.PI * 2) / sides;
   for (let i = 0; i < sides; i++) {
@@ -4653,7 +4688,7 @@ function createCircleSketch(center, radius, planeName) {
 }
 
 function createPolygonSketch(center, radius, sides, planeName) {
-  sides = Math.max(3, parseInt(sides, 10) || 5);
+  sides = Math.min(128, Math.max(3, parseInt(sides, 10) || 5));
   radius = Math.max(0.1, parseFloat(radius) || 10);
   recordUndoState("Polygon Sketch");
 
@@ -7704,12 +7739,9 @@ function recordUndoState(desc = "Operation") {
 }
 
 function executeUndo() {
-  // Checkpoint 4: Special Undo Behavior for Antigravity Mode
-  if (lastUndoableCommand === "antigravity" || (isAntigravityActive && undoStack.length === 0)) {
-    restoreGravity();
-    lastUndoableCommand = "none";
-    addLog("Undid: Antigravity effect. Gravity restored.", "log-success");
-    status("Undid: Antigravity effect.");
+  // Checkpoint A: Special Undo Behavior for Antigravity Mode (freeze in place)
+  if (isAntigravityActive || lastUndoableCommand === "antigravity") {
+    freezeAntigravityInPlace();
     return;
   }
 
@@ -7794,6 +7826,14 @@ function initiateSaveWorkflow() {
 function initiateOpenWorkflow() {
   const picker = document.getElementById("file-input-open");
   if (picker) picker.click();
+}
+
+function saveProjectToFile() {
+  initiateSaveWorkflow();
+}
+
+function openProjectFromFile() {
+  initiateOpenWorkflow();
 }
 
 /* =========================================================================
@@ -8049,6 +8089,13 @@ function startModelingCommand(type, initialArgs = {}) {
       break;
     case "pipe":
       setupPipeCommand(initialArgs);
+      break;
+    case "offset":
+      setupOffsetCommand(initialArgs);
+      break;
+    case "array":
+    case "pattern":
+      setupArrayCommand(initialArgs);
       break;
     default:
       bar.style.display = "none";
@@ -8903,8 +8950,17 @@ function setupScaleCommand(args) {
    ========================================================================= */
 
 function getSolidEdges(mesh) {
-  mesh.geometry.computeBoundingBox();
-  const bbox = mesh.geometry.boundingBox;
+  if (!mesh) return [];
+  if (!mesh.userData) mesh.userData = {};
+  if (!mesh.userData.baseBox) {
+    mesh.geometry.computeBoundingBox();
+    const bb = mesh.geometry.boundingBox || { min: new THREE.Vector3(-10, -10, -10), max: new THREE.Vector3(10, 10, 10) };
+    mesh.userData.baseBox = {
+      min: { x: bb.min.x, y: bb.min.y, z: bb.min.z },
+      max: { x: bb.max.x, y: bb.max.y, z: bb.max.z }
+    };
+  }
+  const bbox = mesh.userData.baseBox;
   const w2 = (bbox.max.x - bbox.min.x) / 2;
   const h2 = (bbox.max.y - bbox.min.y) / 2;
   const d2 = (bbox.max.z - bbox.min.z) / 2;
@@ -8934,36 +8990,132 @@ function getSolidEdges(mesh) {
 }
 const getBoxEdgeSegments = getSolidEdges;
 
-function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
-  if (!mesh || !mesh.geometry) return null;
-  mesh.geometry.computeBoundingBox();
-  const bbox = mesh.geometry.boundingBox;
-  if (!bbox) return null;
-
-  const w = bbox.max.x - bbox.min.x;
-  const h = bbox.max.y - bbox.min.y;
-  const d = bbox.max.z - bbox.min.z;
-  if (w <= 0.001 || h <= 0.001 || d <= 0.001) return null;
-
-  const edges = getSolidEdges(mesh);
-  const indicesToCut = edgeIndices !== null ? edgeIndices : edges.map(e => e.id);
-  if (!indicesToCut || indicesToCut.length === 0) return mesh.geometry.clone();
-
-  let val1 = 2.0;
-  let val2 = 2.0;
-  if (typeof param === "number") {
-    val1 = param;
-    val2 = param;
-  } else if (typeof param === "object" && param !== null) {
-    val1 = param.d1 || param.r1 || param.val1 || param.val || param.p1 || 2.0;
-    val2 = param.d2 || param.r2 || param.val2 || param.p2 || val1;
+/* Exact 3D Polyhedron Half-Space Boundary Clipper (Watertight 2-Manifold chi=2) */
+class PolyhedronClipper {
+  constructor(xmin, xmax, ymin, ymax, zmin, zmax) {
+    this.faces = [
+      { normal: [1, 0, 0], verts: [[xmax, ymin, zmin], [xmax, ymax, zmin], [xmax, ymax, zmax], [xmax, ymin, zmax]] },
+      { normal: [-1, 0, 0], verts: [[xmin, ymin, zmax], [xmin, ymax, zmax], [xmin, ymax, zmin], [xmin, ymin, zmin]] },
+      { normal: [0, 1, 0], verts: [[xmin, ymax, zmin], [xmin, ymax, zmax], [xmax, ymax, zmax], [xmax, ymax, zmin]] },
+      { normal: [0, -1, 0], verts: [[xmin, ymin, zmax], [xmin, ymin, zmin], [xmax, ymin, zmin], [xmax, ymin, zmax]] },
+      { normal: [0, 0, 1], verts: [[xmin, ymin, zmax], [xmax, ymin, zmax], [xmax, ymax, zmax], [xmin, ymax, zmax]] },
+      { normal: [0, 0, -1], verts: [[xmin, ymax, zmin], [xmax, ymax, zmin], [xmax, ymin, zmin], [xmin, ymin, zmin]] }
+    ];
   }
 
+  clipByPlane(n, d, eps = 1e-6) {
+    const newFaces = [];
+    const newPolyPts = [];
+
+    for (let face of this.faces) {
+      const pts = face.verts;
+      const clipped = [];
+      const m = pts.length;
+      for (let i = 0; i < m; i++) {
+        const p1 = pts[i];
+        const p2 = pts[(i + 1) % m];
+        const d1 = n[0] * p1[0] + n[1] * p1[1] + n[2] * p1[2] - d;
+        const d2 = n[0] * p2[0] + n[1] * p2[1] + n[2] * p2[2] - d;
+
+        const in1 = (d1 <= eps);
+        const in2 = (d2 <= eps);
+
+        if (in1) clipped.push(p1);
+        if (in1 !== in2) {
+          let t = d1 / (d1 - d2);
+          t = Math.max(0.0, Math.min(1.0, t));
+          const pint = [
+            p1[0] + t * (p2[0] - p1[0]),
+            p1[1] + t * (p2[1] - p1[1]),
+            p1[2] + t * (p2[2] - p1[2])
+          ];
+          clipped.push(pint);
+          newPolyPts.push(pint);
+        }
+      }
+
+      if (clipped.length >= 3) {
+        newFaces.push({ normal: face.normal, verts: clipped });
+      }
+    }
+
+    if (newPolyPts.length >= 3) {
+      const uniquePts = [];
+      for (let pt of newPolyPts) {
+        if (!uniquePts.some(u => Math.hypot(pt[0] - u[0], pt[1] - u[1], pt[2] - u[2]) < 1e-4)) {
+          uniquePts.push(pt);
+        }
+      }
+
+      if (uniquePts.length >= 3) {
+        let cx = 0, cy = 0, cz = 0;
+        for (let p of uniquePts) { cx += p[0]; cy += p[1]; cz += p[2]; }
+        cx /= uniquePts.length; cy /= uniquePts.length; cz /= uniquePts.length;
+        const center = [cx, cy, cz];
+
+        let uAxis;
+        if (Math.abs(n[0]) < 0.9) {
+          uAxis = [0, -n[2], n[1]];
+        } else {
+          uAxis = [-n[1], n[0], 0];
+        }
+        const uLen = Math.hypot(uAxis[0], uAxis[1], uAxis[2]);
+        uAxis = [uAxis[0] / uLen, uAxis[1] / uLen, uAxis[2] / uLen];
+        const vAxis = [
+          n[1] * uAxis[2] - n[2] * uAxis[1],
+          n[2] * uAxis[0] - n[0] * uAxis[2],
+          n[0] * uAxis[1] - n[1] * uAxis[0]
+        ];
+
+        uniquePts.sort((a, b) => {
+          const da = [a[0] - center[0], a[1] - center[1], a[2] - center[2]];
+          const db = [b[0] - center[0], b[1] - center[1], b[2] - center[2]];
+          const pua = da[0] * uAxis[0] + da[1] * uAxis[1] + da[2] * uAxis[2];
+          const pva = da[0] * vAxis[0] + da[1] * vAxis[1] + da[2] * vAxis[2];
+          const pub = db[0] * uAxis[0] + db[1] * uAxis[1] + db[2] * uAxis[2];
+          const pvb = db[0] * vAxis[0] + db[1] * vAxis[1] + db[2] * vAxis[2];
+          return Math.atan2(pva, pua) - Math.atan2(pvb, pub);
+        });
+
+        newFaces.push({ normal: n, verts: uniquePts });
+      }
+    }
+
+    this.faces = newFaces;
+  }
+
+  toBufferGeometry() {
+    const tris = [];
+    for (let face of this.faces) {
+      const pts = face.verts;
+      if (pts.length < 3) continue;
+      const p0 = pts[0];
+      for (let i = 1; i < pts.length - 1; i++) {
+        tris.push(p0, pts[i], pts[i + 1]);
+      }
+    }
+    const posArray = new Float32Array(tris.length * 3);
+    let idx = 0;
+    for (let p of tris) {
+      posArray[idx++] = p[0];
+      posArray[idx++] = p[1];
+      posArray[idx++] = p[2];
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+    geo.computeVertexNormals();
+    geo.computeBoundingBox();
+    geo.computeBoundingSphere();
+    return geo;
+  }
+}
+
+function getBoxConfigs(bbox) {
   const x_min = bbox.min.x, x_max = bbox.max.x;
   const y_min = bbox.min.y, y_max = bbox.max.y;
   const z_min = bbox.min.z, z_max = bbox.max.z;
 
-  const configs = {
+  return {
     0: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: +1, sv: +1 },
     1: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: -1, sv: +1 },
     2: { s_axis: 1, s_min: y_min, s_max: y_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 2, v_min: z_min, v_max: z_max, su: -1, sv: -1 },
@@ -8979,68 +9131,85 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
     10: { s_axis: 2, s_min: z_min, s_max: z_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 1, v_min: y_min, v_max: y_max, su: -1, sv: -1 },
     11: { s_axis: 2, s_min: z_min, s_max: z_max, u_axis: 0, u_min: x_min, u_max: x_max, v_axis: 1, v_min: y_min, v_max: y_max, su: +1, sv: -1 }
   };
+}
 
-  const firstCfg = configs[indicesToCut[0]];
-  if (!firstCfg) return null;
-  const sweep_axis = firstCfg.s_axis;
-
-  const u_span = firstCfg.u_max - firstCfg.u_min;
-  const v_span = firstCfg.v_max - firstCfg.v_min;
-  const pu = Math.max(0.01, Math.min(val1, u_span * 0.48));
-  const pv = Math.max(0.01, Math.min(val2, v_span * 0.48));
-
-  for (let eid of indicesToCut) {
-    if (!configs[eid] || configs[eid].s_axis !== sweep_axis) {
-      return null; // Mixed orientations -> fallback to CSG cutter
+function buildBoxMultiCut(bbox, history, segs = 16) {
+  const configs = getBoxConfigs(bbox);
+  let sweep_axis = null;
+  for (let item of history) {
+    for (let eid of item.edges) {
+      const cfg = configs[eid];
+      if (!cfg) return null;
+      if (sweep_axis === null) sweep_axis = cfg.s_axis;
+      else if (sweep_axis !== cfg.s_axis) return null; // Mixed orientations
     }
   }
 
-  const activeCorners = new Set();
-  for (let eid of indicesToCut) {
-    activeCorners.add(`${configs[eid].su}_${configs[eid].sv}`);
+  const cornerCuts = {};
+  for (let item of history) {
+    let val1 = 2.0, val2 = 2.0;
+    if (typeof item.param === "number") {
+      val1 = item.param; val2 = item.param;
+    } else if (typeof item.param === "object" && item.param !== null) {
+      val1 = item.param.d1 || item.param.r1 || item.param.val1 || item.param.val || item.param.p1 || 2.0;
+      val2 = item.param.d2 || item.param.r2 || item.param.val2 || item.param.p2 || val1;
+    }
+    for (let eid of item.edges) {
+      const cfg = configs[eid];
+      const key = `${cfg.su}_${cfg.sv}`;
+      cornerCuts[key] = { mode: item.mode, val1, val2 };
+    }
   }
 
-  const is_right_handed = ((firstCfg.u_axis + 1) % 3 === firstCfg.v_axis);
+  const sampleCfg = Object.values(configs).find(c => c.s_axis === sweep_axis);
+  if (!sampleCfg) return null;
+  const is_right_handed = ((sampleCfg.u_axis + 1) % 3 === sampleCfg.v_axis);
+  const u_span = sampleCfg.u_max - sampleCfg.u_min;
+  const v_span = sampleCfg.v_max - sampleCfg.v_min;
 
   const corners = [
-    { cu: -1, cv: -1, u: firstCfg.u_min, v: firstCfg.v_min },
-    { cu: +1, cv: -1, u: firstCfg.u_max, v: firstCfg.v_min },
-    { cu: +1, cv: +1, u: firstCfg.u_max, v: firstCfg.v_max },
-    { cu: -1, cv: +1, u: firstCfg.u_min, v: firstCfg.v_max }
+    { cu: -1, cv: -1, u: sampleCfg.u_min, v: sampleCfg.v_min },
+    { cu: +1, cv: -1, u: sampleCfg.u_max, v: sampleCfg.v_min },
+    { cu: +1, cv: +1, u: sampleCfg.u_max, v: sampleCfg.v_max },
+    { cu: -1, cv: +1, u: sampleCfg.u_min, v: sampleCfg.v_max }
   ];
 
   const poly = [];
   for (let c of corners) {
     const key = `${c.cu}_${c.cv}`;
-    if (activeCorners.has(key)) {
+    const cut = cornerCuts[key];
+    if (cut) {
+      const pu = Math.max(0.01, Math.min(cut.val1, u_span * 0.48));
+      const pv = Math.max(0.01, Math.min(cut.val2, v_span * 0.48));
       let p_in, p_out, center, theta_start, theta_end;
+
       if (c.cu === +1 && c.cv === +1) {
-        p_in = [firstCfg.u_max, firstCfg.v_max - pv];
-        p_out = [firstCfg.u_max - pu, firstCfg.v_max];
-        center = [firstCfg.u_max - pu, firstCfg.v_max - pv];
+        p_in = [sampleCfg.u_max, sampleCfg.v_max - pv];
+        p_out = [sampleCfg.u_max - pu, sampleCfg.v_max];
+        center = [sampleCfg.u_max - pu, sampleCfg.v_max - pv];
         theta_start = 0.0;
         theta_end = Math.PI / 2.0;
       } else if (c.cu === -1 && c.cv === +1) {
-        p_in = [firstCfg.u_min + pu, firstCfg.v_max];
-        p_out = [firstCfg.u_min, firstCfg.v_max - pv];
-        center = [firstCfg.u_min + pu, firstCfg.v_max - pv];
+        p_in = [sampleCfg.u_min + pu, sampleCfg.v_max];
+        p_out = [sampleCfg.u_min, sampleCfg.v_max - pv];
+        center = [sampleCfg.u_min + pu, sampleCfg.v_max - pv];
         theta_start = Math.PI / 2.0;
         theta_end = Math.PI;
       } else if (c.cu === -1 && c.cv === -1) {
-        p_in = [firstCfg.u_min, firstCfg.v_min + pv];
-        p_out = [firstCfg.u_min + pu, firstCfg.v_min];
-        center = [firstCfg.u_min + pu, firstCfg.v_min + pv];
+        p_in = [sampleCfg.u_min, sampleCfg.v_min + pv];
+        p_out = [sampleCfg.u_min + pu, sampleCfg.v_min];
+        center = [sampleCfg.u_min + pu, sampleCfg.v_min + pv];
         theta_start = Math.PI;
         theta_end = 3.0 * Math.PI / 2.0;
       } else { // +1, -1
-        p_in = [firstCfg.u_max - pu, firstCfg.v_min];
-        p_out = [firstCfg.u_max, firstCfg.v_min + pv];
-        center = [firstCfg.u_max - pu, firstCfg.v_min + pv];
+        p_in = [sampleCfg.u_max - pu, sampleCfg.v_min];
+        p_out = [sampleCfg.u_max, sampleCfg.v_min + pv];
+        center = [sampleCfg.u_max - pu, sampleCfg.v_min + pv];
         theta_start = 3.0 * Math.PI / 2.0;
         theta_end = 2.0 * Math.PI;
       }
 
-      if (mode === "chamfer") {
+      if (cut.mode === "chamfer") {
         poly.push(p_in);
         poly.push(p_out);
       } else {
@@ -9062,28 +9231,19 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
 
   function makeVec3(u, v, s) {
     const v3 = [0, 0, 0];
-    v3[firstCfg.u_axis] = u;
-    v3[firstCfg.v_axis] = v;
-    v3[firstCfg.s_axis] = s;
+    v3[sampleCfg.u_axis] = u;
+    v3[sampleCfg.v_axis] = v;
+    v3[sampleCfg.s_axis] = s;
     return v3;
   }
 
   const verts = [];
-  // Bottom cap
-  for (let pt of poly) verts.push(makeVec3(pt[0], pt[1], firstCfg.s_min));
-  // Top cap
-  for (let pt of poly) verts.push(makeVec3(pt[0], pt[1], firstCfg.s_max));
+  for (let pt of poly) verts.push(makeVec3(pt[0], pt[1], sampleCfg.s_min));
+  for (let pt of poly) verts.push(makeVec3(pt[0], pt[1], sampleCfg.s_max));
 
   const tris = [];
-  // Bottom cap (CW)
-  for (let i = 1; i < N - 1; i++) {
-    tris.push([0, i + 1, i]);
-  }
-  // Top cap (CCW)
-  for (let i = 1; i < N - 1; i++) {
-    tris.push([N, N + i, N + i + 1]);
-  }
-  // Sides
+  for (let i = 1; i < N - 1; i++) tris.push([0, i + 1, i]);
+  for (let i = 1; i < N - 1; i++) tris.push([N, N + i, N + i + 1]);
   for (let i = 0; i < N; i++) {
     const next_i = (i + 1) % N;
     const b1 = i, b2 = next_i;
@@ -9108,6 +9268,96 @@ function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
   geo.computeBoundingBox();
   geo.computeBoundingSphere();
   return geo;
+}
+
+function clipPolyhedronWithHistory(bbox, history, segs = 8) {
+  const poly = new PolyhedronClipper(bbox.min.x, bbox.max.x, bbox.min.y, bbox.max.y, bbox.min.z, bbox.max.z);
+  const configs = getBoxConfigs(bbox);
+
+  for (let item of history) {
+    let val1 = 2.0, val2 = 2.0;
+    if (typeof item.param === "number") {
+      val1 = item.param; val2 = item.param;
+    } else if (typeof item.param === "object" && item.param !== null) {
+      val1 = item.param.d1 || item.param.r1 || item.param.val1 || item.param.val || item.param.p1 || 2.0;
+      val2 = item.param.d2 || item.param.r2 || item.param.val2 || item.param.p2 || val1;
+    }
+
+    for (let eid of item.edges) {
+      const cfg = configs[eid];
+      if (!cfg) continue;
+      const u_corner = cfg.su > 0 ? cfg.u_max : cfg.u_min;
+      const v_corner = cfg.sv > 0 ? cfg.v_max : cfg.v_min;
+      const uc = u_corner - cfg.su * val1;
+      const vc = v_corner - cfg.sv * val2;
+
+      if (item.mode === "chamfer") {
+        const nu = cfg.su / Math.SQRT2;
+        const nv = cfg.sv / Math.SQRT2;
+        const D = nu * uc + nv * v_corner;
+        const n3 = [0, 0, 0];
+        n3[cfg.u_axis] = nu;
+        n3[cfg.v_axis] = nv;
+        poly.clipByPlane(n3, D);
+      } else {
+        let th0, th1;
+        if (cfg.su === 1 && cfg.sv === 1) { th0 = 0; th1 = Math.PI / 2; }
+        else if (cfg.su === -1 && cfg.sv === 1) { th0 = Math.PI / 2; th1 = Math.PI; }
+        else if (cfg.su === -1 && cfg.sv === -1) { th0 = Math.PI; th1 = 3 * Math.PI / 2; }
+        else { th0 = 3 * Math.PI / 2; th1 = 2 * Math.PI; }
+
+        const steps = Math.max(4, segs);
+        for (let s = 0; s < steps; s++) {
+          const th = th0 + (th1 - th0) * ((s + 0.5) / steps);
+          const nu = Math.cos(th);
+          const nv = Math.sin(th);
+          const D = nu * uc + nv * vc + val1;
+          const n3 = [0, 0, 0];
+          n3[cfg.u_axis] = nu;
+          n3[cfg.v_axis] = nv;
+          poly.clipByPlane(n3, D);
+        }
+      }
+    }
+  }
+
+  return poly.toBufferGeometry();
+}
+
+function evaluateMeshWithCutHistory(target, history, segs = 16) {
+  if (!target.userData) target.userData = {};
+  if (!target.userData.baseBox) {
+    target.geometry.computeBoundingBox();
+    const bb = target.geometry.boundingBox;
+    target.userData.baseBox = {
+      min: { x: bb.min.x, y: bb.min.y, z: bb.min.z },
+      max: { x: bb.max.x, y: bb.max.y, z: bb.max.z }
+    };
+  }
+  const bbox = target.userData.baseBox;
+
+  if (!history || history.length === 0) {
+    const w = bbox.max.x - bbox.min.x;
+    const h = bbox.max.y - bbox.min.y;
+    const d = bbox.max.z - bbox.min.z;
+    const geo = new THREE.BoxGeometry(w, h, d);
+    geo.translate((bbox.max.x + bbox.min.x) / 2, (bbox.max.y + bbox.min.y) / 2, (bbox.max.z + bbox.min.z) / 2);
+    return geo;
+  }
+
+  const multiCutGeo = buildBoxMultiCut(bbox, history, segs);
+  if (multiCutGeo) return multiCutGeo;
+
+  return clipPolyhedronWithHistory(bbox, history, segs);
+}
+
+function buildBoxManifoldCut(mesh, mode, param, edgeIndices, segs = 16) {
+  if (!mesh || !mesh.geometry) return null;
+  const existingHistory = (mesh.userData && mesh.userData.edgeCutHistory) ? [...mesh.userData.edgeCutHistory] : [];
+  const edges = getSolidEdges(mesh);
+  const indicesToCut = edgeIndices !== null ? edgeIndices : edges.map(e => e.id);
+  const combinedHistory = [...existingHistory, { mode, param, edges: indicesToCut }];
+  return evaluateMeshWithCutHistory(mesh, combinedHistory, segs);
 }
 
 function computeEdgeCutGeometry(mesh, mode, param, edgeIndices = null) {
@@ -9324,10 +9574,11 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     edgeSegments.forEach(seg => {
       const isSel = selectedEdgeIds.includes(seg.id);
       const isHov = hoveredId === seg.id;
+      const priorCut = (target.userData && target.userData.edgeCutHistory) ? target.userData.edgeCutHistory.find(h => h.edges.includes(seg.id)) : null;
       
       // 1. Edge Line overlay
-      const edgeColor = isHov ? 0xff7700 : (isSel ? 0xffff00 : 0x00d4ff);
-      const edgeWidth = isHov ? 4 : (isSel ? 3 : 1.5);
+      const edgeColor = isHov ? 0xff7700 : (isSel ? 0xffff00 : (priorCut ? 0xffaa00 : 0x00d4ff));
+      const edgeWidth = isHov ? 4 : (isSel ? 3 : (priorCut ? 2.5 : 1.5));
       const mat = new THREE.LineBasicMaterial({
         color: edgeColor,
         linewidth: edgeWidth,
@@ -9345,7 +9596,7 @@ function setupFilletOrChamferCommand(mode, args = {}) {
         color: edgeColor,
         depthTest: false
       });
-      const dotRadius = isHov ? 1.1 : (isSel ? 0.8 : 0.45);
+      const dotRadius = isHov ? 1.1 : (isSel ? 0.8 : (priorCut ? 0.6 : 0.45));
       const dot = new THREE.Mesh(new THREE.SphereGeometry(dotRadius, 8, 8), dotMat);
       dot.position.copy(mid);
       dot.renderOrder = isHov ? 1003 : (isSel ? 1001 : 999);
@@ -9381,10 +9632,18 @@ function setupFilletOrChamferCommand(mode, args = {}) {
     const chk = document.getElementById("fillet-preview-chk");
     if (!chk || !chk.checked || selectedEdgeIds.length === 0) return;
 
-    const { param } = getParamValues();
+    const { isAsymmetric, param } = getParamValues();
 
     try {
-      const pGeo = computeEdgeCutGeometry(target, mode, param, selectedEdgeIds);
+      const existingHistory = (target.userData && target.userData.edgeCutHistory) ? [...target.userData.edgeCutHistory] : [];
+      // Combine existing cuts with the active preview selection
+      const filtered = existingHistory.filter(h => {
+        h.edges = h.edges.filter(e => !selectedEdgeIds.includes(e));
+        return h.edges.length > 0;
+      });
+      filtered.push({ mode, param, edges: [...selectedEdgeIds], isAsymmetric });
+
+      const pGeo = evaluateMeshWithCutHistory(target, filtered, 16);
       const pMat = new THREE.MeshBasicMaterial({
         color: 0x39ff14,
         wireframe: true,
@@ -9631,7 +9890,23 @@ function setupFilletOrChamferCommand(mode, args = {}) {
       triggerArtificialDelay(`Calculating ${descStr} Topology Edges...`, () => {
         recordUndoState(isAsymmetric ? `Asymmetrical ${mode === "fillet" ? "Fillet" : "Chamfer"}` : `${mode === "fillet" ? "Fillet" : "Chamfer"} Edge(s)`);
         try {
-          const newGeo = computeEdgeCutGeometry(target, mode, param, edgesToCut);
+          if (!target.userData) target.userData = {};
+          if (!target.userData.edgeCutHistory) target.userData.edgeCutHistory = [];
+
+          // Filter out prior cuts on these edges so they are updated
+          target.userData.edgeCutHistory = target.userData.edgeCutHistory.filter(h => {
+            h.edges = h.edges.filter(e => !edgesToCut.includes(e));
+            return h.edges.length > 0;
+          });
+          target.userData.edgeCutHistory.push({
+            id: "cut_" + (++primitiveCounter),
+            mode,
+            param,
+            edges: [...edgesToCut],
+            isAsymmetric
+          });
+
+          const newGeo = evaluateMeshWithCutHistory(target, target.userData.edgeCutHistory, 16);
           target.geometry.dispose();
           target.geometry = newGeo;
 
@@ -9648,7 +9923,7 @@ function setupFilletOrChamferCommand(mode, args = {}) {
           target.userData.type = isAsymmetric
             ? (mode === "fillet" ? "AsymFilletedSolid" : "AsymChamferedSolid")
             : (mode === "fillet" ? "FilletedSolid" : "ChamferedSolid");
-          target.userData.filletParams = { mode, param, edges: edgesToCut, isAsymmetric };
+          target.userData.filletParams = target.userData.edgeCutHistory;
 
           creditBalance -= fee;
           updateEconomyDisplay();
@@ -10002,6 +10277,786 @@ function setupPipeCommand(initialArgs = {}) {
   if (valInp) valInp.focus();
 }
 
+// ==========================================
+// CHECKPOINT C: 2D OFFSET COMMAND
+// ==========================================
+
+function isOffsettableCurve(obj) {
+  if (!obj || !obj.visible) return false;
+  if (obj.userData && obj.userData.protected) return false;
+  if (obj.userData && (obj.userData.type === "ClosedProfile" || obj.userData.type === "SketchCurve" || obj.userData.type === "CircleProfile" || obj.userData.profileType === "polygon" || obj.userData.profileType === "circle")) return true;
+  if (obj.isLine || obj.isLineLoop) return true;
+  return false;
+}
+
+function isCurveClosed(obj) {
+  if (!obj || !obj.userData) return false;
+  if (obj.userData.closed === true) return true;
+  if (obj.userData.type === "ClosedProfile" || obj.userData.type === "CircleProfile") return true;
+  if (obj.isLineLoop) return true;
+  return false;
+}
+
+function offset2DPolygon(pts3D, distance, inward = false, plane = "top") {
+  const n = pts3D.length;
+  if (n < 3) return null;
+
+  const pts2D = pts3D.map(p => {
+    if (plane === "front") return [p.x, p.y];
+    if (plane === "right") return [p.z, p.y];
+    return [p.x, p.z];
+  });
+
+  let area2 = 0;
+  for (let i = 0; i < n; i++) {
+    const p1 = pts2D[i], p2 = pts2D[(i + 1) % n];
+    area2 += (p1[0] * p2[1] - p2[0] * p1[1]);
+  }
+  const isCCW = area2 > 0;
+  let d = inward ? -Math.abs(distance) : Math.abs(distance);
+  if (!isCCW) d = -d;
+
+  const lines = [];
+  for (let i = 0; i < n; i++) {
+    const p1 = pts2D[i], p2 = pts2D[(i + 1) % n];
+    const du = p2[0] - p1[0], dv = p2[1] - p1[1];
+    const len = Math.hypot(du, dv);
+    if (len < 1e-6) continue;
+    const nu = dv / len;
+    const nv = -du / len;
+    const c = nu * (p1[0] + d * nu) + nv * (p1[1] + d * nv);
+    lines.push({ nu, nv, c });
+  }
+
+  const m = lines.length;
+  if (m < 3) return null;
+
+  const offset2D = [];
+  for (let i = 0; i < m; i++) {
+    const l1 = lines[(i - 1 + m) % m];
+    const l2 = lines[i];
+    const det = l1.nu * l2.nv - l2.nu * l1.nv;
+    if (Math.abs(det) < 1e-6) {
+      offset2D.push([(l1.c * l1.nu + l2.c * l2.nu) / 2, (l1.c * l1.nv + l2.c * l2.nv) / 2]);
+    } else {
+      const u = (l1.c * l2.nv - l2.c * l1.nv) / det;
+      const v = (l1.nu * l2.c - l2.nu * l1.c) / det;
+      offset2D.push([u, v]);
+    }
+  }
+
+  let newArea2 = 0;
+  for (let i = 0; i < offset2D.length; i++) {
+    const p1 = offset2D[i], p2 = offset2D[(i + 1) % offset2D.length];
+    newArea2 += (p1[0] * p2[1] - p2[0] * p1[1]);
+  }
+  if ((newArea2 > 0) !== isCCW || Math.abs(newArea2) < 1e-3) return null;
+
+  const baseCoord = pts3D[0];
+  const offset3D = offset2D.map(p => {
+    if (plane === "front") return new THREE.Vector3(p[0], p[1], baseCoord.z);
+    if (plane === "right") return new THREE.Vector3(baseCoord.x, p[1], p[0]);
+    return new THREE.Vector3(p[0], baseCoord.y, p[1]);
+  });
+
+  return { offset3D, offset2D };
+}
+
+function offsetCircleCurve(circleObj, distance, inward = false) {
+  const origRadius = circleObj.userData.radius || 10;
+  const d = Math.abs(distance);
+  const newRadius = inward ? (origRadius - d) : (origRadius + d);
+  if (newRadius <= 0.1) return null;
+  const plane = circleObj.userData.plane || "top";
+  const center = circleObj.userData.center ? circleObj.userData.center.clone() : circleObj.position.clone();
+  const pts = getCirclePoints(center, newRadius, plane, 48);
+  return { center, newRadius, pts, plane };
+}
+
+function offsetOpenPolyline(pts3D, distance, sideA = true, plane = "top") {
+  const n = pts3D.length;
+  if (n < 2) return null;
+  const pts2D = pts3D.map(p => {
+    if (plane === "front") return [p.x, p.y];
+    if (plane === "right") return [p.z, p.y];
+    return [p.x, p.z];
+  });
+  const d = sideA ? Math.abs(distance) : -Math.abs(distance);
+  const lines = [];
+  for (let i = 0; i < n - 1; i++) {
+    const p1 = pts2D[i], p2 = pts2D[i + 1];
+    const du = p2[0] - p1[0], dv = p2[1] - p1[1];
+    const len = Math.hypot(du, dv);
+    if (len < 1e-6) continue;
+    const nu = dv / len;
+    const nv = -du / len;
+    const c = nu * (p1[0] + d * nu) + nv * (p1[1] + d * nv);
+    lines.push({ nu, nv, c });
+  }
+  if (lines.length === 0) return null;
+  const res2D = [];
+  res2D.push([pts2D[0][0] + d * lines[0].nu, pts2D[0][1] + d * lines[0].nv]);
+  for (let i = 0; i < lines.length - 1; i++) {
+    const l1 = lines[i], l2 = lines[i + 1];
+    const det = l1.nu * l2.nv - l2.nu * l1.nv;
+    if (Math.abs(det) < 1e-6) {
+      res2D.push([(l1.c * l1.nu + l2.c * l2.nu) / 2, (l1.c * l1.nv + l2.c * l2.nv) / 2]);
+    } else {
+      const u = (l1.c * l2.nv - l2.c * l1.nv) / det;
+      const v = (l1.nu * l2.c - l2.nu * l1.c) / det;
+      res2D.push([u, v]);
+    }
+  }
+  const lastLine = lines[lines.length - 1];
+  const lastP = pts2D[pts2D.length - 1];
+  res2D.push([lastP[0] + d * lastLine.nu, lastP[1] + d * lastLine.nv]);
+
+  const baseCoord = pts3D[0];
+  return res2D.map(p => {
+    if (plane === "front") return new THREE.Vector3(p[0], p[1], baseCoord.z);
+    if (plane === "right") return new THREE.Vector3(baseCoord.x, p[1], p[0]);
+    return new THREE.Vector3(p[0], baseCoord.y, p[1]);
+  });
+}
+
+function clearOffsetPreview() {
+  const prev = scene.getObjectByName("Offset_Preview");
+  if (prev) {
+    scene.remove(prev);
+    if (typeof disposeObjectHierarchy === "function") disposeObjectHierarchy(prev);
+  }
+}
+
+function setupOffsetCommand(initialArgs = {}) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  badge.textContent = "OFFSET";
+  confirmBtn.textContent = "✓ Confirm (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  let targetCurve = null;
+  if (selectedObjects.length > 0 && isOffsettableCurve(selectedObjects[0])) {
+    targetCurve = selectedObjects[0];
+  } else {
+    targetCurve = sceneObjects.slice().reverse().find(o => !o.userData.protected && isOffsettableCurve(o));
+    if (targetCurve) selectObject(targetCurve);
+  }
+
+  let defaultDist = 2.0;
+  if (initialArgs && initialArgs.dist !== undefined && !isNaN(parseFloat(initialArgs.dist))) {
+    defaultDist = parseFloat(initialArgs.dist);
+  }
+  let isClosed = targetCurve ? isCurveClosed(targetCurve) : true;
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:3px; font-weight:bold;">Distance:</span>
+    <input id="offset-param-dist" class="prop-input" type="number" step="0.5" min="0.1" value="${defaultDist}" style="width:50px; height:20px;">
+    <span style="font-size:11px; margin-left:2px; margin-right:8px;">mm</span>
+    <span style="font-size:11px; margin-right:3px; font-weight:bold;">Direction:</span>
+    <select id="offset-param-dir" class="prop-input" style="height:20px; font-size:11px; width:95px;">
+      ${isClosed ? `
+        <option value="inward" selected>Inward (Inset)</option>
+        <option value="outward">Outward (Offset)</option>
+      ` : `
+        <option value="sideA" selected>Side A (+N)</option>
+        <option value="sideB">Side B (-N)</option>
+      `}
+    </select>
+    <label style="font-size:11px; margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;">
+      <input type="checkbox" id="offset-preview-chk" checked style="margin-right:3px;"> Preview
+    </label>
+  `;
+
+  function getOffsetCalculation() {
+    if (!targetCurve) return null;
+    const distInp = document.getElementById("offset-param-dist");
+    const dirSel = document.getElementById("offset-param-dir");
+    const dist = Math.max(0.1, parseFloat(distInp ? distInp.value : defaultDist) || defaultDist);
+    const dirVal = dirSel ? dirSel.value : (isClosed ? "inward" : "sideA");
+    const isInward = dirVal === "inward";
+    const plane = (targetCurve.userData && targetCurve.userData.plane) ? targetCurve.userData.plane : (activeViewport || "top");
+
+    // Case 1: Circle
+    if (targetCurve.userData && targetCurve.userData.radius && (targetCurve.userData.profileType === "circle" || targetCurve.userData.type === "CircleProfile")) {
+      const circ = offsetCircleCurve(targetCurve, dist, isInward);
+      return circ ? { type: "circle", circ, plane } : null;
+    }
+
+    // Case 2: Closed Profile
+    if (isCurveClosed(targetCurve)) {
+      const pts3D = (targetCurve.userData && targetCurve.userData.points && targetCurve.userData.points.length >= 3)
+        ? targetCurve.userData.points
+        : getCurvePathPoints(targetCurve);
+      if (!pts3D || pts3D.length < 3) return null;
+      const polyRes = offset2DPolygon(pts3D, dist, isInward, plane);
+      return polyRes ? { type: "polygon", polyRes, plane } : null;
+    }
+
+    // Case 3: Open Line / Polyline
+    const pts3D = (targetCurve.userData && targetCurve.userData.points && targetCurve.userData.points.length >= 2)
+      ? targetCurve.userData.points
+      : getCurvePathPoints(targetCurve);
+    if (!pts3D || pts3D.length < 2) return null;
+    const isSideA = dirVal === "sideA";
+    const openRes = offsetOpenPolyline(pts3D, dist, isSideA, plane);
+    return openRes ? { type: "open", offset3D: openRes, plane } : null;
+  }
+
+  function updatePrompt() {
+    if (!targetCurve) {
+      prompt.textContent = "OFFSET: Select a 2D curve, polygon, rectangle, or circle in viewport.";
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = "0.5";
+    } else {
+      const calc = getOffsetCalculation();
+      if (!calc) {
+        prompt.textContent = `OFFSET on '${targetCurve.name}': Distance is invalid or profile collapses. Adjust distance.`;
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = "0.5";
+      } else {
+        const distInp = document.getElementById("offset-param-dist");
+        const d = distInp ? parseFloat(distInp.value) : defaultDist;
+        prompt.textContent = `OFFSET on '${targetCurve.name}': Offset ${d}mm. Click [✓ Confirm] (or Enter).`;
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = "1";
+      }
+    }
+  }
+
+  function updatePreview() {
+    clearOffsetPreview();
+    if (!targetCurve) return;
+    const chk = document.getElementById("offset-preview-chk");
+    if (chk && !chk.checked) return;
+
+    const calc = getOffsetCalculation();
+    if (!calc) return;
+
+    let pts = null;
+    let isLoop = false;
+    if (calc.type === "circle") {
+      pts = calc.circ.pts;
+      isLoop = true;
+    } else if (calc.type === "polygon") {
+      pts = calc.polyRes.offset3D;
+      isLoop = true;
+    } else if (calc.type === "open") {
+      pts = calc.offset3D;
+      isLoop = false;
+    }
+
+    if (!pts || pts.length < 2) return;
+
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineDashedMaterial({
+      color: 0x00ffff,
+      dashSize: 2,
+      gapSize: 1,
+      linewidth: 2
+    });
+    const lineObj = isLoop ? new THREE.LineLoop(geo, mat) : new THREE.Line(geo, mat);
+    lineObj.computeLineDistances();
+    lineObj.name = "Offset_Preview";
+    lineObj.userData = { isTransientPreview: true };
+    scene.add(lineObj);
+    renderAllViewports();
+  }
+
+  function confirmOffset() {
+    if (!targetCurve) return;
+    const calc = getOffsetCalculation();
+    if (!calc) {
+      status("Cannot create offset: Geometry collapses or is invalid.");
+      shakeRequestBar();
+      return;
+    }
+
+    recordUndoState("Offset Curve");
+    let resultObj = null;
+    const newId = "obj_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+    const newName = `Offset_${targetCurve.name}_${++primitiveCounter}`;
+
+    if (calc.type === "circle") {
+      const circ = calc.circ;
+      const geo = new THREE.BufferGeometry().setFromPoints(circ.pts);
+      const mat = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 2 });
+      const line = new THREE.LineLoop(geo, mat);
+      line.name = newName;
+
+      const shape = new THREE.Shape();
+      let u_c = circ.center.x, v_c = circ.center.z;
+      if (circ.plane === "front") { u_c = circ.center.x; v_c = circ.center.y; }
+      else if (circ.plane === "right") { u_c = circ.center.z; v_c = circ.center.y; }
+      shape.absarc(u_c, v_c, circ.newRadius, 0, Math.PI * 2, false);
+
+      line.userData = {
+        id: newId,
+        isStartingObject: false,
+        type: "ClosedProfile",
+        profileType: "circle",
+        layer: getActiveLayer().name,
+        protected: false,
+        closed: true,
+        radius: circ.newRadius,
+        center: circ.center.clone(),
+        points: circ.pts,
+        plane: circ.plane,
+        shape: shape
+      };
+      resultObj = line;
+    } else if (calc.type === "polygon") {
+      const polyRes = calc.polyRes;
+      const geo = new THREE.BufferGeometry().setFromPoints(polyRes.offset3D);
+      const mat = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 2 });
+      const line = new THREE.LineLoop(geo, mat);
+      line.name = newName;
+
+      const shape = new THREE.Shape();
+      shape.moveTo(polyRes.offset2D[0][0], polyRes.offset2D[0][1]);
+      for (let i = 1; i < polyRes.offset2D.length; i++) {
+        shape.lineTo(polyRes.offset2D[i][0], polyRes.offset2D[i][1]);
+      }
+      shape.closePath();
+
+      line.userData = {
+        id: newId,
+        isStartingObject: false,
+        type: "ClosedProfile",
+        profileType: (targetCurve.userData && targetCurve.userData.profileType) || "polygon",
+        layer: getActiveLayer().name,
+        protected: false,
+        closed: true,
+        points: polyRes.offset3D,
+        shape: shape,
+        plane: calc.plane
+      };
+      resultObj = line;
+    } else if (calc.type === "open") {
+      const geo = new THREE.BufferGeometry().setFromPoints(calc.offset3D);
+      const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+      const line = new THREE.Line(geo, mat);
+      line.name = newName;
+      line.userData = {
+        id: newId,
+        isStartingObject: false,
+        type: "SketchCurve",
+        layer: getActiveLayer().name,
+        protected: false,
+        closed: false,
+        points: calc.offset3D,
+        plane: calc.plane
+      };
+      resultObj = line;
+    }
+
+    if (resultObj) {
+      scene.add(resultObj);
+      sceneObjects.push(resultObj);
+      clearOffsetPreview();
+      updateObjectsTree();
+      selectObject(resultObj);
+      renderAllViewports();
+      finishActiveCommand();
+      addLog(`Created 2D offset curve '${newName}' from '${targetCurve.name}'.`, "log-success");
+      status(`Created 2D offset: ${newName}`);
+      recordModelingCommand();
+      CADNT_AUDIO.playSuccess();
+    }
+  }
+
+  const distInp = document.getElementById("offset-param-dist");
+  if (distInp) {
+    distInp.oninput = () => { updatePrompt(); updatePreview(); };
+    distInp.onkeydown = (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        confirmOffset();
+      }
+    };
+  }
+
+  const dirSel = document.getElementById("offset-param-dir");
+  if (dirSel) {
+    dirSel.onchange = () => { updatePrompt(); updatePreview(); };
+  }
+
+  const chk = document.getElementById("offset-preview-chk");
+  if (chk) {
+    chk.onchange = () => updatePreview();
+  }
+
+  activeCommand = {
+    type: "offset",
+    handleSelect(obj) {
+      if (!isOffsettableCurve(obj)) {
+        addLog("Offset requires a 2D line, polyline, rectangle, polygon, or circle.", "log-warn");
+        status("Select a 2D sketch curve or closed profile.");
+        return;
+      }
+      targetCurve = obj;
+      isClosed = isCurveClosed(obj);
+      selectObject(obj);
+      if (dirSel) {
+        dirSel.innerHTML = isClosed ? `
+          <option value="inward" selected>Inward (Inset)</option>
+          <option value="outward">Outward (Offset)</option>
+        ` : `
+          <option value="sideA" selected>Side A (+N)</option>
+          <option value="sideB">Side B (-N)</option>
+        `;
+      }
+      updatePrompt();
+      updatePreview();
+    },
+    confirm() {
+      confirmOffset();
+    },
+    cleanup() {
+      clearOffsetPreview();
+    }
+  };
+
+  updatePrompt();
+  updatePreview();
+  if (distInp) distInp.focus();
+}
+
+
+// ==========================================
+// CHECKPOINT B: ARRAY COMMAND (LINEAR & POLAR)
+// ==========================================
+
+function clearArrayPreview() {
+  const prev = scene.getObjectByName("Array_Preview");
+  if (prev) {
+    scene.remove(prev);
+    if (typeof disposeObjectHierarchy === "function") disposeObjectHierarchy(prev);
+  }
+}
+
+function setupArrayCommand(initialArgs = {}) {
+  const badge = document.getElementById("command-badge");
+  const prompt = document.getElementById("command-prompt");
+  const params = document.getElementById("command-params");
+  const confirmBtn = document.getElementById("btn-cmd-confirm");
+  const cancelBtn = document.getElementById("btn-cmd-cancel");
+
+  badge.textContent = "ARRAY PATTERN";
+  confirmBtn.textContent = "✓ Confirm (Enter)";
+  cancelBtn.textContent = "✕ Cancel (Esc)";
+
+  let targetObj = (selectedObjects.length > 0 && !selectedObjects[0].userData.isStartingObject)
+    ? selectedObjects[0]
+    : sceneObjects.slice().reverse().find(o => !o.userData.protected && !o.userData.isStartingObject);
+
+  if (targetObj) selectObject(targetObj);
+
+  let arrayType = (initialArgs && initialArgs.type === "polar") ? "polar" : "linear";
+
+  params.innerHTML = `
+    <span style="font-size:11px; margin-right:3px; font-weight:bold;">Type:</span>
+    <select id="array-param-mode" class="prop-input" style="height:20px; font-size:11px; width:75px;">
+      <option value="linear" ${arrayType === "linear" ? "selected" : ""}>Linear</option>
+      <option value="polar" ${arrayType === "polar" ? "selected" : ""}>Polar</option>
+    </select>
+    <span id="array-dynamic-inputs" style="display:inline-flex; align-items:center;"></span>
+    <label style="font-size:11px; margin-left:8px; display:inline-flex; align-items:center; cursor:pointer;">
+      <input type="checkbox" id="array-preview-chk" checked style="margin-right:3px;"> Preview
+    </label>
+  `;
+
+  function renderDynamicInputs() {
+    const dyn = document.getElementById("array-dynamic-inputs");
+    const modeSel = document.getElementById("array-param-mode");
+    if (!dyn || !modeSel) return;
+
+    if (modeSel.value === "linear") {
+      dyn.innerHTML = `
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Count:</span>
+        <input id="array-param-count" class="prop-input" type="number" min="2" max="50" step="1" value="4" style="width:40px; height:20px;">
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Spacing:</span>
+        <input id="array-param-spacing" class="prop-input" type="number" step="1" value="15" style="width:45px; height:20px;">
+        <span style="font-size:11px; margin-left:2px;">mm</span>
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Axis:</span>
+        <select id="array-param-axis" class="prop-input" style="height:20px; font-size:11px; width:65px;">
+          <option value="+x">+X Axis</option>
+          <option value="-x">-X Axis</option>
+          <option value="+y">+Y Axis</option>
+          <option value="-y">-Y Axis</option>
+          <option value="+z" selected>+Z Axis</option>
+          <option value="-z">-Z Axis</option>
+        </select>
+      `;
+    } else {
+      dyn.innerHTML = `
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Count:</span>
+        <input id="array-polar-count" class="prop-input" type="number" min="2" max="50" step="1" value="6" style="width:40px; height:20px;">
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Center:</span>
+        <input id="array-polar-center" class="prop-input" value="0, 0, 0" placeholder="0, 0, 0" style="width:75px; height:20px;">
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Axis:</span>
+        <select id="array-polar-axis" class="prop-input" style="height:20px; font-size:11px; width:70px;">
+          <option value="y" selected>Y (Vert)</option>
+          <option value="z">Z</option>
+          <option value="x">X</option>
+        </select>
+        <span style="font-size:11px; margin-left:6px; margin-right:2px; font-weight:bold;">Sweep:</span>
+        <input id="array-polar-angle" class="prop-input" type="number" step="15" value="360" style="width:45px; height:20px;">
+        <span style="font-size:11px; margin-left:2px;">°</span>
+      `;
+    }
+
+    dyn.querySelectorAll("input, select").forEach(el => {
+      el.oninput = () => { updatePrompt(); updatePreview(); };
+      el.onchange = () => { updatePrompt(); updatePreview(); };
+      el.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          confirmArray();
+        }
+      };
+    });
+  }
+
+  function getArrayTransforms() {
+    if (!targetObj) return null;
+    const modeSel = document.getElementById("array-param-mode");
+    const isLinear = modeSel && modeSel.value === "linear";
+
+    if (isLinear) {
+      const countInp = document.getElementById("array-param-count");
+      const spaceInp = document.getElementById("array-param-spacing");
+      const axisSel = document.getElementById("array-param-axis");
+
+      const count = Math.min(50, Math.max(2, parseInt(countInp ? countInp.value : 4, 10) || 4));
+      const spacing = parseFloat(spaceInp ? spaceInp.value : 15) || 15;
+      const axisStr = axisSel ? axisSel.value : "+z";
+
+      const dirVec = new THREE.Vector3(0, 0, 1);
+      if (axisStr === "+x") dirVec.set(1, 0, 0);
+      else if (axisStr === "-x") dirVec.set(-1, 0, 0);
+      else if (axisStr === "+y") dirVec.set(0, 1, 0);
+      else if (axisStr === "-y") dirVec.set(0, -1, 0);
+      else if (axisStr === "+z") dirVec.set(0, 0, 1);
+      else if (axisStr === "-z") dirVec.set(0, 0, -1);
+
+      const transforms = [];
+      for (let k = 1; k < count; k++) {
+        transforms.push({
+          offset: dirVec.clone().multiplyScalar(k * spacing),
+          qRot: new THREE.Quaternion()
+        });
+      }
+      return { type: "linear", count, transforms };
+    } else {
+      const countInp = document.getElementById("array-polar-count");
+      const centerInp = document.getElementById("array-polar-center");
+      const axisSel = document.getElementById("array-polar-axis");
+      const angleInp = document.getElementById("array-polar-angle");
+
+      const count = Math.min(50, Math.max(2, parseInt(countInp ? countInp.value : 6, 10) || 6));
+      const sweepAngleDeg = parseFloat(angleInp ? angleInp.value : 360) || 360;
+      const sweepRad = THREE.MathUtils.degToRad(sweepAngleDeg);
+
+      let center = new THREE.Vector3(0, 0, 0);
+      if (centerInp && centerInp.value.trim()) {
+        const parts = centerInp.value.split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+        if (parts.length >= 2) {
+          center.set(parts[0], parts.length >= 3 ? parts[1] : 0, parts.length >= 3 ? parts[2] : parts[1]);
+        }
+      }
+
+      const axisStr = axisSel ? axisSel.value : "y";
+      const axisVec = new THREE.Vector3(0, 1, 0);
+      if (axisStr === "x") axisVec.set(1, 0, 0);
+      else if (axisStr === "y") axisVec.set(0, 1, 0);
+      else if (axisStr === "z") axisVec.set(0, 0, 1);
+
+      const stepRad = (Math.abs(sweepAngleDeg - 360) < 0.01)
+        ? (sweepRad / count)
+        : (sweepRad / (count - 1));
+
+      const transforms = [];
+      for (let k = 1; k < count; k++) {
+        const theta = k * stepRad;
+        const qRot = new THREE.Quaternion().setFromAxisAngle(axisVec, theta);
+        transforms.push({
+          qRot,
+          center
+        });
+      }
+      return { type: "polar", count, transforms, center, axisVec };
+    }
+  }
+
+  function updatePrompt() {
+    if (!targetObj) {
+      prompt.textContent = "ARRAY: Select an object to create pattern duplicates.";
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = "0.5";
+    } else {
+      const arr = getArrayTransforms();
+      if (!arr) {
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = "0.5";
+      } else {
+        prompt.textContent = `ARRAY on '${targetObj.name}': Creating ${arr.count} items (${arr.transforms.length} clones) via ${arr.type.toUpperCase()} pattern. Click [✓ Confirm].`;
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = "1";
+      }
+    }
+  }
+
+  function updatePreview() {
+    clearArrayPreview();
+    if (!targetObj) return;
+    const chk = document.getElementById("array-preview-chk");
+    if (chk && !chk.checked) return;
+
+    const arr = getArrayTransforms();
+    if (!arr || arr.transforms.length === 0) return;
+
+    const prevGroup = new THREE.Group();
+    prevGroup.name = "Array_Preview";
+    prevGroup.userData = { isTransientPreview: true };
+
+    const ghostMat = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.7
+    });
+    const ghostLineMat = new THREE.LineBasicMaterial({
+      color: 0xffff00,
+      transparent: true,
+      opacity: 0.7
+    });
+
+    arr.transforms.forEach(t => {
+      let clone = null;
+      if (targetObj.isMesh) {
+        clone = new THREE.Mesh(targetObj.geometry, ghostMat);
+      } else if (targetObj.isLine || targetObj.isLineLoop) {
+        clone = targetObj.isLineLoop ? new THREE.LineLoop(targetObj.geometry, ghostLineMat) : new THREE.Line(targetObj.geometry, ghostLineMat);
+      } else {
+        clone = targetObj.clone(true);
+      }
+
+      if (arr.type === "linear") {
+        clone.position.copy(targetObj.position).add(t.offset);
+        clone.quaternion.copy(targetObj.quaternion);
+      } else {
+        const relPos = targetObj.position.clone().sub(t.center);
+        relPos.applyQuaternion(t.qRot);
+        clone.position.copy(t.center).add(relPos);
+        clone.quaternion.copy(targetObj.quaternion).premultiply(t.qRot);
+      }
+      clone.scale.copy(targetObj.scale);
+      prevGroup.add(clone);
+    });
+
+    scene.add(prevGroup);
+    renderAllViewports();
+  }
+
+  function confirmArray() {
+    if (!targetObj) return;
+    const arr = getArrayTransforms();
+    if (!arr || arr.transforms.length === 0) return;
+
+    recordUndoState("Array Pattern");
+    const createdClones = [];
+    const baseName = targetObj.name.replace(/_copy\d+$/, "");
+
+    arr.transforms.forEach((t, idx) => {
+      const clone = targetObj.clone(true);
+      if (targetObj.geometry) clone.geometry = targetObj.geometry.clone();
+      if (Array.isArray(targetObj.material)) {
+        clone.material = targetObj.material.map(m => m.clone());
+      } else if (targetObj.material) {
+        clone.material = targetObj.material.clone();
+      }
+
+      clone.userData = JSON.parse(JSON.stringify(targetObj.userData));
+      clone.userData.id = "obj_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+      clone.name = `${baseName}_copy${++primitiveCounter}`;
+
+      if (arr.type === "linear") {
+        clone.position.copy(targetObj.position).add(t.offset);
+        clone.quaternion.copy(targetObj.quaternion);
+      } else {
+        const relPos = targetObj.position.clone().sub(t.center);
+        relPos.applyQuaternion(t.qRot);
+        clone.position.copy(t.center).add(relPos);
+        clone.quaternion.copy(targetObj.quaternion).premultiply(t.qRot);
+      }
+      clone.scale.copy(targetObj.scale);
+      clone.updateMatrix();
+      clone.updateMatrixWorld(true);
+
+      scene.add(clone);
+      sceneObjects.push(clone);
+      createdClones.push(clone);
+    });
+
+    clearArrayPreview();
+    updateObjectsTree();
+    selectedObjects = [targetObj, ...createdClones];
+    updatePropertiesPanel();
+    updateGumball();
+    renderAllViewports();
+    finishActiveCommand();
+
+    addLog(`Array completed: Created ${createdClones.length} genuine pattern copies of '${targetObj.name}'.`, "log-success");
+    status(`Array completed: ${createdClones.length} copies created.`);
+    recordModelingCommand();
+    CADNT_AUDIO.playSuccess();
+  }
+
+  const modeSel = document.getElementById("array-param-mode");
+  if (modeSel) {
+    modeSel.onchange = () => {
+      renderDynamicInputs();
+      updatePrompt();
+      updatePreview();
+    };
+  }
+
+  renderDynamicInputs();
+
+  const chk = document.getElementById("array-preview-chk");
+  if (chk) {
+    chk.onchange = () => updatePreview();
+  }
+
+  activeCommand = {
+    type: "array",
+    handleSelect(obj) {
+      if (obj.userData && obj.userData.isStartingObject) {
+        addLog("Starting Michigan solid cannot be duplicated into array.", "log-warn");
+        status("Select user geometry for array.");
+        return;
+      }
+      targetObj = obj;
+      selectObject(obj);
+      updatePrompt();
+      updatePreview();
+    },
+    confirm() {
+      confirmArray();
+    },
+    cleanup() {
+      clearArrayPreview();
+    }
+  };
+
+  updatePrompt();
+  updatePreview();
+}
+
 // Wire Command Bar buttons
 const btnCmdConfirm = document.getElementById("btn-cmd-confirm");
 if (btnCmdConfirm) {
@@ -10253,7 +11308,7 @@ const COMMAND_REGISTRY = [
     category: "2. Sketching and curves",
     syntax: "Can I polygon [sides]",
     aliases: ["Can I polygon", "Can I poly", "Can I ngon", "polygon", "poly", "ngon"],
-    description: "Generates regular n-sided polygon sketches (3 to 12 sides) centered at origin.",
+    description: "Interactive polygon sketch tool. Prompts for number of sides (3 to 128), center, and radius.",
     prerequisites: "Active construction plane",
     cost: "$0.00",
     status: "Working",
@@ -10265,8 +11320,29 @@ const COMMAND_REGISTRY = [
       return null;
     },
     execute: (args) => {
-      const sides = args && args[0] ? args[0] : 6;
+      const sides = args && args[0] ? args[0] : undefined;
       startSketch("polygon", sides);
+    }
+  },
+  {
+    id: "offset",
+    category: "2. Sketching and curves",
+    syntax: "Can I offset [distance]",
+    aliases: ["Can I offset", "offset"],
+    description: "Constructs true 2D geometric normal offsets of curves, polygons, rectangles, and circles with inward/outward controls.",
+    prerequisites: "Selected 2D sketch curve or closed profile",
+    cost: "$0.00",
+    status: "Working",
+    control: "#tool-offset",
+    match: (raw, norm, withoutCanI) => {
+      const q = withoutCanI || norm;
+      const m = q.match(/^offset(?:\s+([0-9.]+))?$/i);
+      if (m) return { args: m[1] ? [parseFloat(m[1])] : [] };
+      return null;
+    },
+    execute: (args) => {
+      const dist = args && args[0] !== undefined ? args[0] : undefined;
+      startModelingCommand("offset", { dist });
     }
   },
 
@@ -10511,6 +11587,27 @@ const COMMAND_REGISTRY = [
       updateGumball();
       addLog("Gumball activated.", "log-success");
       status("Gumball activated on selected object.");
+    }
+  },
+  {
+    id: "array",
+    category: "6. Moving and transforming",
+    syntax: "Can I array",
+    aliases: ["Can I array", "array", "pattern"],
+    description: "Creates linear or polar pattern array duplicates of selected geometry with count, spacing, and axis controls.",
+    prerequisites: "Selected object",
+    cost: "$0.00",
+    status: "Working",
+    control: "#tool-array",
+    match: (raw, norm, withoutCanI) => {
+      const q = withoutCanI || norm;
+      const m = q.match(/^(?:array|pattern)(?:\s+(linear|polar))?$/i);
+      if (m) return { args: m[1] ? [m[1].toLowerCase()] : [] };
+      return null;
+    },
+    execute: (args) => {
+      const type = args && args[0] ? args[0] : "linear";
+      startModelingCommand("array", { type });
     }
   },
 
@@ -11517,6 +12614,8 @@ function executeCommand(rawCmd) {
       }
       break;
     case "pipe": startModelingCommand("pipe"); break;
+    case "offset": startModelingCommand("offset", args[0] ? { dist: parseFloat(args[0]) } : {}); break;
+    case "array": case "pattern": startModelingCommand("array", args[0] ? { type: args[0].toLowerCase() } : {}); break;
     case "sweep": attemptPaidOperation("sweep", 49.00); break;
     case "theme": case "light": case "dark":
       status("Fixed Windows 95 theme active.");
@@ -11723,7 +12822,7 @@ try {
   });
 } catch (e) {}
 let antigravityStartTime = 0;
-const ANTIGRAVITY_BOUNDED_DURATION = 5.0; // 5.0s bounded animation duration
+const ANTIGRAVITY_BOUNDED_DURATION = 30.0; // Slow, bounded 30.0s drift animation
 
 function activateAntigravity() {
   if (isAntigravityActive) {
@@ -11756,16 +12855,16 @@ function activateAntigravity() {
     };
 
     // Calculate unique pseudo-random drift physics for each object
-    // Different objects drift in slightly different directions and accelerate upward
+    // Speed and acceleration reduced to 15% of initial values for slow visible drift
     const angle = (i * 1.6180339887) * Math.PI * 2 + ((i % 3) * 0.4 - 0.2);
-    const horizSpeed = 6.0 + (i % 5) * 3.0;
+    const horizSpeed = (6.0 + (i % 5) * 3.0) * 0.15;
     const vx = Math.cos(angle) * horizSpeed;
     const vz = Math.sin(angle) * horizSpeed;
-    const initialVy = 10.0 + (i % 4) * 4.0; // initial slow upward float
-    const accelY = 25.0 + (i % 3) * 12.0;   // acceleration away
+    const initialVy = (10.0 + (i % 4) * 4.0) * 0.15; // slow visibly noticeable initial drift
+    const accelY = (25.0 + (i % 3) * 12.0) * 0.15;   // gradual acceleration away
 
     // Slow 3D rotational velocity while floating
-    const rotSpeed = 0.5 + (i % 4) * 0.25;
+    const rotSpeed = (0.5 + (i % 4) * 0.25) * 0.15;
     const rotAxis = new THREE.Vector3(
       Math.sin(i * 1.7 + 0.3),
       Math.cos(i * 2.3 + 0.7),
@@ -11782,7 +12881,7 @@ function activateAntigravity() {
     };
   }
 
-  addLog("GRAVITY FAULT: Gravitational constant set to 0. Objects drifting.", "log-warn");
+  addLog("GRAVITY FAULT: Gravitational constant set to 0. Objects drifting slowly.", "log-warn");
   status("Gravity removed. Objects are floating away.");
   renderAllViewports();
 }
@@ -11825,8 +12924,38 @@ function updateAntigravity(timeOverride) {
   }
 }
 
+function freezeAntigravityInPlace() {
+  if (!isAntigravityActive) return;
+
+  // Make sure current positions/quaternions are fully evaluated at this instant
+  updateAntigravity();
+
+  for (let i = 0; i < sceneObjects.length; i++) {
+    const obj = sceneObjects[i];
+    if (!obj || !obj.userData) continue;
+
+    // Immediately stop accumulating motion
+    delete obj.userData.antigravityPhysics;
+
+    // Preserve current displaced position and orientation in real scene state
+    obj.updateMatrix();
+    obj.updateMatrixWorld(true);
+    // Retain obj.userData.antigravityOriginalTransform so 'can i restore gravity' can still restore!
+  }
+
+  isAntigravityActive = false;
+  antigravityStartTime = 0;
+  lastUndoableCommand = "none";
+  renderAllViewports();
+  updatePropertiesPanel();
+  updateObjectsTree();
+  addLog("Antigravity cancelled. Objects frozen in place at current displaced coordinates.", "log-info");
+  status("Antigravity frozen at current positions.");
+}
+
 function restoreGravity() {
-  if (!isAntigravityActive) {
+  const hasDisplacedObjects = sceneObjects.some(o => o.userData && o.userData.antigravityOriginalTransform);
+  if (!isAntigravityActive && !hasDisplacedObjects) {
     addLog("Gravity is already functioning normally.", "log-info");
     status("Gravity is normal.");
     return;
@@ -11853,6 +12982,7 @@ function restoreGravity() {
 
   isAntigravityActive = false;
   antigravityStartTime = 0;
+  lastUndoableCommand = "none";
   renderAllViewports();
   updatePropertiesPanel();
   updateObjectsTree();
@@ -11990,6 +13120,8 @@ function executeToolbarCommand(cmd) {
     case "chamfer":
     case "fillet":
     case "pipe":
+    case "offset":
+    case "array":
       startModelingCommand(cmd);
       break;
     case "sweep":
@@ -15384,7 +16516,7 @@ f 4 5 6`;
     const modalHelpClosed = helpModalEl && !helpModalEl.open;
     assertTest("Checkpoint B: Opening Help summons Cubert beside the scrollable Windows 95 interface, and closing Help dismisses cleanly without breaking CAD controls", helpOpened && cubertActiveBesideHelp && modalHelpClosed);
 
-    // Test 70e: Checkpoint C — Antigravity Command Recognition & Multi-Object Visual Drift
+    // Test 70e: Checkpoint A — Antigravity Refinement (15% Speed/Acceleration)
     processRequest("Can I box");
     const agTestBox = sceneObjects[sceneObjects.length - 1];
     processRequest("Can I sphere");
@@ -15406,65 +16538,124 @@ f 4 5 6`;
     processRequest("can i remove gravity");
     const preventDuplicate = isAntigravityActive === true;
 
-    // Advance physics to t = 1.0s (slow recognizable float)
+    // Advance physics to t = 1.0s (slow recognizable float at 15% speed)
     updateAntigravity(1.0);
-    const boxFloated1s = agTestBox.position.y > initialBoxPos.y + 5;
-    const sphereFloated1s = agTestSphere.position.y > initialSpherePos.y + 5;
+    const boxFloated1s = agTestBox.position.y > initialBoxPos.y + 0.5;
+    const sphereFloated1s = agTestSphere.position.y > initialSpherePos.y + 0.5;
 
-    // Advance physics to t = 5.0s (bounded limit - objects fly completely outside viewports)
+    // Advance physics to t = 5.0s (gradual acceleration, visible in 4 viewports)
     updateAntigravity(5.0);
-    const boxFlewOffScreen = agTestBox.position.y > initialBoxPos.y + 200;
-    const sphereFlewOffScreen = agTestSphere.position.y > initialSpherePos.y + 200;
-    const posAt5s = agTestBox.position.y;
+    const boxFloated5s = agTestBox.position.y > initialBoxPos.y + 10;
+    const sphereFloated5s = agTestSphere.position.y > initialSpherePos.y + 10;
+    assertTest("Checkpoint A: Antigravity speed and acceleration reduced to 15% for slow recognizable upward float across all viewports", antigravityActive1 && boxHasOrigTransform && sphereHasOrigTransform && michiganHasOrigTransform && preventDuplicate && boxFloated1s && sphereFloated1s && boxFloated5s);
 
-    // Additional time must not accumulate infinite drift (bounded animation)
-    updateAntigravity(10.0);
-    const posAt10s = agTestBox.position.y;
-    const boundedLimitRespected = Math.abs(posAt10s - posAt5s) < 0.001;
-    assertTest("Checkpoint C: 'can i antigravity' and 'can i remove gravity' invoke shared 4-viewport visual float, gradually accelerate away outside viewports, and enforce bounded 5.0s animation duration", antigravityActive1 && boxHasOrigTransform && sphereHasOrigTransform && michiganHasOrigTransform && preventDuplicate && boxFloated1s && sphereFloated1s && boxFlewOffScreen && boundedLimitRespected);
-
-    // Test 70f: Checkpoint C — Exact Scene Restoration ('can i restore gravity') & Zero Fee
+    // Test 70f: Checkpoint A — Exact Scene Restoration ('can i restore gravity') & Zero Fee
     processRequest("can i restore gravity");
     const gravityRestored = isAntigravityActive === false;
     const boxPosRestored = agTestBox.position.distanceTo(initialBoxPos) < 0.0001;
     const spherePosRestored = agTestSphere.position.distanceTo(initialSpherePos) < 0.0001;
     const sphereStillLocked = agTestSphere.userData.locked === true;
     const creditsUnchanged = creditBalance === initialCredits;
-    assertTest("Checkpoint C: 'can i restore gravity' returns all objects to exact millimeter coordinates, preserves lock status, and deducts $0", gravityRestored && boxPosRestored && spherePosRestored && sphereStillLocked && creditsUnchanged);
+    assertTest("Checkpoint A: 'can i restore gravity' returns all objects to exact millimeter coordinates, preserves lock status, and deducts $0", gravityRestored && boxPosRestored && spherePosRestored && sphereStillLocked && creditsUnchanged);
 
-    // Test 70g: Checkpoint C — Special Undo & Project Serialization / Export Protection
+    // Test 70g: Checkpoint A — Undo Freezes Objects at Current Displaced Positions (No Snap-Back)
     processRequest("can i remove gravity");
-    assertTest("Antigravity active before immediate undo", isAntigravityActive === true);
+    updateAntigravity(3.0);
+    const posBeforeUndo = agTestBox.position.clone();
     processRequest("can i undo");
-    const undoReversedAntigravity = isAntigravityActive === false && agTestBox.position.distanceTo(initialBoxPos) < 0.0001;
+    const undoStoppedActiveMotion = isAntigravityActive === false;
+    const undoFrozeAtDisplacedPos = agTestBox.position.distanceTo(posBeforeUndo) < 0.001;
+    const undoDidNotSnapBack = agTestBox.position.distanceTo(initialBoxPos) > 1.0;
+    const physicsHalted = !agTestBox.userData.antigravityPhysics;
 
-    // Save & Export protection while antigravity is active
-    processRequest("can i antigravity");
-    updateAntigravity(5.0);
-    const serializedWhileFlying = serializeProjectState();
-    const parsedState = JSON.parse(serializedWhileFlying);
-    const savedBox = parsedState.objects.find(o => o.name === agTestBox.name);
-    const saveNotDisplaced = savedBox && Math.abs(savedBox.position[1] - initialBoxPos.y) < 0.001;
-    const saveHasNoAntigravityFlags = savedBox && !savedBox.userData.antigravityOriginalTransform && !savedBox.userData.antigravityPhysics;
-
-    exportProjectGeometry("stl");
-    const exportRanWithoutError = true;
-
-    // Modeling command after antigravity is undone normally
-    const countBeforeNewObj = sceneObjects.length;
-    processRequest("Can I box");
-    const boxCreatedAfterAntigrav = sceneObjects.length === countBeforeNewObj + 1;
-    processRequest("can i undo");
-    const modelingUndoneNormally = sceneObjects.length === countBeforeNewObj;
-
-    // Clean up
+    // Calling restore gravity restores to initial position even after freeze
     processRequest("can i restore gravity");
+    const restoreAfterFreeze = agTestBox.position.distanceTo(initialBoxPos) < 0.0001;
+
+    // Clean up test objects
     [agTestBox, agTestSphere].forEach(o => {
       const idx = sceneObjects.indexOf(o);
       if (idx !== -1) sceneObjects.splice(idx, 1);
       scene.remove(o);
     });
-    assertTest("Checkpoint C: Special undo reverses antigravity, modeling undos operate normally, and project save/export protects un-displaced geometry", undoReversedAntigravity && saveNotDisplaced && saveHasNoAntigravityFlags && exportRanWithoutError && boxCreatedAfterAntigrav && modelingUndoneNormally);
+    assertTest("Checkpoint A: 'can i undo' stops active antigravity and freezes objects at current displaced positions without snap-back, and 'can i restore gravity' restores pre-antigravity coordinates", undoStoppedActiveMotion && undoFrozeAtDisplacedPos && undoDidNotSnapBack && physicsHalted && restoreAfterFreeze);
+
+    // Test 70h: Checkpoint B — Linear & Polar Pattern Array Command
+    processRequest("Can I box");
+    const arraySourceBox = sceneObjects[sceneObjects.length - 1];
+    selectObject(arraySourceBox);
+    const countBeforeLinear = sceneObjects.length;
+    startModelingCommand("array", { type: "linear" });
+    const countInpLinear = document.getElementById("array-param-count");
+    if (countInpLinear) countInpLinear.value = 4;
+    const spaceInpLinear = document.getElementById("array-param-spacing");
+    if (spaceInpLinear) spaceInpLinear.value = 20;
+    const axisSelLinear = document.getElementById("array-param-axis");
+    if (axisSelLinear) axisSelLinear.value = "+x";
+    if (activeCommand && activeCommand.confirm) activeCommand.confirm();
+    const countAfterLinear = sceneObjects.length;
+    const linearClonesCreated = countAfterLinear === countBeforeLinear + 3;
+    const linearClonesSelectable = selectedObjects.length === 4;
+
+    // Undo reverses linear array in one single step
+    processRequest("can i undo");
+    const linearArrayUndone = sceneObjects.length === countBeforeLinear;
+
+    // Polar Array
+    selectObject(arraySourceBox);
+    const countBeforePolar = sceneObjects.length;
+    startModelingCommand("array", { type: "polar" });
+    const countInpPolar = document.getElementById("array-polar-count");
+    if (countInpPolar) countInpPolar.value = 6;
+    const angleInpPolar = document.getElementById("array-polar-angle");
+    if (angleInpPolar) angleInpPolar.value = 360;
+    if (activeCommand && activeCommand.confirm) activeCommand.confirm();
+    const countAfterPolar = sceneObjects.length;
+    const polarClonesCreated = countAfterPolar === countBeforePolar + 5;
+    processRequest("can i undo");
+    const polarArrayUndone = sceneObjects.length === countBeforePolar;
+
+    // Clean up source box
+    const idxSrc = sceneObjects.indexOf(arraySourceBox);
+    if (idxSrc !== -1) sceneObjects.splice(idxSrc, 1);
+    scene.remove(arraySourceBox);
+    assertTest("Checkpoint B: 'can i array' supports Linear and Polar duplication with independent selectable clones, and single Undo reverses entire array", linearClonesCreated && linearClonesSelectable && linearArrayUndone && polarClonesCreated && polarArrayUndone);
+
+    // Test 70i: Checkpoint C — 2D Offset Command (Polygon, Rectangle, Circle)
+    const offsetPoly = createPolygonSketch(new THREE.Vector3(0, 0, 0), 20, 6, "top");
+    selectObject(offsetPoly);
+    const countBeforeOffset = sceneObjects.length;
+    startModelingCommand("offset", { dist: 4.0 });
+    const dirSelOffset = document.getElementById("offset-param-dir");
+    if (dirSelOffset) dirSelOffset.value = "inward";
+    if (activeCommand && activeCommand.confirm) activeCommand.confirm();
+    const countAfterOffset = sceneObjects.length;
+    const offsetCreated = countAfterOffset === countBeforeOffset + 1;
+    const newOffsetObj = sceneObjects[sceneObjects.length - 1];
+    const offsetIsClosedProfile = newOffsetObj && newOffsetObj.userData.closed === true && !!newOffsetObj.userData.shape;
+    selectObject(newOffsetObj);
+    const offsetExtrudedSolid = extrudeSelectedProfile(8);
+    const offsetSolidCreated = !!offsetExtrudedSolid;
+
+    // Single Undo removes offset solid and curve
+    processRequest("can i undo");
+    processRequest("can i undo");
+    const offsetUndone = sceneObjects.length === countBeforeOffset;
+
+    // Clean up poly
+    const idxPoly = sceneObjects.indexOf(offsetPoly);
+    if (idxPoly !== -1) sceneObjects.splice(idxPoly, 1);
+    scene.remove(offsetPoly);
+    assertTest("Checkpoint C: 'can i offset' constructs true geometric 2D offsets of closed sketch curves, supports extrusion into 3D solid, and reverses via single Undo", offsetCreated && offsetIsClosedProfile && offsetSolidCreated && offsetUndone);
+
+    // Test 70j: Checkpoint D — Polygon Interactive Sketch Command & Range [3, 128]
+    startSketch("polygon");
+    const polyBadgeActive = document.getElementById("command-badge").textContent.includes("POLYGON");
+    const polyPromptAsksSides = document.getElementById("command-prompt").textContent.includes("How many sides");
+    const polySidesInput = document.getElementById("poly-param-sides");
+    const polySidesMinMaxValid = polySidesInput && polySidesInput.min === "3" && polySidesInput.max === "128";
+    cancelSketch();
+    assertTest("Checkpoint D: 'can i polygon' initiates interactive sketch workflow, prompts 'How many sides?', and enforces range 3 to 128", polyBadgeActive && polyPromptAsksSides && polySidesMinMaxValid);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });

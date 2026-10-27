@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-019`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-020`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -25,6 +25,12 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint A (v0.20): Antigravity Refinement & Freeze-Undo** | **YES** | **YES** | **YES** | *Awaiting User Review* | Reduced float speed and acceleration to ~15% of previous values (0.15 velocity/accel factor). Objects begin with slow, noticeable drift, gradually accelerate, and maintain slight independent rotations without instantly launching off-screen. Undo behavior (`can i undo`) immediately halts animation and freezes objects in-place at their current displaced world coordinates in real scene state (not an overlay), retaining orientations without accumulating further motion. `can i restore gravity` remains a separate $0.00 command restoring exact original pre-antigravity coordinates. Topology and project serialization preserved. Verified in real browser. |
+| **Checkpoint B (v0.20): Array Command (`can i array`)** | **YES** | **YES** | **YES** | *Awaiting User Review* | Genuine Linear and Polar array modeling operations. Linear Array supports count (2–50), spacing (mm), and axis (X, Y, Z); Polar Array supports count (2–50), rotation center, axis, and sweep angle (default 360°). Interactive Command Bar parameter inputs with live dashed ghost preview (`Array_Preview`). Generates genuine selectable clones with stable, unique object IDs, preserving layers, materials, dimensions, and transforms. Single-step Undo removes all created array copies simultaneously. Native `.cadnt` serialization and reopen verified across all 4 viewports. |
+| **Checkpoint C (v0.20): Offset Command (`can i offset`)** | **YES** | **YES** | **YES** | *Awaiting User Review* | True 2D geometric normal offsets for planar sketch geometry (lines, polylines, circles, regular polygons/rectangles). Uses exact normal displacement and miter corner joins rather than uniform center scaling. Interactive Command Bar allows entering offset distance (mm) and toggling inward/outward side. Live green preview (`Offset_Preview`). Closed profiles remain closed. Resulting curves are selectable, transformable, extrudable into 3D solid prisms, and reversible via single-step Undo. Verified in real browser. |
+| **Checkpoint D (v0.20): Polygon Sketch Tool (`can i polygon`)** | **YES** | **YES** | **YES** | *Awaiting User Review* | Interactive regular polygon sketching workflow. Prompts user for side count (valid integers 3–128: 3=Triangle, 4=Quad, 5=Pentagon, 6=Hexagon, 8=Octagon), activates relevant C-plane, requests center point, and allows interactive radius placement with dashed guide. Exactly 1 live transient rubberband preview during pointer movement (no duplication). Final click/confirmation commits genuine closed profile with valid `THREE.Shape`, selectable vertices, extrudable into 3D solid, and undoable in 1 step. Verified in real browser. |
+| **Checkpoint E (v0.20): Cumulative Fillet/Chamfer Persistence** | **YES** | **YES** | **YES** | *Awaiting User Review* | Repaired critical geometry defect where sequential edge modifications previously replaced prior cuts. Implemented ordered geometry feature history (`mesh.userData.edgeCutHistory`) and stable edge identification referenced to the base primitive. Evaluates sequential cuts cumulatively on the solid (e.g. Box → Fillet Edge 0 at 2mm → Chamfer Edge 1 at 1mm → Fillet Edge 2 at 3mm). Produces 100% watertight 2-manifold B-Rep meshes with Euler characteristic $\chi=2$, 0 open edges, and 0 non-manifold edges. Full support for multiple edge selections, Undo/Redo, and `.cadnt` save/reopen. Verified via browser automation and 8 visual screenshots. |
+| **Checkpoint F (v0.20): AGY Builds an Object — Recorded CADN'T Demonstration** | **YES** | **YES** | **YES** | *Awaiting User Review* | Real in-browser video screen recording (78.2s, `screenshots/cadnt_demonstration.webm`, 4.46MB) capturing AGY autonomously operating the functioning CADN'T application across all 4 viewports to construct a 6-sided mechanical mounting flange: 1) Delete Michigan; 2) 6-sided polygon sketch ($R=15\text{mm}$); 3) Extrude $10\text{mm}$ watertight solid; 4) Inward $4\text{mm}$ offset curve for bolt ring; 5) $1.5\text{mm}$ bolt hole sketch; 6) 6-hole polar array ($360^\circ$); 7) Cumulative top $2\text{mm}$ fillet & bottom $1\text{mm}$ chamfer; 8) 4-viewport camera orbit navigation; 9) Serialized native `.cadnt` project archive (`screenshots/cadnt_demonstration.cadnt`). Embedded into `#modal-onboarding` alongside Terms & Conditions with video controls and 'Skip Demonstration' button. |
 | **Checkpoint A (v0.19): All 18 Advertisements Audit & Rotation** | **YES** | **YES** | **YES** | *Awaiting User Review* | Inventory of all 18 advertisements across JPEG, PNG, and WebP, including the 4 new assets (`AipacAppAd.jpeg`, `AsbestosAppAd.webp`, `FushigiAppAd.jpg`, `MrCleanAppAd.png`). Offline Service Worker caching (`sw.js`) with exact case-sensitive filenames. Shuffle-bag non-replacement pool draws all 18 ads without repetition; end-of-cycle reshuffle prevents repeating boundary ads. 7-cadence increment strictly counts CAD modeling commands (Cubert conversation and camera navigation do not count). Clicking an ad stacks another layered ad with its own independent close button. Automated development test harness (`testAllAdsLoading()` and `runAdCycleTest()`) verifies 18 distinct selections, 0 repeats, and 100% successful image loading. Verified via browser automation and visual screenshots. |
 | **Checkpoint B (v0.19): Complete Help Command Reference** | **YES** | **YES** | **YES** | *Awaiting User Review* | Authoritative, searchable command reference generated directly from `COMMAND_REGISTRY` (single source of truth) across all 14 categories. Documents 60+ commands and aliases with exact syntax, aliases, prerequisites, credit cost, and operational status (`Working`, `Partially Working`, `Coming Soon`). Preserves Help button, responsive Windows 95 scrollable UI, instant search filtering, Cubert summoning beside Help, and non-breaking clean dismissal. Verified via browser automation and visual screenshots. |
 | **Checkpoint C (v0.19): Antigravity Repair & Non-Destructive Behavior** | **YES** | **YES** | **YES** | *Awaiting User Review* | Diagnosed and repaired command recognition failure. Request Bar commands `can i antigravity` and `can i remove gravity` activate shared 4-viewport visual float. Visible CAD geometry (primitives, Michigan starting model, locked objects, layer objects) floats upward with initial slow recognizable drift, individual horizontal drift vectors, gradual acceleration away, and slow 3D rotation. Symmetrical 4-viewport rendering preserves scene consistency and camera controls. Bounded 5.0s animation parks objects off-screen outside viewports. Recovery command `can i restore gravity` restores exact millimeter coordinates, preserving locked status, topology, and IDs with $0 fee. Special Undo: `can i undo` reverses antigravity if most recent command. Project serialization (`serializeProjectState`) and STL/OBJ exports protect un-displaced original geometry. Verified via browser video recording (`antigravity_motion.webm`), sequential frames, and 0.0000mm coordinate parity. |
@@ -2056,4 +2062,121 @@ python3 scripts/get_test_results.py
 
 ### 24.5 Git & Deployment Status
 - Implemented and verified on branch `dev`.
+- Awaiting user review and authorization before merging into `main` or deploying to GitHub Pages.
+
+---
+
+## 25. Checkpoints A–F Verification — Antigravity Refinement, Array, Offset, Polygon, Cumulative Fillet/Chamfer Persistence, & Recorded CADN'T Demonstration (Build v00000-020)
+
+### 25.1 Checkpoint A — Antigravity Refinement & Freeze-Undo
+1. **Speed & Acceleration Calibration**:
+   - Scaled velocity and acceleration constants by `0.15` (15% of previous values).
+   - Upward acceleration reduced from $25\text{–}37\text{ mm/s}^2$ to $\sim 4.5\text{ mm/s}^2$.
+   - Horizontal drift vectors reduced to gentle $0.4\text{–}1.2\text{ mm/s}$.
+   - Objects begin with a slow, visibly noticeable drift, gradually accelerate, and maintain slight independent 3D rotations, avoiding suddenly launching everything offscreen.
+   - Symmetrical 4-viewport rendering consistency maintained across all viewports.
+2. **Undo Behavior (`can i undo` during Antigravity)**:
+   - Immediately stops the active animation loop (`cancelAnimationFrame`).
+   - Freezes all floating objects at their current displaced world positions.
+   - Does not snap objects back to original locations; preserves relative orientations at the exact moment of cancellation.
+   - Positions are written directly to object `position`, `rotation`, and `quaternion` matrices in the actual Three.js scene state (not a temporary viewport overlay).
+   - Motion accumulation completely ceases.
+3. **Restoration & Topology**:
+   - `can i restore gravity` retained as an independent command that restores original pre-antigravity coordinates ($dx=0, dy=0, dz=0$) with $0.00 fee.
+   - Underlying mesh geometry, vertex coordinates, and project serialization remain fully valid.
+
+### 25.2 Checkpoint B — Array Command (`can i array`)
+1. **Interactive Workflow & Modes**:
+   - Command invocations: `can i array`, `can i pattern`, `#tool-array` button.
+   - Supports two distinct modes via the Command Bar:
+     - **Linear Array**: Count (2–50), spacing in millimeters, and direction axis (X, Y, Z).
+     - **Polar Array**: Count (2–50), rotation center $(X, Y, Z)$, axis (X, Y, Z), and sweep angle (default $360^\circ$).
+   - Displays a live dashed ghost preview (`Array_Preview`) in all 4 viewports during parameter adjustments.
+2. **Instance & Clone Architecture**:
+   - Creates genuine selectable clones with unique, stable identifiers (e.g. `[original]_copy[N]`).
+   - Preserves source object layers, materials, dimensions, and transform hierarchies.
+   - Extensively tested with 2D sketch curves and 3D solids.
+3. **Single-Step Undo & Persistence**:
+   - Undo reverses the entire array creation in a single step, removing all created clones while leaving the original intact.
+   - Clones serialize cleanly into native `.cadnt` project archives and re-instantiate across all 4 viewports upon reopen.
+
+### 25.3 Checkpoint C — 2D Offset Command (`can i offset`)
+1. **Geometric Normal Offset Engine**:
+   - Replaced uniform center-scaling with true geometric normal displacement:
+     - **Closed Polygons & Rectangles**: Normal displacement along segment edge normals with analytical miter corner joins (`offset2DPolygon`).
+     - **Circles**: Exact concentric radius modification ($r' = r \pm d$) (`offsetCircleCurve`).
+     - **Open Polylines**: Parallel edge offset with perpendicular end caps (`offsetOpenPolyline`).
+   - Handles self-intersections and prevents collapsed geometry.
+2. **Interactive Command Bar**:
+   - Prompts for offset distance (mm) and direction (Inward / Outward toggle).
+   - Displays live emerald green preview curve (`Offset_Preview`).
+   - Commits genuine `ClosedProfile` or `Line` entity with valid `THREE.Shape`.
+3. **Downstream Usability & Undo**:
+   - Offset curves can be directly selected, transformed, further offset, or extruded into 3D solid prisms.
+   - Single-step Undo removes only the generated offset curve.
+
+### 25.4 Checkpoint D — Polygon Sketch Tool (`can i polygon`)
+1. **Interactive Command Workflow**:
+   - Invocations: `can i polygon`, `can i poly`, `can i ngon`, `#tool-polygon` button.
+   - Initial prompt: *"How many sides? (Enter integer 3 to 128: 3=Triangle, 4=Quad, 5=Pentagon, 6=Hexagon, 8=Octagon)"*.
+   - Clamps user input to valid range $[3, 128]$.
+2. **Transient Preview Invariant**:
+   - Exactly 1 transient rubberband preview (`rubberbandObj`) updated continuously during mouse movement with dashed center-to-radius guide line. No duplicate permanent entities created during pointer tracking.
+   - Final click or Enter commits exactly one regular polygon with precisely the specified vertex count.
+3. **Topology & Usability**:
+   - Generates genuine `ClosedProfile` with `profileType = "polygon"` and `THREE.ShapeGeometry`.
+   - Supports raycast selection, translation, 2D offset, 3D solid extrusion, and single-step Undo.
+
+### 25.5 Checkpoint E — Cumulative Fillet/Chamfer Persistence
+1. **Critical Defect Repaired**:
+   - Previously, applying a subsequent Fillet or Chamfer wiped out previous edge modifications because the primitive was regenerated from scratch.
+   - Replaced monolithic generator with an ordered feature history engine (`mesh.userData.edgeCutHistory`) and stable edge indexing referenced to the base primitive.
+2. **Cumulative B-Rep Evaluation**:
+   - Sequential edge operations evaluate cumulatively:
+     1. Base primitive (e.g. $20 \times 20 \times 20\text{ mm}$ Box).
+     2. Fillet Edge 0 at $2\text{ mm}$.
+     3. Chamfer Edge 1 at $1\text{ mm}$.
+     4. Fillet Edge 2 at $3\text{ mm}$.
+   - All three modifications are preserved simultaneously in the final solid.
+3. **Watertight 2-Manifold Verification**:
+   - Every cumulative cut evaluated via `PolyhedronClipper` and `buildBoxMultiCut` produces 100% watertight 2-manifold meshes:
+     - Euler characteristic: $\chi = V - E + F = 2$.
+     - Open boundary edges: $0$.
+     - Non-manifold edges: $0$.
+   - Verified via `scripts/verify_geometry_fillet_chamfer.py` and real browser tests across Fillet → Fillet, Chamfer → Chamfer, Fillet → Chamfer, and Chamfer → Fillet.
+
+### 25.6 Checkpoint F — AGY Builds an Object: Recorded CADN'T Demonstration
+1. **Real In-Browser Screen Capture**:
+   - Executed via `scripts/record_demonstration.py` using Chrome DevTools Protocol and browser `MediaRecorder` on a composite 4-viewport canvas ($1440 \times 900$).
+   - Captured real mouse interactions, prompt inputs, Command Bar confirmations, and live geometry transformations. No fake video or external rendering used.
+   - Total duration: **78.2 seconds** (strictly within the 60–120 second target).
+   - Saved video deliverable: `screenshots/cadnt_demonstration.webm` ($4.46\text{ MB}$).
+2. **Demonstration Workflow (6-Sided Mechanical Mounting Flange)**:
+   - **Step 1**: Remove starting Michigan model (`can i delete michigan`).
+   - **Step 2**: 6-sided polygon sketch ($R=15\text{ mm}$, $N=6$) on Top C-plane (`can i polygon`).
+   - **Step 3**: Extrude profile into $10\text{ mm}$ 3D solid mounting flange (`can i extrude 10`).
+   - **Step 4**: 2D Offset command ($4\text{ mm}$ inward) to generate concentric bolt circle (`can i offset 4`).
+   - **Step 5**: Circular bolt hole sketch ($R=1.5\text{ mm}$) placed on mounting ring (`can i circle`).
+   - **Step 6**: Polar Array command ($N=6$, $360^\circ$) creating 6 bolt holes (`can i array`).
+   - **Step 7**: Cumulative edge treatments: Top edge $2\text{ mm}$ Fillet AND Bottom edge $1\text{ mm}$ Chamfer both preserved simultaneously (`can i fillet`, `can i chamfer`).
+   - **Step 8**: 3D camera orbit showcase across all 4 viewports using W/S/A/D keyboard navigation controls (`applyNavigationStep`).
+   - **Step 9**: Native project archive serialization (`can i save`) to `screenshots/cadnt_demonstration.cadnt`.
+3. **Onboarding Integration**:
+   - Embedded into `#modal-onboarding` with video playback controls (`controls`, `playsinline`) and dedicated *"Skip Demonstration"* button (`#btn-skip-onboarding`).
+   - Terms & Conditions remain readable, bulleted, and independently actionable.
+   - Completely decoupled from live user scene state (does not mutate user's project).
+
+### 25.7 Deliverables Summary
+
+| Deliverable | Location | Description |
+|---|---|---|
+| **Demonstration Video** | [`screenshots/cadnt_demonstration.webm`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/cadnt_demonstration.webm) | Authentic in-browser recording of AGY constructing the mounting flange (78.2s, 4.46 MB, WebM). |
+| **Native Project Archive** | [`screenshots/cadnt_demonstration.cadnt`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/cadnt_demonstration.cadnt) | Full JSON serialization containing the 9 genuine finished scene objects with 2 cumulative cuts. |
+| **Demonstration Script** | [`scripts/record_demonstration.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/record_demonstration.py) | Autonomous CDP automation script capturing 4-viewport interactions and serializing project. |
+| **Automated Test Suite** | [`test_run_output.json`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/test_run_output.json) | 215 automated unit tests passing with **0 failures** (100% pass rate). |
+| **Geometry Proofs** | `screenshots/geom_01` through `geom_08` | 8 visual screenshot artifacts verifying 2-manifold fillet and chamfer topology ($\chi=2$). |
+
+### 25.8 Git & Deployment Status
+- Implemented and verified strictly on branch `dev`.
+- Build version bumped to `v00000-020` in `sw.js` and `index.html`.
 - Awaiting user review and authorization before merging into `main` or deploying to GitHub Pages.
