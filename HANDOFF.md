@@ -2,7 +2,7 @@
 
 ## Project Overview
 - **Project**: CADN'T — Satirical Functional 3D CAD
-- **Version**: `v0.1.0-alpha` (Build `v00000-017`)
+- **Version**: `v0.1.0-alpha` (Build `v00000-018`)
 - **Repository**: [MrAndyBuck/single-file-html-app-template](https://github.com/MrAndyBuck/single-file-html-app-template)
 - **Live URL**: [https://mrandybuck.github.io/single-file-html-app-template/](https://mrandybuck.github.io/single-file-html-app-template/)
 - **Project Workspace**: `/Users/andybuck/.gemini/antigravity/single-file-html-app`
@@ -25,6 +25,8 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint 1 (v0.18): Chinese Takeover Flag Animation** | **YES** | **YES** | **YES** | *Awaiting User Review* | Triggered on `can i chinese`. Centered People's Republic of China flag overlay (`assets/ChineseFlag.webp`, 960x640) occupying ~50% of viewport area (`min(72vw, 108vh)` with 3:2 aspect ratio). Spins continuously for exactly 5.0 seconds via CSS 360-degree rotation animation, then automatically disappears. Application remains in Chinese mode. Fully isolated from Three.js scene (zero geometry or camera interference). Suppressed on page reload when Chinese is already selected. Respects `prefers-reduced-motion` with stationary flag display. Automated tests 68a & 68b passing; visually verified at DPR 1.0 & 2.0. |
+| **Checkpoint 2 (v0.18): ChinaMusic Audio System** | **YES** | **YES** | **YES** | *Awaiting User Review* | Continuous looping audio playback of `assets/audio/ChinaMusic.m4a` when Chinese mode is active. Singleton audio instance; persists across CAD operations without restart or overlap. Replaces hold music while Chinese mode is active. Automatically ducks volume to 0.2 during Cubert speech and cleanly restores to 1.0 when speech ends. Exit commands `can i unchinese`, `can i dechinese`, `can i english`, and `切换英文` restore English and immediately stop playback. Special Undo: `can i undo` reverses Chinese mode only if it was the most recent undoable command; subsequent modeling commands preserve Chinese mode and undo geometry normally without corrupting stacks. Automated tests 68c & 68d passing; visually verified at DPR 1.0 & 2.0. |
 | **Checkpoint A (v0.16): About Window Repair** | **YES** | **YES** | **YES** | **YES** | Sizing, flexbox collapse, and overflow fix for `#modal-about`. Styled at full size (~540px height, 640px width, `box-sizing: border-box`), scrollable inner container `#about-dialog-content` (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), authentic sunken panel, unclipped credits, technology audit, bibliography citations, and Lake Superior billing address. Responsive and ready for Chinese localization. **Accepted by user; merged into `main`.** |
 | **Checkpoint B (v0.16): Cubert Tip Buttons ($1, $5, $10, $0)** | **YES** | **YES** | **YES** | **YES** | Fixed disconnect where tips referenced undefined `fictionalBalance`. Integrated with `creditBalance` and `updateEconomyDisplay()`. Immediate single-click deduction for $1, $5, $10 with localStorage persistence, dismisses Cubert, and restores smiling standby mascot. $0 tip deducts $0.00 and dismisses. Duplicate-click lock (`isProcessingCubertTip`) prevents double deductions. Insufficient credits rejects charge ($0 deducted), logs warning, and triggers 'Broke ass.' speech bubble & audio. **Accepted by user; merged into `main`.** |
 | **Checkpoint C (v0.16): Redesign Blue Header Branding** | **YES** | **YES** | **YES** | **YES** | Removed old standalone SVG icon. Enlarge official white-backed CADNTLogo inside `.win95-title-logo-badge` to occupy header height (badge 38px, logo 32px) with minimal padding, preserving full aspect ratio, black serif letters, and blue cube. Added italicized subtitle `Computer Aided Design Noncompliance Technology` immediately adjacent to the right. Preserved retro Windows 95 title bar appearance. **Accepted by user; merged into `main`.** |
@@ -1909,3 +1911,68 @@ python3 scripts/get_test_results.py
 - Implemented and verified on branch `dev`.
 - Merged into `main` and pushed to `origin/dev` and `origin/main` upon explicit user acceptance (commit `5043e03`).
 - Formally reviewed and accepted by user. Live application deployed at GitHub Pages.
+
+---
+
+## 23. Checkpoints 1 & 2 Verification — Chinese Takeover Flag Animation & ChinaMusic Audio System (Build v00000-018)
+
+### 23.1 Checkpoint 1 — Chinese Takeover Flag Animation
+1. **Trigger & Behavior**:
+   - Triggered when the user enters `can i chinese` in the Request Bar or Cubert Conversation Bar.
+   - Switches the interface to Simplified Chinese (`zh-Hans-CN`) and displays a celebratory visual overlay (`#chinese-takeover-overlay`).
+   - Graphic asset: `assets/ChineseFlag.webp` (960×640 WebP, authentic People's Republic of China flag with five yellow stars on red field).
+2. **Layout & Animation Spec**:
+   - Centered horizontally and vertically over the CAD workspace (`display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; pointer-events: none; z-index: 10000`).
+   - Sizing: Occupies approximately 50% of browser viewport visible area (`width: min(72vw, 108vh); max-height: 72vh; aspect-ratio: 3/2;`). Measured unrotated layout area: 45.7%–51.0% of viewport.
+   - Animation: Spins continuously for exactly 5.0 seconds (`animation: chineseFlagSpin 5s linear infinite; @keyframes chineseFlagSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`).
+   - Auto-dismiss: Removed cleanly after exactly 5.0 seconds (`setTimeout(..., 5000)`).
+   - Reload Protection: Does not re-trigger on subsequent page reloads when Chinese is already the active language stored in `localStorage`.
+   - Motion Accessibility: Respects `@media (prefers-reduced-motion: reduce)` by displaying a stationary flag (`animation: none !important`) for 5 seconds before dismissal.
+   - Isolation: Implemented as a pure DOM overlay; does not modify Three.js scene geometry, meshes, materials, camera positions, or controls.
+
+### 23.2 Checkpoint 2 — ChinaMusic Audio System
+1. **Asset Discovery & Integration**:
+   - Located asset `assets/audio/ChinaMusic.m4a` (Apple iTunes ALAC/AAC-LC audio container, 44.1 kHz, stereo).
+   - Registered in `scripts/generate_asset_manifest.py`, `assets/manifest.json`, and `sw.js` cache list (`v00000-018`).
+2. **Playback & Looping**:
+   - Initiates immediately when Chinese mode is activated (`CADNT_AUDIO.playChinaMusic()`).
+   - Sets `loop = true` and loops continuously as long as the application remains in Chinese mode.
+   - Singleton instance: Subsequent CAD operations do not restart playback, create duplicate instances, or desynchronize audio.
+   - Priority: Replaces standard CAD hold music while active. Standard hold music calls (`playHoldMusic`) are suppressed while `isChinaMusicActive` is true.
+3. **Dialogue Ducking**:
+   - When Cubert speaks (`duckHoldMusicForDialogue()`), ChinaMusic volume automatically ducks from `1.0` to `0.2` so voiceover lines remain crisp and legible.
+   - When Cubert speech ends (`restoreHoldMusicAfterDialogue()`), ChinaMusic volume smoothly restores to `1.0`.
+4. **Exit Commands**:
+   - Recognizes exit commands in Request Bar and Cubert Conversation Bar:
+     - `can i unchinese`
+     - `can i dechinese`
+     - `can i english`
+     - `切换英文`
+   - Immediately stops ChinaMusic (`CADNT_AUDIO.stopChinaMusic()`), clears audio state, hides any active flag overlay, and restores the English UI without altering CAD geometry or session balance.
+5. **Special Undo Behavior**:
+   - Entering Chinese mode sets `lastUndoableCommand = "chinese"`.
+   - Entering `can i undo` immediately after entering Chinese mode reverses the language change, stops ChinaMusic, and removes the flag overlay.
+   - If any qualifying CAD modeling operation occurs after entering Chinese mode (`recordUndoState` resets `lastUndoableCommand = "modeling"`), `can i undo` reverses that CAD modeling operation normally, keeping Chinese mode and ChinaMusic completely intact and preserving the geometry undo stack.
+
+### 23.3 Automated Unit Tests (Tests 68a–68d)
+- Unit tests integrated into `runAllTests()` in `index.html`:
+  - **Test 68a**: Checkpoint 1 — Chinese Takeover Flag Animation (DOM element existence, 50% sizing, 5s animation, auto-dismissal, reload isolation).
+  - **Test 68b**: Checkpoint 1 — Flag Reduced Motion Compliance (`prefers-reduced-motion`).
+  - **Test 68c**: Checkpoint 2 — ChinaMusic Looping, Singleton Instance, Ducking & Volume Restoration during Cubert Speech.
+  - **Test 68d**: Checkpoint 2 — Chinese Mode Exit Commands (`can i unchinese`, `can i dechinese`) & Special Undo Behavior (Language Undo vs Geometry Undo separation).
+- Total automated unit tests: **205 passing tests (0 failures)**. Verified via `python3 scripts/get_test_results.py`.
+
+### 23.4 Visual Evidence Artifacts
+- Script [`scripts/verify_checkpoints_1_2_v18.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoints_1_2_v18.py) executed in headless Chromium at DPR 1.0 and DPR 2.0 (Retina).
+- Visual artifacts stored in `screenshots/` and mirrored to `/Users/andybuck/Desktop/`:
+  - `checkpoint_01_01_chinese_flag_spinning.png` (and `_dpr2.png`): Centered 50% viewport Chinese flag overlay actively spinning.
+  - `checkpoint_02_01_chinamusic_looping.png` (and `_dpr2.png`): Chinese UI active with ChinaMusic looping singleton.
+  - `checkpoint_02_02_cubert_ducking_chinamusic.png` (and `_dpr2.png`): Cubert dialogue active with ChinaMusic ducked to 0.2.
+  - `checkpoint_02_03_unchinese_exit.png` (and `_dpr2.png`): `can i unchinese` exit with ChinaMusic stopped and English UI restored.
+  - `checkpoint_02_04_undo_chinese_mode.png` (and `_dpr2.png`): `can i undo` immediately following `can i chinese`, reversing language mode.
+  - `checkpoint_02_05_undo_modeling_preserves_chinese.png` (and `_dpr2.png`): Modeling followed by `can i undo`, reversing geometry while preserving Chinese mode and music.
+
+### 23.5 Git & Development Phase Status
+- Work completed on branch `dev`.
+- Awaiting user review and authorization before proceeding to Checkpoint 3 (New Advertisement Assets) and Checkpoint 4 (Antigravity Command).
+- No deployment to `main` or GitHub Pages without explicit approval.

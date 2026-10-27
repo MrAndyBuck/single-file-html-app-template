@@ -1,5 +1,5 @@
 const APP_ID = "cadnt";
-const VERSION = "v00000-017";
+const VERSION = "v00000-018";
 const CACHE = APP_ID + "-" + VERSION;
 const FILES = [
   "./",
@@ -12,20 +12,28 @@ const FILES = [
   "./vendor/three-loaders.js",
   "./assets/manifest.json",
   "./assets/Finger.jpg",
+  "./assets/ChineseFlag.webp",
+  "./assets/brand/CADNTLogo.png",
+  "./assets/brand/favicon-32x32.png",
+  "./assets/ads/AipacAppAd.jpeg",
   "./assets/ads/AmwayAppAd.jpeg",
   "./assets/ads/AppAds.jpeg",
   "./assets/ads/AppleAppAd.jpeg",
+  "./assets/ads/AsbestosAppAd.webp",
   "./assets/ads/CnBAppAd.png",
   "./assets/ads/EnronAppAd.jpg",
+  "./assets/ads/FushigiAppAd.jpg",
   "./assets/ads/GamblingAppAd.webp",
   "./assets/ads/GamblingAppAd2.png",
   "./assets/ads/MomsAppAd.jpg",
+  "./assets/ads/MrCleanAppAd.png",
   "./assets/ads/PalantirAppAd.jpeg",
   "./assets/ads/TheranosAppAd.jpeg",
   "./assets/ads/TourismAppAd.jpeg",
   "./assets/ads/ViagraAppAd.webp",
   "./assets/ads/VirusAppAd.png",
   "./assets/ads/ZuneAppAd.webp",
+  "./assets/audio/ChinaMusic.m4a",
   "./assets/audio/New%20Recording%2012.m4a"
 ];
 

@@ -1381,6 +1381,61 @@
     40%, 80% { transform: translateX(6px); }
   }
   .shake { animation: shake 0.3s ease-in-out; border-color: var(--alert-pink) !important; }
+
+  /* Checkpoint 1: Chinese Takeover Celebration Flag Animation */
+  .chinese-takeover-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
+  }
+  .chinese-flag-spinner-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(72vw, 108vh);
+    max-height: 72vh;
+    aspect-ratio: 3 / 2;
+    transform-origin: center center;
+    filter: drop-shadow(0 0 35px rgba(222, 41, 16, 0.95)) drop-shadow(0 0 70px rgba(255, 222, 0, 0.8));
+    animation: chineseFlagSpin 5s linear forwards;
+  }
+  .chinese-takeover-flag {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border: 3px solid #ffde00;
+    display: block;
+    box-sizing: border-box;
+  }
+  @keyframes chineseFlagSpin {
+    0% {
+      transform: rotate(0deg);
+      opacity: 1;
+    }
+    90% {
+      transform: rotate(1800deg);
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(2000deg);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chinese-flag-spinner-wrapper {
+      animation: none !important;
+      transform: rotate(0deg) !important;
+      opacity: 1 !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1547,7 +1602,7 @@
       <div id="debug-overlay">
         <div class="debug-hud-header" id="debug-hud-toggle">
           <span class="debug-hud-title" data-i18n="hud.title">🔍 DIAGNOSTIC HUD</span>
-          <span id="debug-hud-version" class="debug-badge">v00000-017</span>
+          <span id="debug-hud-version" class="debug-badge">v00000-018</span>
           <button id="btn-minimize-debug" class="debug-min-btn" title="Minimize / Expand">_</button>
         </div>
         <div id="debug-hud-body" class="debug-hud-body">
@@ -1824,7 +1879,7 @@
     <div id="coords-readout" class="status-panel">X: 0.00 Y: 0.00 Z: 0.00</div>
     <div class="nav-hint status-panel" data-i18n="app.nav_hint">Orbit: W/S/A/D | Pan: Arrows | Zoom: Shift+Arrows | Click: Select</div>
     <div class="status-panel status-credit" id="status-credit-panel">Tokens: $249.00</div>
-    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-017 ↻</button>
+    <button id="chip" class="status-panel status-chip" title="Check for newer version">v00000-018 ↻</button>
   </footer>
 </div>
 
@@ -1969,7 +2024,7 @@
         CADN'T — Computer Aided Design Noncompliance Technology
       </div>
       <div style="font-size: 10px; color: #555555; margin-bottom: 6px;">
-        Version: <span id="about-version">v00000-017</span> (Release Build)
+        Version: <span id="about-version">v00000-018</span> (Release Build)
       </div>
       <p style="margin: 0; font-style: italic; color: #222222;">
         CADN'T exists because professional CAD software has spent forty years convincing designers that suffering is an intrinsic property of three-dimensional space. Built as an adversarial, fully functional 3D CAD environment featuring genuine geometry calculations, genuine meshes, and a deliberately hostile user interface.
@@ -2139,6 +2194,13 @@
   </div>
 </dialog>
 
+<!-- Checkpoint 1: Chinese Takeover Celebration Flag Overlay -->
+<div id="chinese-takeover-overlay" class="chinese-takeover-overlay" style="display: none;" aria-hidden="true">
+  <div class="chinese-flag-spinner-wrapper" id="chinese-flag-spinner-wrapper">
+    <img id="chinese-takeover-flag" src="assets/ChineseFlag.webp" alt="Flag of the People's Republic of China" class="chinese-takeover-flag">
+  </div>
+</div>
+
 <!-- Three.js & Libraries (Vendored locally for 100% offline PWA operation) -->
 <script src="vendor/three.min.js"></script>
 <script src="vendor/three-csg.js"></script>
@@ -2154,7 +2216,7 @@
 const APP = {
   name: "CADN'T",
   id: "cadnt",
-  version: "v00000-017",
+  version: "v00000-018",
   author: "Andy Buck",
   site: "https://mrandybuck.github.io/single-file-html-app-template/",
   repo: "https://github.com/MrAndyBuck/single-file-html-app-template"
@@ -2306,6 +2368,73 @@ function applyLocale(locale) {
   }
 }
 window.applyLocale = applyLocale;
+
+/* Checkpoint 1 & 2: Chinese Takeover Celebration & Mode Controller */
+let chineseFlagTimeout = null;
+let lastUndoableCommand = null;
+
+function showChineseTakeoverAnimation() {
+  hideChineseTakeoverAnimation();
+  const overlay = document.getElementById("chinese-takeover-overlay");
+  if (!overlay) return;
+  overlay.style.display = "flex";
+  const wrapper = document.getElementById("chinese-flag-spinner-wrapper");
+  if (wrapper) {
+    wrapper.style.animation = "none";
+    void wrapper.offsetWidth; // trigger reflow
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReducedMotion) {
+      wrapper.style.animation = "chineseFlagSpin 5s linear forwards";
+    } else {
+      wrapper.style.animation = "none";
+      wrapper.style.transform = "rotate(0deg)";
+      wrapper.style.opacity = "1";
+    }
+  }
+  chineseFlagTimeout = setTimeout(() => {
+    hideChineseTakeoverAnimation();
+  }, 5000);
+}
+
+function hideChineseTakeoverAnimation() {
+  if (chineseFlagTimeout) {
+    clearTimeout(chineseFlagTimeout);
+    chineseFlagTimeout = null;
+  }
+  const overlay = document.getElementById("chinese-takeover-overlay");
+  if (overlay) {
+    overlay.style.display = "none";
+  }
+}
+
+function activateChineseMode(options = { celebrate: true }) {
+  applyLocale("zh-Hans-CN");
+  if (options && options.celebrate) {
+    showChineseTakeoverAnimation();
+  }
+  if (typeof CADNT_AUDIO !== "undefined") {
+    CADNT_AUDIO.playChinaMusic();
+  }
+  lastUndoableCommand = "chinese";
+  addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
+  status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+}
+
+function deactivateChineseMode() {
+  applyLocale("en");
+  hideChineseTakeoverAnimation();
+  if (typeof CADNT_AUDIO !== "undefined") {
+    CADNT_AUDIO.stopChinaMusic();
+  }
+  lastUndoableCommand = null;
+  addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
+  status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+}
+
+window.showChineseTakeoverAnimation = showChineseTakeoverAnimation;
+window.hideChineseTakeoverAnimation = hideChineseTakeoverAnimation;
+window.activateChineseMode = activateChineseMode;
+window.deactivateChineseMode = deactivateChineseMode;
 
 
 /* =========================================================================
@@ -5767,14 +5896,18 @@ function updatePropertiesPanel() {
    ========================================================================= */
 const ASSET_MANIFEST = {
   ads: [
+    "assets/ads/AipacAppAd.jpeg",
     "assets/ads/AmwayAppAd.jpeg",
     "assets/ads/AppAds.jpeg",
     "assets/ads/AppleAppAd.jpeg",
+    "assets/ads/AsbestosAppAd.webp",
     "assets/ads/CnBAppAd.png",
     "assets/ads/EnronAppAd.jpg",
+    "assets/ads/FushigiAppAd.jpg",
     "assets/ads/GamblingAppAd.webp",
     "assets/ads/GamblingAppAd2.png",
     "assets/ads/MomsAppAd.jpg",
+    "assets/ads/MrCleanAppAd.png",
     "assets/ads/PalantirAppAd.jpeg",
     "assets/ads/TheranosAppAd.jpeg",
     "assets/ads/TourismAppAd.jpeg",
@@ -5783,6 +5916,7 @@ const ASSET_MANIFEST = {
     "assets/ads/ZuneAppAd.webp"
   ],
   audio: [
+    "assets/audio/ChinaMusic.m4a",
     "assets/audio/New%20Recording%2012.m4a"
   ]
 };
@@ -5811,6 +5945,11 @@ const CADNT_AUDIO = {
   droneOsc: null,
   droneGain: null,
   holdMusicAudio: null,
+  chinaMusicAudio: null,
+  isChinaMusicActive: false,
+  chinaMusicVolume: 1.0,
+  preDuckChinaMusicVolume: 1.0,
+  chinaMusicDucked: false,
   volume: 1.0,
 
   init() {
@@ -5828,6 +5967,13 @@ const CADNT_AUDIO = {
     if (this.mute) {
       this.stopDrone();
       this.stopHoldMusic();
+      if (this.chinaMusicAudio) {
+        this.chinaMusicAudio.pause();
+      }
+    } else {
+      if (this.isChinaMusicActive && this.chinaMusicAudio) {
+        this.chinaMusicAudio.play().catch(() => {});
+      }
     }
     status(this.mute ? "Audio muted." : "Audio unmuted.");
   },
@@ -5892,8 +6038,12 @@ const CADNT_AUDIO = {
 
   playHoldMusic() {
     if (this.mute) return;
+    if (this.isChinaMusicActive) {
+      // While Chinese mode is active, ChinaMusic replaces ordinary background/hold music!
+      return;
+    }
     this.stopHoldMusic();
-    const tracks = ASSET_MANIFEST.audio;
+    const tracks = (ASSET_MANIFEST.audio || []).filter(t => !t.includes("ChinaMusic"));
     if (!tracks || tracks.length === 0) return;
     const trackSrc = tracks[Math.floor(Math.random() * tracks.length)];
     try {
@@ -5920,6 +6070,48 @@ const CADNT_AUDIO = {
       } catch (e) {}
       this.holdMusicAudio = null;
     }
+  },
+
+  playChinaMusic() {
+    this.isChinaMusicActive = true;
+    if (this.mute) return;
+    if (this.chinaMusicAudio && !this.chinaMusicAudio.paused) {
+      // Loop is already active and playing; do not restart!
+      return;
+    }
+    if (!this.chinaMusicAudio) {
+      this.chinaMusicAudio = new Audio("assets/audio/ChinaMusic.m4a");
+      this.chinaMusicAudio.loop = true;
+      this.chinaMusicAudio.volume = this.chinaMusicVolume;
+    }
+    this.stopHoldMusic();
+    const playPromise = this.chinaMusicAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.warn("ChinaMusic autoplay handled:", err);
+        const resumePlayback = () => {
+          if (this.isChinaMusicActive && this.chinaMusicAudio && this.chinaMusicAudio.paused && !this.mute) {
+            this.chinaMusicAudio.play().catch(() => {});
+          }
+          window.removeEventListener("pointerdown", resumePlayback);
+          window.removeEventListener("keydown", resumePlayback);
+        };
+        window.addEventListener("pointerdown", resumePlayback, { once: true });
+        window.addEventListener("keydown", resumePlayback, { once: true });
+      });
+    }
+  },
+
+  stopChinaMusic() {
+    this.isChinaMusicActive = false;
+    if (this.chinaMusicAudio) {
+      try {
+        this.chinaMusicAudio.pause();
+        this.chinaMusicAudio.currentTime = 0;
+      } catch (e) {}
+      this.chinaMusicAudio = null;
+    }
+    this.chinaMusicDucked = false;
   }
 };
 
@@ -6369,21 +6561,38 @@ function stopCubertVoiceover() {
 }
 
 function duckHoldMusicForDialogue() {
-  if (typeof CADNT_AUDIO !== "undefined" && CADNT_AUDIO.holdMusicAudio && !CADNT_AUDIO.holdMusicAudio.paused) {
-    if (!holdMusicDucked) {
-      preDuckHoldMusicVolume = CADNT_AUDIO.holdMusicAudio.volume !== undefined ? CADNT_AUDIO.holdMusicAudio.volume : 1.0;
-      CADNT_AUDIO.holdMusicAudio.volume = Math.min(preDuckHoldMusicVolume, 0.15);
-      holdMusicDucked = true;
+  if (typeof CADNT_AUDIO !== "undefined") {
+    if (CADNT_AUDIO.holdMusicAudio && !CADNT_AUDIO.holdMusicAudio.paused) {
+      if (!holdMusicDucked) {
+        preDuckHoldMusicVolume = CADNT_AUDIO.holdMusicAudio.volume !== undefined ? CADNT_AUDIO.holdMusicAudio.volume : 1.0;
+        CADNT_AUDIO.holdMusicAudio.volume = Math.min(preDuckHoldMusicVolume, 0.15);
+        holdMusicDucked = true;
+      }
+    }
+    if (CADNT_AUDIO.chinaMusicAudio && (CADNT_AUDIO.isChinaMusicActive || !CADNT_AUDIO.chinaMusicAudio.paused)) {
+      if (!CADNT_AUDIO.chinaMusicDucked) {
+        CADNT_AUDIO.preDuckChinaMusicVolume = CADNT_AUDIO.chinaMusicAudio.volume !== undefined ? CADNT_AUDIO.chinaMusicAudio.volume : 1.0;
+        CADNT_AUDIO.chinaMusicAudio.volume = Math.min(CADNT_AUDIO.preDuckChinaMusicVolume, 0.2);
+        CADNT_AUDIO.chinaMusicDucked = true;
+      }
     }
   }
 }
 
 function restoreHoldMusicAfterDialogue() {
-  if (holdMusicDucked && typeof CADNT_AUDIO !== "undefined" && CADNT_AUDIO.holdMusicAudio) {
-    try {
-      CADNT_AUDIO.holdMusicAudio.volume = preDuckHoldMusicVolume;
-    } catch (e) {}
-    holdMusicDucked = false;
+  if (typeof CADNT_AUDIO !== "undefined") {
+    if (holdMusicDucked && CADNT_AUDIO.holdMusicAudio) {
+      try {
+        CADNT_AUDIO.holdMusicAudio.volume = preDuckHoldMusicVolume;
+      } catch (e) {}
+      holdMusicDucked = false;
+    }
+    if (CADNT_AUDIO.chinaMusicDucked && CADNT_AUDIO.chinaMusicAudio) {
+      try {
+        CADNT_AUDIO.chinaMusicAudio.volume = CADNT_AUDIO.preDuckChinaMusicVolume;
+      } catch (e) {}
+      CADNT_AUDIO.chinaMusicDucked = false;
+    }
   }
 }
 
@@ -6789,18 +6998,19 @@ function handleCubertConversationSubmit(raw) {
 
   addLog(`> (To Cubert) ${text}`, "log-user");
 
-  // Checkpoint F: Language switching commands from Cubert Bar
+  // Checkpoint F & Checkpoint 2: Language switching commands from Cubert Bar
   const trimmedLower = text.toLowerCase().replace(/[?!.,;]+$/, "").trim();
-  if (/^(?:切换|切换到|切换至|切换为)?英文[?！!。]*$/i.test(text) || trimmedLower === "can i english" || trimmedLower === "english") {
-    applyLocale("en");
-    addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
-    status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+  if (
+    /^(?:切换|切换到|切换至|切换为)?英文[?！!。]*$/i.test(text) ||
+    trimmedLower === "can i english" || trimmedLower === "english" ||
+    trimmedLower === "can i unchinese" || trimmedLower === "unchinese" ||
+    trimmedLower === "can i dechinese" || trimmedLower === "dechinese"
+  ) {
+    deactivateChineseMode();
     return;
   }
   if (/^(?:切换|切换到|切换至|切换为)?中文[?！!。]*$/i.test(text) || trimmedLower === "can i chinese" || trimmedLower === "chinese") {
-    applyLocale("zh-Hans-CN");
-    addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
-    status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+    activateChineseMode({ celebrate: true });
     return;
   }
 
@@ -7245,6 +7455,7 @@ function deserializeProjectState(jsonStr) {
 }
 
 function recordUndoState(desc = "Operation") {
+  lastUndoableCommand = "modeling";
   try {
     const snapshot = serializeProjectState();
     undoStack.push({ desc, snapshot });
@@ -7256,6 +7467,14 @@ function recordUndoState(desc = "Operation") {
 }
 
 function executeUndo() {
+  // Checkpoint 2: Special Undo Behavior for Chinese Mode
+  if (lastUndoableCommand === "chinese") {
+    deactivateChineseMode();
+    addLog("Undid: Switch to Chinese Mode. Restored English interface.", "log-success");
+    status("Undid: Switch to Chinese Mode.");
+    return;
+  }
+
   if (undoStack.length === 0) {
     addLog("Undo requested. (No prior user edits in stack)", "log-warn");
     status("Undo stack clean.");
@@ -9543,7 +9762,7 @@ function isRecognizedCadCommand(cmd) {
     "delete", "remove", "undo", "redo", "lock", "unlock",
     "save", "open", "export", "import", "remesh", "simplify",
     "theme", "light", "dark", "mute", "ad", "help", "tutorial", "clear",
-    "crash", "michigan", "chinese", "english"
+    "crash", "michigan", "chinese", "unchinese", "un-chinese", "dechinese", "de-chinese", "english"
   ];
   return recognizedVerbs.includes(verb) || norm.includes("starting object") || norm.includes("michigan") || norm.includes("crash report") || isCubertDismissRequest(cmd);
 }
@@ -9569,17 +9788,17 @@ function processRequest(raw) {
     return;
   }
 
-  // Checkpoint F: Chinese restoration command (without polite English prefix)
-  if (/^(?:切换|切换到|切换至|切换为)?英文[?！!。]*$/i.test(text) || /^switch\s+to\s+english[?!.]*$/i.test(text)) {
-    applyLocale("en");
-    addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
-    status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+  // Checkpoints 1 & 2: Chinese mode exit commands (without polite English prefix)
+  if (
+    /^(?:切换|切换到|切换至|切换为)?英文[?！!。]*$/i.test(text) ||
+    /^switch\s+to\s+english[?!.]*$/i.test(text) ||
+    /^(?:un-?chinese|de-?chinese)[?!.]*$/i.test(text)
+  ) {
+    deactivateChineseMode();
     return;
   }
   if (/^(?:切换|切换到|切换至|切换为)?中文[?！!。]*$/i.test(text) || /^switch\s+to\s+chinese[?!.]*$/i.test(text)) {
-    applyLocale("zh-Hans-CN");
-    addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
-    status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+    activateChineseMode({ celebrate: true });
     return;
   }
 
@@ -9602,17 +9821,17 @@ function processRequest(raw) {
   const query = match[1].trim().toLowerCase();
   const normalizedQuery = query.replace(/[?!.,;]+$/, "").trim();
 
-  // Checkpoint F: Language switching commands with polite 'Can I' prefix
+  // Checkpoints 1 & 2: Language switching commands with polite 'Can I' prefix
   if (normalizedQuery === "chinese" || normalizedQuery === "zh" || normalizedQuery === "zh-hans" || normalizedQuery === "zh-hans-cn" || normalizedQuery === "simplified chinese") {
-    applyLocale("zh-Hans-CN");
-    addLog(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."), "log-info");
-    status(t("app.locale_switched_zh", "Interface language switched to Simplified Chinese (zh-Hans-CN)."));
+    activateChineseMode({ celebrate: true });
     return;
   }
-  if (normalizedQuery === "english" || normalizedQuery === "en" || normalizedQuery === "us" || normalizedQuery === "en-us") {
-    applyLocale("en");
-    addLog(t("app.locale_switched_en", "Interface language switched to English (en)."), "log-info");
-    status(t("app.locale_switched_en", "Interface language switched to English (en)."));
+  if (
+    normalizedQuery === "english" || normalizedQuery === "en" || normalizedQuery === "us" || normalizedQuery === "en-us" ||
+    normalizedQuery === "unchinese" || normalizedQuery === "un-chinese" ||
+    normalizedQuery === "dechinese" || normalizedQuery === "de-chinese"
+  ) {
+    deactivateChineseMode();
     return;
   }
 
@@ -12667,7 +12886,7 @@ function runAllTests() {
     assertTest("Ad modal contains tiny close button and blank ad placement placeholder", !!adCloseBtn && adCloseBtn.clientWidth <= 14 && !!adPlaceholder);
 
     // Test 33: Asset manifest contains ads and hold music
-    assertTest("Asset manifest loaded with 14 ads and hold music track", ASSET_MANIFEST.ads.length === 14 && ASSET_MANIFEST.audio.length >= 1);
+    assertTest("Asset manifest loaded with 18 ads and hold music track", ASSET_MANIFEST.ads.length === 18 && ASSET_MANIFEST.audio.length >= 1);
 
     // Test 34: 7-command ad cadence
     modelingCommandCount = 0;
@@ -13598,6 +13817,64 @@ f 4 5 6`;
     const topVpEn = document.getElementById("lbl-top").textContent.includes("Top");
 
     assertTest("Checkpoint F: 'can i chinese' switches entire interface to Simplified Chinese, English CAD commands continue working, '切换英文' restores English", isLangZh && isStorageZh && aboutBtnZh && importBtnZh && topVpZh && perspVpZh && cubertBarLabelZh && cubertStatusZh && cubertBubbleZh && boxCreatedInZh && isLangEn && isStorageEn && aboutBtnEn && importBtnEn && topVpEn);
+
+    // =========================================================================
+    // Checkpoints 1 & 2: Chinese Takeover Animation & ChinaMusic Audio System
+    // =========================================================================
+
+    // Test 68a: Checkpoint 1 — Chinese Takeover Animation (Flag overlay, accurate graphic, 50% viewport area, 5s duration)
+    const overlayEl = document.getElementById("chinese-takeover-overlay");
+    const flagImg = document.getElementById("chinese-takeover-flag");
+    const flagWrapper = document.getElementById("chinese-flag-spinner-wrapper");
+    processRequest("can i chinese");
+    const overlayVisibleOnTrigger = overlayEl && overlayEl.style.display === "flex";
+    const flagSourceValid = flagImg && flagImg.getAttribute("src").includes("ChineseFlag.webp");
+    const flagWrapperHasSpinAnim = flagWrapper && (getComputedStyle(flagWrapper).animationName.includes("chineseFlagSpin") || flagWrapper.style.animation.includes("chineseFlagSpin"));
+    assertTest("Checkpoint 1: Chinese Takeover displays centered PRC flag overlay with continuous 5s spinning animation", overlayVisibleOnTrigger && flagSourceValid && flagWrapperHasSpinAnim);
+
+    // Test 68b: Checkpoint 2 — ChinaMusic Audio System (Playback, looping, CAD command persistence, hold music suppression, ducking)
+    const chinaMusicActive = CADNT_AUDIO.isChinaMusicActive === true;
+    const chinaMusicAudioObj = CADNT_AUDIO.chinaMusicAudio;
+    const chinaMusicLoops = chinaMusicAudioObj && chinaMusicAudioObj.loop === true;
+    const origChinaAudioInstance = CADNT_AUDIO.chinaMusicAudio;
+    // Execute modeling command - must NOT restart or create duplicate audio instance
+    processRequest("Can I sphere");
+    const instancePreservedAfterCmd = CADNT_AUDIO.chinaMusicAudio === origChinaAudioInstance;
+    // Hold music suppression
+    CADNT_AUDIO.playHoldMusic();
+    const holdMusicSuppressed = CADNT_AUDIO.holdMusicAudio === null;
+    // Cubert voiceover ducking
+    duckHoldMusicForDialogue();
+    const chinaMusicDucked = CADNT_AUDIO.chinaMusicDucked === true && CADNT_AUDIO.chinaMusicAudio.volume <= 0.25;
+    restoreHoldMusicAfterDialogue();
+    const chinaMusicRestored = CADNT_AUDIO.chinaMusicDucked === false && CADNT_AUDIO.chinaMusicAudio.volume >= 0.95;
+    assertTest("Checkpoint 2: ChinaMusic loops continuously, persists across CAD commands, suppresses hold music, and ducks during Cubert speech", chinaMusicActive && chinaMusicLoops && instancePreservedAfterCmd && holdMusicSuppressed && chinaMusicDucked && chinaMusicRestored);
+
+    // Test 68c: Checkpoint 2 — Chinese Mode Exit Commands ('can i unchinese', 'can i dechinese', 'can i english')
+    processRequest("can i unchinese");
+    const unchineseRestoredEn = document.documentElement.lang === "en" && CADNT_AUDIO.isChinaMusicActive === false && CADNT_AUDIO.chinaMusicAudio === null && overlayEl.style.display === "none";
+    processRequest("can i chinese");
+    processRequest("can i dechinese");
+    const dechineseRestoredEn = document.documentElement.lang === "en" && CADNT_AUDIO.isChinaMusicActive === false && CADNT_AUDIO.chinaMusicAudio === null && overlayEl.style.display === "none";
+    assertTest("Checkpoint 2: 'can i unchinese' and 'can i dechinese' restore English interface, stop ChinaMusic immediately, and remove flag animation", unchineseRestoredEn && dechineseRestoredEn);
+
+    // Test 68d: Checkpoint 2 — Special Undo Behavior (Undo reverses Chinese mode ONLY if it was the most recent undoable command)
+    // Subtest 1: Immediate undo after Chinese command reverses Chinese mode
+    processRequest("can i chinese");
+    assertTest("Chinese mode active before immediate undo test", document.documentElement.lang === "zh-Hans-CN" && CADNT_AUDIO.isChinaMusicActive === true);
+    processRequest("can i undo");
+    const undoReversedChinese = document.documentElement.lang === "en" && CADNT_AUDIO.isChinaMusicActive === false && CADNT_AUDIO.chinaMusicAudio === null;
+    // Subtest 2: If modeling operation happened afterward, Undo reverses modeling operation normally and preserves Chinese mode
+    processRequest("can i chinese");
+    const countBeforeUndoBox = sceneObjects.length;
+    processRequest("Can I box");
+    const boxCreatedInChinese = sceneObjects.length === countBeforeUndoBox + 1;
+    processRequest("can i undo");
+    const boxUndoneNormally = sceneObjects.length === countBeforeUndoBox;
+    const chineseRemainedActive = document.documentElement.lang === "zh-Hans-CN" && CADNT_AUDIO.isChinaMusicActive === true;
+    // Cleanup by exiting Chinese mode
+    processRequest("can i english");
+    assertTest("Checkpoint 2: 'can i undo' reverses Chinese mode if it was the most recent command, but reverses modeling commands normally if modeling occurred afterward", undoReversedChinese && boxCreatedInChinese && boxUndoneNormally && chineseRemainedActive);
 
     activeLayerId = "default";
     layers.forEach(l => { if (l.id === "default") l.visible = true; });

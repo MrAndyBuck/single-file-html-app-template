@@ -81,6 +81,12 @@ def update_sw_js(root_dir, ads, audio):
 
     if os.path.exists(os.path.join(root_dir, "assets", "Finger.jpg")):
         base_files.append('"./assets/Finger.jpg"')
+    if os.path.exists(os.path.join(root_dir, "assets", "ChineseFlag.webp")):
+        base_files.append('"./assets/ChineseFlag.webp"')
+    if os.path.exists(os.path.join(root_dir, "assets", "brand", "CADNTLogo.png")):
+        base_files.append('"./assets/brand/CADNTLogo.png"')
+    if os.path.exists(os.path.join(root_dir, "assets", "brand", "favicon-32x32.png")):
+        base_files.append('"./assets/brand/favicon-32x32.png"')
 
     ad_entries = [f'"./{ad}"' for ad in ads]
     audio_entries = [f'"./{urllib.parse.quote(a)}"' for a in audio]
