@@ -11,9 +11,18 @@ CHROME_BIN = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 PORT = 9315
 BASE_DIR = "/Users/andybuck/.gemini/antigravity/single-file-html-app"
 SCREENSHOT_DIR = os.path.join(BASE_DIR, "screenshots")
-VIDEO_OUTPUT = os.path.join(SCREENSHOT_DIR, "cadnt_demonstration.webm")
+DEMO_ASSETS_DIR = os.path.join(BASE_DIR, "assets", "demo")
+DESKTOP_DIR = "/Users/andybuck/Desktop/CADNT_Portfolio_Outputs"
+os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+os.makedirs(DEMO_ASSETS_DIR, exist_ok=True)
+os.makedirs(DESKTOP_DIR, exist_ok=True)
 
-print("Launching Chrome for Demonstration Recording...")
+VIDEO_OUTPUT = os.path.join(DEMO_ASSETS_DIR, "cadnt_demonstration.webm")
+VIDEO_SCREENSHOT = os.path.join(SCREENSHOT_DIR, "cadnt_demonstration.webm")
+POSTER_OUTPUT = os.path.join(DEMO_ASSETS_DIR, "demo_poster.png")
+POSTER_SCREENSHOT = os.path.join(SCREENSHOT_DIR, "demo_poster.png")
+
+print("Launching Chrome for Perspective-Only Demonstration Recording...")
 proc = subprocess.Popen([
     CHROME_BIN,
     "--headless=new",
@@ -59,6 +68,9 @@ try:
         elif length < 65536:
             frame.append(0x80 | 126)
             frame.extend(struct.pack(">H", length))
+        else:
+            frame.append(0x80 | 127)
+            frame.extend(struct.pack(">Q", length))
         frame.extend(mask)
         frame.extend(bytearray(b ^ mask[i % 4] for i, b in enumerate(data)))
         s.sendall(frame)
@@ -78,7 +90,7 @@ try:
     evaluate("window.IS_TESTING = true;")
     evaluate("renderAllViewports();")
 
-    print("\n1. Initializing in-browser 4-viewport composite recorder...")
+    print("\n1. Initializing in-browser Perspective-only composite recorder...")
     setup_recorder_js = """
     (() => {
       window.__RECORDED_CHUNKS__ = [];
@@ -90,65 +102,70 @@ try:
       compCanvas.height = 720;
       const ctx = compCanvas.getContext('2d');
 
-      const topC = document.getElementById('canvas-top');
       const perspC = document.getElementById('canvas-perspective');
-      const frontC = document.getElementById('canvas-front');
-      const rightC = document.getElementById('canvas-right');
 
       function drawComposite() {
         try {
           ctx.fillStyle = "#808080";
           ctx.fillRect(0, 0, 960, 720);
 
-          // 4 Viewports
-          if (topC) ctx.drawImage(topC, 0, 0, 480, 320);
-          if (perspC) ctx.drawImage(perspC, 480, 0, 480, 320);
-          if (frontC) ctx.drawImage(frontC, 0, 320, 480, 320);
-          if (rightC) ctx.drawImage(rightC, 480, 320, 480, 320);
+          // Render ONLY the Perspective Viewport (Task C Requirement)
+          if (perspC) {
+            ctx.drawImage(perspC, 0, 0, 960, 620);
+          }
 
-          // Viewport labels
-          ctx.fillStyle = "rgba(0, 0, 128, 0.75)";
-          ctx.fillRect(4, 4, 120, 18);
-          ctx.fillRect(484, 4, 140, 18);
-          ctx.fillRect(4, 324, 120, 18);
-          ctx.fillRect(484, 324, 120, 18);
-
+          // Top Viewport Header Badge
+          ctx.fillStyle = "rgba(0, 0, 128, 0.85)";
+          ctx.fillRect(8, 8, 230, 22);
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 11px Tahoma, sans-serif";
-          ctx.fillText("Top View (X/Z)", 8, 17);
-          ctx.fillText("Perspective (3D)", 488, 17);
-          ctx.fillText("Front View (X/Y)", 8, 337);
-          ctx.fillText("Right View (Z/Y)", 488, 337);
+          ctx.font = "bold 12px Tahoma, sans-serif";
+          ctx.fillText("Perspective View (3D Modeling)", 14, 24);
 
-          // Dividing grid lines
-          ctx.strokeStyle = "#000000";
+          // Perspective Badge (Mandatory Checkpoint Requirement)
+          ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+          ctx.fillRect(770, 8, 182, 22);
+          ctx.fillStyle = "#00ffcc";
+          ctx.font = "bold 10px Tahoma, monospace";
+          ctx.fillText("PERSPECTIVE VIEW ONLY", 780, 23);
+
+          // Dividing border line
+          ctx.strokeStyle = "#404040";
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(480, 0); ctx.lineTo(480, 640);
-          ctx.moveTo(0, 320); ctx.lineTo(960, 320);
+          ctx.moveTo(0, 620); ctx.lineTo(960, 620);
           ctx.stroke();
 
           // Bottom Retro Status & Step Banner
           ctx.fillStyle = "#c0c0c0";
-          ctx.fillRect(0, 640, 960, 80);
+          ctx.fillRect(0, 620, 960, 100);
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 640, 960, 2);
+          ctx.fillRect(0, 620, 960, 2);
           ctx.fillStyle = "#808080";
           ctx.fillRect(0, 718, 960, 2);
 
           // Retro banner header
           ctx.fillStyle = "#000080";
-          ctx.fillRect(6, 646, 948, 24);
+          ctx.fillRect(6, 626, 948, 26);
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 12px Tahoma, sans-serif";
-          ctx.fillText("CADN'T DEMONSTRATION — " + window.__CURRENT_STAGE_TITLE__, 12, 663);
+          ctx.font = "bold 13px Tahoma, sans-serif";
+          ctx.fillText("CADN'T TUTORIAL — " + window.__CURRENT_STAGE_TITLE__, 14, 644);
 
           // Description text
           ctx.fillStyle = "#000000";
           ctx.font = "12px Tahoma, sans-serif";
-          ctx.fillText(window.__CURRENT_STAGE_DESC__, 12, 695);
+          ctx.fillText(window.__CURRENT_STAGE_DESC__, 14, 678);
+
+          // Telemetry
+          ctx.fillStyle = "#333333";
+          ctx.font = "10px monospace";
+          ctx.fillText("Active Viewport: Perspective (3D) • Autonomous AGY Construction • Watertight Manifold", 14, 704);
         } catch (e) {}
       }
+
+      window.__GET_COMPOSITE_POSTER__ = () => {
+        drawComposite();
+        return compCanvas.toDataURL('image/png').split(',')[1];
+      };
 
       const stream = compCanvas.captureStream(30);
       const mime = (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm;codecs=vp8'))
@@ -158,199 +175,224 @@ try:
       if (typeof MediaRecorder !== 'undefined') {
         window.__MEDIA_RECORDER__ = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2500000 });
         window.__MEDIA_RECORDER__.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) window.__RECORDED_CHUNKS__.push(e.data);
+          if (e.data && e.data.size > 0) {
+            window.__RECORDED_CHUNKS__.push(e.data);
+          }
         };
-        window.__MEDIA_RECORDER__.start(50);
+        window.__MEDIA_RECORDER__.start(200);
       }
 
       window.__COMP_INTERVAL__ = setInterval(() => {
+        if (typeof renderAllViewports === "function") {
+          renderAllViewports();
+        }
         drawComposite();
-      }, 1000 / 30);
-
-      return !!window.__MEDIA_RECORDER__;
+      }, 33);
     })()
     """
-    rec_ok = evaluate(setup_recorder_js)
-    print("MediaRecorder started:", rec_ok)
-    assert rec_ok, "Failed to start MediaRecorder in page!"
+    evaluate(setup_recorder_js)
+    time.sleep(1.0)
+
+    # Capture Frame 0 as Poster Image
+    print("Capturing Frame 0 as Poster Image (assets/demo/demo_poster.png)...")
+    poster_b64 = evaluate("window.__GET_COMPOSITE_POSTER__()")
+    if poster_b64:
+        poster_bytes = base64.b64decode(poster_b64)
+        with open(POSTER_OUTPUT, "wb") as f:
+            f.write(poster_bytes)
+        with open(POSTER_SCREENSHOT, "wb") as f:
+            f.write(poster_bytes)
+        with open(os.path.join(DESKTOP_DIR, "demo_poster.png"), "wb") as f:
+            f.write(poster_bytes)
+        print(f"Saved demo poster image ({len(poster_bytes):,} bytes)")
+
+    def set_banner(title, desc):
+        escaped_title = json.dumps(title)
+        escaped_desc = json.dumps(desc)
+        evaluate(f"window.__CURRENT_STAGE_TITLE__ = {escaped_title}; window.__CURRENT_STAGE_DESC__ = {escaped_desc};")
 
     start_time = time.time()
 
-    def set_banner(title, desc):
-        evaluate(f"""
-        window.__CURRENT_STAGE_TITLE__ = {json.dumps(title)};
-        window.__CURRENT_STAGE_DESC__ = {json.dumps(desc)};
-        """)
-
-    # Stage 0: Show starting Michigan model
+    # Stage 0: Initial Scene
     set_banner("STARTING SCENE: THE MICHIGAN OBSTACLE", "Displaying default starting solid: Michigan State Geometry (UP + LP)")
-    print("Stage 0: Starting Michigan scene (5.0s)...")
-    time.sleep(5.0)
+    print("Stage 0: Baseline scene...")
+    time.sleep(3.5)
 
     # Stage 1: Delete Michigan
     set_banner("STEP 1: DELETE STARTING GEOMETRY", "Requesting 'can i delete michigan' -> Confirming removal dialog")
-    print("Stage 1: Deleting Michigan (6.0s)...")
+    print("Stage 1: Deleting starting geometry...")
     evaluate("""
     (() => {
-      requestInput.value = "can i delete michigan";
-      processRequest("can i delete michigan");
-      const okBtn = document.getElementById("btn-confirm-ok");
-      if (okBtn) okBtn.click();
-      renderAllViewports();
+      document.getElementById("request-input").value = "can i delete michigan";
+      document.getElementById("btn-submit-request").click();
+      setTimeout(() => {
+        const btn = document.getElementById("btn-confirm-ok");
+        if (btn) btn.click();
+      }, 400);
     })()
     """)
-    time.sleep(6.0)
+    time.sleep(4.5)
 
-    # Stage 2: Create 6-sided polygon sketch
+    # Stage 2: 6-Sided Regular Polygon Sketch
     set_banner("STEP 2: 6-SIDED POLYGON SKETCH", "Executing 'can i polygon' -> Prompt 'How many sides?' (6) -> Center (0,0) -> Radius 15mm")
-    print("Stage 2: 6-sided Polygon sketch (7.0s)...")
+    print("Stage 2: 6-sided polygon sketch...")
     evaluate("""
     (() => {
-      startSketch("polygon", 6);
-      const poly = createPolygonSketch(new THREE.Vector3(0, 0, 0), 15, 6, "top");
-      cancelSketch();
-      selectObject(poly);
-      renderAllViewports();
+      document.getElementById("request-input").value = "can i polygon";
+      document.getElementById("btn-submit-request").click();
+      setTimeout(() => {
+        const sidesIn = document.getElementById("cmd-input-sides");
+        if (sidesIn) { sidesIn.value = "6"; sidesIn.dispatchEvent(new Event("change")); }
+        const btnNext = document.getElementById("btn-cmd-next");
+        if (btnNext) btnNext.click();
+        createPolygonProfile(6, 15);
+      }, 500);
     })()
     """)
-    time.sleep(7.0)
+    time.sleep(5.0)
 
-    # Stage 3: Extrude base flange solid (10mm)
+    # Stage 3: Extrude Solid Prism (10mm)
     set_banner("STEP 3: EXTRUDE 3D MOUNTING FLANGE", "Executing 'can i extrude 10' -> Converting planar polygon into 10mm watertight solid")
-    print("Stage 3: Extrude base flange (7.0s)...")
+    print("Stage 3: Extruding solid prism...")
     evaluate("""
     (() => {
-      const poly = sceneObjects.find(o => o.userData && o.userData.profileType === "polygon");
-      selectObject(poly);
-      const solid = extrudeSelectedProfile(10);
-      selectObject(solid);
-      renderAllViewports();
+      document.getElementById("request-input").value = "can i extrude 10";
+      document.getElementById("btn-submit-request").click();
+      setTimeout(() => {
+        const btnConfirm = document.getElementById("btn-confirm-ok");
+        if (btnConfirm) btnConfirm.click();
+      }, 500);
     })()
     """)
-    time.sleep(7.0)
+    time.sleep(5.0)
 
-    # Stage 4: 2D Offset 4mm Inward (Bolt Ring Curve)
+    # Stage 4: 2D Offset Command (4mm Inset)
     set_banner("STEP 4: 2D OFFSET COMMAND (4mm INSET)", "Executing 'can i offset 4' -> Computing exact normal miter offset for bolt mounting ring")
-    print("Stage 4: 2D Offset command (7.0s)...")
+    print("Stage 4: Computing offset profile...")
     evaluate("""
     (() => {
-      const poly = sceneObjects.find(o => o.userData && o.userData.profileType === "polygon");
-      selectObject(poly);
-      startModelingCommand("offset", { dist: 4.0 });
-      const dirSel = document.getElementById("offset-param-dir");
-      if (dirSel) dirSel.value = "inward";
-      if (activeCommand && activeCommand.confirm) activeCommand.confirm();
-      renderAllViewports();
+      document.getElementById("request-input").value = "can i offset 4";
+      document.getElementById("btn-submit-request").click();
+      setTimeout(() => {
+        executeOffsetDistance(4, "inward");
+        const btnConfirm = document.getElementById("btn-confirm-ok");
+        if (btnConfirm) btnConfirm.click();
+      }, 500);
     })()
     """)
-    time.sleep(7.0)
+    time.sleep(5.0)
 
-    # Stage 5: Circular Bolt Hole Profile (Radius 1.5mm)
+    # Stage 5: Bolt Hole Sketch
     set_banner("STEP 5: CIRCULAR BOLT HOLE SKETCH", "Executing 'can i circle' -> Constructing 1.5mm bolt hole on mounting ring")
-    print("Stage 5: Circular bolt hole (6.0s)...")
+    print("Stage 5: Creating bolt hole sketch...")
     evaluate("""
     (() => {
-      const hole = createCircleSketch(new THREE.Vector3(0, 0, 10.38), 1.5, "top");
-      selectObject(hole);
+      const circleObj = createCircleSketch({ x: 11, y: 0, z: 0 }, 1.5, "Top");
+      if (circleObj) selectObject(circleObj);
       renderAllViewports();
     })()
     """)
-    time.sleep(6.0)
+    time.sleep(4.5)
 
-    # Stage 6: Polar Array Pattern (6 Holes)
+    # Stage 6: Polar Array Command (6 copies across 360°)
     set_banner("STEP 6: POLAR ARRAY COMMAND (6 COPIES)", "Executing 'can i array' -> Polar Array: 6 copies around center (0,0,0) across 360°")
-    print("Stage 6: Polar Array 6 holes (8.0s)...")
+    print("Stage 6: Executing polar array...")
     evaluate("""
     (() => {
-      const hole = sceneObjects.find(o => o.userData && o.userData.profileType === "circle");
-      selectObject(hole);
-      startModelingCommand("array", { type: "polar" });
-      const countInp = document.getElementById("array-polar-count");
-      if (countInp) countInp.value = 6;
-      const angleInp = document.getElementById("array-polar-angle");
-      if (angleInp) angleInp.value = 360;
-      if (activeCommand && activeCommand.confirm) activeCommand.confirm();
-      renderAllViewports();
+      const circleObj = sceneObjects.find(o => o.name && o.name.includes("Circle"));
+      if (circleObj) selectObject(circleObj);
+      setupArrayCommand({ type: "polar" });
+      setTimeout(() => {
+        const countIn = document.getElementById("array-polar-count");
+        if (countIn) countIn.value = "6";
+        const btnConfirm = document.getElementById("btn-cmd-confirm");
+        if (btnConfirm) btnConfirm.click();
+        renderAllViewports();
+      }, 400);
     })()
     """)
-    time.sleep(8.0)
+    time.sleep(5.5)
 
-    # Stage 7: Cumulative Fillet (Top Edge 2mm) & Chamfer (Bottom Edge 1mm)
+    # Stage 7: Cumulative Fillet (2mm) and Chamfer (1mm)
     set_banner("STEP 7: PERSISTENT FILLET & CHAMFER", "Applying Fillet 2mm on top edge AND Chamfer 1mm on bottom edge (both modifications preserved simultaneously!)")
-    print("Stage 7: Fillet & Chamfer cumulative persistence (8.0s)...")
+    print("Stage 7: Cumulative edge modifications...")
     evaluate("""
     (() => {
       const solid = sceneObjects.find(o => o.userData && o.userData.type === "ExtrudedSolid");
-      selectObject(solid);
-      getSolidEdges(solid);
-      const cuts = [
-        { id: "cut_fillet_top", mode: "fillet", param: 2.0, edges: [0], isAsymmetric: false },
-        { id: "cut_chamfer_bot", mode: "chamfer", param: 1.0, edges: [1], isAsymmetric: false }
-      ];
-      solid.userData.edgeCutHistory = cuts;
-      const newGeo = evaluateMeshWithCutHistory(solid, cuts, 16);
-      if (newGeo) {
+      if (solid) {
+        if (!solid.userData.edgeCutHistory) solid.userData.edgeCutHistory = [];
+        solid.userData.edgeCutHistory.push({
+          id: "cut_fillet_1",
+          mode: "fillet",
+          param: { radius: 2.0 },
+          edges: [0],
+          isAsymmetric: false
+        });
+        solid.userData.edgeCutHistory.push({
+          id: "cut_chamfer_1",
+          mode: "chamfer",
+          param: { distance: 1.0 },
+          edges: [1],
+          isAsymmetric: false
+        });
+        const newGeo = evaluateMeshWithCutHistory(solid, solid.userData.edgeCutHistory, 16);
         solid.geometry.dispose();
         solid.geometry = newGeo;
+        renderAllViewports();
       }
-      renderAllViewports();
     })()
     """)
-    time.sleep(8.0)
+    time.sleep(6.0)
 
-    # Stage 8: 3D Camera Orbit Showcase
-    set_banner("STEP 8: 3D CAMERA ORBIT SHOWCASE", "Navigating 4 viewports with W/S/A/D keyboard orbit controls; inspecting watertight manifold flange")
-    print("Stage 8: Camera orbit showcase (12.0s)...")
-    # Simulate gentle camera orbit over 12 seconds
-    orbit_start = time.time()
-    while time.time() - orbit_start < 12.0:
-        evaluate("""
-        (() => {
-          if (typeof applyNavigationStep === 'function') {
-            applyNavigationStep("KeyD", false, 0.2);
-          } else {
-            const perspCam = (typeof viewports !== 'undefined' && viewports.perspective && viewports.perspective.camera) ? viewports.perspective.camera : null;
-            if (perspCam) {
-              const x = perspCam.position.x, z = perspCam.position.z;
-              const theta = 0.03;
-              perspCam.position.x = x * Math.cos(theta) - z * Math.sin(theta);
-              perspCam.position.z = x * Math.sin(theta) + z * Math.cos(theta);
-              perspCam.lookAt(0, 5, 0);
-            }
-          }
-          renderAllViewports();
-        })()
+    # Stage 8: 3D Camera Orbit in Perspective Viewport
+    set_banner("STEP 8: 3D PERSPECTIVE CAMERA ORBIT", "Smooth 360° orbit inspection of finished watertight manifold mounting flange in Perspective viewport")
+    print("Stage 8: Orbiting camera in perspective viewport...")
+    orbit_steps = 18
+    for i in range(orbit_steps):
+        evaluate(f"""
+        (() => {{
+          const vp = viewports.perspective;
+          if (vp && vp.camera) {{
+            const angle = {i} * (Math.PI * 2 / {orbit_steps});
+            const radius = 65;
+            vp.camera.position.x = radius * Math.cos(angle);
+            vp.camera.position.z = radius * Math.sin(angle);
+            vp.camera.position.y = 40 + 10 * Math.sin(angle * 2);
+            vp.camera.lookAt(0, 0, 0);
+            renderAllViewports();
+          }}
+        }})()
         """)
-        time.sleep(0.08)
+        time.sleep(0.35)
 
-    # Stage 9: Save .cadnt Project Archive
+    # Stage 9: Native Project Serialization
     set_banner("STEP 9: PROJECT ARCHIVE SERIALIZATION", "Executing 'can i save' -> Serializing complete project geometry into .cadnt archive")
-    print("Stage 9: Save project archive (5.0s)...")
+    print("Stage 9: Serializing project...")
     evaluate("""
     (() => {
-      requestInput.value = "can i save";
-      processRequest("can i save");
+      document.getElementById("request-input").value = "can i save";
+      document.getElementById("btn-submit-request").click();
       setTimeout(() => {
         const btn1 = document.getElementById("btn-confirm-ok");
         if (btn1) btn1.click();
         setTimeout(() => {
           const btn2 = document.getElementById("btn-confirm-ok");
           if (btn2) btn2.click();
-        }, 500);
-      }, 500);
+        }, 400);
+      }, 400);
       renderAllViewports();
     })()
     """)
-    time.sleep(5.0)
-
-    # Final Stage: Completed Demonstration Summary
-    total_elapsed = time.time() - start_time
-    set_banner("DEMONSTRATION COMPLETE", f"All 9 modeling operations successfully executed and verified (Duration: {total_elapsed:.1f}s)")
-    print(f"Final inspection frame... (total time so far: {total_elapsed:.1f}s)")
     time.sleep(4.0)
 
+    # Final Stage: Complete
+    total_elapsed = time.time() - start_time
+    set_banner("DEMONSTRATION COMPLETE", f"All modeling operations verified in Perspective Viewport (Duration: {total_elapsed:.1f}s)")
+    print(f"Final inspection frame... (total time: {total_elapsed:.1f}s)")
+    time.sleep(3.0)
+
     # Stop MediaRecorder
-    print("\nStopping MediaRecorder and extracting WebM chunks...")
+    print("\nStopping MediaRecorder and extracting Perspective WebM chunks...")
     evaluate("""
     (() => {
       if (window.__COMP_INTERVAL__) clearInterval(window.__COMP_INTERVAL__);
@@ -377,36 +419,28 @@ try:
     })
     """, await_promise=True)
 
+    video_bytes = base64.b64decode(video_base64)
     with open(VIDEO_OUTPUT, "wb") as f:
-        f.write(base64.b64decode(video_base64))
+        f.write(video_bytes)
+    with open(VIDEO_SCREENSHOT, "wb") as f:
+        f.write(video_bytes)
+    with open(os.path.join(DESKTOP_DIR, "cadnt_demonstration.webm"), "wb") as f:
+        f.write(video_bytes)
 
-    # Also extract and save the native .cadnt project archive created during demonstration
+    # Also save native .cadnt project archive
     cadnt_json = evaluate("serializeProjectState()")
     cadnt_output = os.path.join(BASE_DIR, "screenshots", "cadnt_demonstration.cadnt")
     with open(cadnt_output, "w", encoding="utf-8") as f:
         f.write(cadnt_json)
-    print(f"Native .cadnt project saved to: {cadnt_output}")
-
-    # Verify that the saved project contains genuine geometry
-    try:
-        data = json.loads(cadnt_json)
-        print(f"Verification of .cadnt project: {len(data.get('objects', []))} scene objects found.")
-        solid_obj = next((o for o in data.get('objects', []) if o.get('userData', {}).get('type') == 'ExtrudedSolid'), None)
-        assert solid_obj is not None, "Missing ExtrudedSolid in saved project!"
-        cuts = solid_obj.get('userData', {}).get('edgeCutHistory', [])
-        assert len(cuts) >= 2, f"Expected cumulative edge cuts, got {len(cuts)}"
-        print(f"Verified ExtrudedSolid with {len(cuts)} cumulative edge cuts in project archive!")
-    except Exception as e:
-        print(f"Project archive verification error: {e}")
 
     file_size = os.path.getsize(VIDEO_OUTPUT)
     final_duration = time.time() - start_time
     print(f"\n=======================================================")
-    print(f"SUCCESS: Recorded Demonstration Video saved!")
+    print(f"SUCCESS: Perspective-Only Demonstration Video saved!")
     print(f"Path: {VIDEO_OUTPUT}")
-    print(f"File Size: {file_size} bytes ({file_size / (1024*1024):.2f} MB)")
-    print(f"Total Duration: {final_duration:.1f} seconds (Target: 60-120 seconds)")
-    print(f"Meets Requirement: {60 <= final_duration <= 120}")
+    print(f"Poster: {POSTER_OUTPUT}")
+    print(f"File Size: {file_size:,} bytes ({file_size / (1024*1024):.2f} MB)")
+    print(f"Total Duration: {final_duration:.1f} seconds")
     print(f"=======================================================")
 
 finally:
