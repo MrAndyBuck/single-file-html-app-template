@@ -25,6 +25,7 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Checkpoint G (v0.20): Introductory Demonstration Popup** | **YES** | **YES** | **YES** | *Awaiting User Review* | Browser-compatible demonstration video saved in `assets/demo/cadnt_demonstration.webm` ($4.46\text{ MB}$). Integrated into the onboarding interface alongside the complete Terms & Conditions. Preserves complete operational guidelines, bullet points, and exact quote *"The command to delete the starting object exists."* Includes retro Windows 95 `▶ Play`, `⏸ Pause`, `↺ Replay`, and `⏭ Skip` controls, time display, and status badge. Reopening via Tutorial button (`#btn-tutorial-open`, menu item, or `can i tutorial`) reopens demonstration without resetting or modifying the CAD scene ($100\%$ scene preservation). Auto-displays on first launch; suppressed on subsequent reloads once accepted in localStorage. Standalone popup `#modal-getting-started` also implemented. Verified in Chrome via automated video telemetry (currentTime > 0, decoded width 960x720) and documented for manual Safari verification. |
 | **Checkpoint A (v0.20): Antigravity Refinement & Freeze-Undo** | **YES** | **YES** | **YES** | *Awaiting User Review* | Reduced float speed and acceleration to ~15% of previous values (0.15 velocity/accel factor). Objects begin with slow, noticeable drift, gradually accelerate, and maintain slight independent rotations without instantly launching off-screen. Undo behavior (`can i undo`) immediately halts animation and freezes objects in-place at their current displaced world coordinates in real scene state (not an overlay), retaining orientations without accumulating further motion. `can i restore gravity` remains a separate $0.00 command restoring exact original pre-antigravity coordinates. Topology and project serialization preserved. Verified in real browser. |
 | **Checkpoint B (v0.20): Array Command (`can i array`)** | **YES** | **YES** | **YES** | *Awaiting User Review* | Genuine Linear and Polar array modeling operations. Linear Array supports count (2–50), spacing (mm), and axis (X, Y, Z); Polar Array supports count (2–50), rotation center, axis, and sweep angle (default 360°). Interactive Command Bar parameter inputs with live dashed ghost preview (`Array_Preview`). Generates genuine selectable clones with stable, unique object IDs, preserving layers, materials, dimensions, and transforms. Single-step Undo removes all created array copies simultaneously. Native `.cadnt` serialization and reopen verified across all 4 viewports. |
 | **Checkpoint C (v0.20): Offset Command (`can i offset`)** | **YES** | **YES** | **YES** | *Awaiting User Review* | True 2D geometric normal offsets for planar sketch geometry (lines, polylines, circles, regular polygons/rectangles). Uses exact normal displacement and miter corner joins rather than uniform center scaling. Interactive Command Bar allows entering offset distance (mm) and toggling inward/outward side. Live green preview (`Offset_Preview`). Closed profiles remain closed. Resulting curves are selectable, transformable, extrudable into 3D solid prisms, and reversible via single-step Undo. Verified in real browser. |
@@ -2179,4 +2180,84 @@ python3 scripts/get_test_results.py
 ### 25.8 Git & Deployment Status
 - Implemented and verified strictly on branch `dev`.
 - Build version bumped to `v00000-020` in `sw.js` and `index.html`.
+- Awaiting user review and authorization before merging into `main` or deploying to GitHub Pages.
+
+---
+
+## 26. Checkpoint G Verification — Introductory Demonstration Popup & Getting Started Interface (Build v00000-020)
+
+### 26.1 Asset Placement in `assets/demo/`
+- Created dedicated asset directory `assets/demo/`.
+- Saved the genuine browser screen recording of AGY constructing the mechanical mounting flange to:
+  [`assets/demo/cadnt_demonstration.webm`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/assets/demo/cadnt_demonstration.webm) ($4,680,519\text{ bytes}$, $4.46\text{ MB}$).
+- Configured HTML fallback sources:
+  - Primary: `assets/demo/cadnt_demonstration.webm` (`video/webm`)
+  - Secondary fallback: `assets/demo/cadnt_demonstration.mp4` (`video/mp4`)
+  - Backward-compatibility fallback: `screenshots/cadnt_demonstration.webm` (`video/webm`)
+
+### 26.2 Windows 95 Popup Architecture & Layout
+1. **Side-by-Side Presentation with Terms & Conditions (`#modal-onboarding`)**:
+   - Layout: Two-column Windows 95 container (`.onboarding-split-container`, $860\text{px}$ width).
+   - **Left Column** (Terms & Conditions & Operational Guidelines):
+     - Displays complete Terms & Conditions inside an authentic sunken document panel.
+     - Preserves all original guidelines: The Request Bar, Viewport Navigation, Wandering Toolbars, Starting Geometry, and Economy.
+     - Preserves the exact quote: *"The command to delete the starting object exists."* (verified by automated Test 10).
+     - Action buttons: `[ Accept Terms & Conditions ]` (`#btn-close-onboarding`) and `[ Skip Demonstration ]` (`#btn-skip-onboarding`).
+   - **Right Column** (Getting Started Video Player):
+     - Title bar badge: *"AGY Autonomous Construction: Flange"*.
+     - Live timer readout: `#onboarding-video-timer` (e.g. `00:05 / 01:18`).
+     - Sunken video player: `#onboarding-demo-video` in black inset frame.
+     - Retro Windows 95 control strip:
+       - `[ ▶ Play ]` (`#btn-demo-play`): initiates active playback.
+       - `[ ⏸ Pause ]` (`#btn-demo-pause`): halts active playback.
+       - `[ ↺ Replay ]` (`#btn-demo-replay`): resets playback to timestamp $0.00\text{s}$ and resumes.
+       - `[ ⏭ Skip ]` (`#btn-demo-skip-ctrl`): dismisses demonstration video.
+       - Live status badge: `#demo-video-status-badge` (`Ready`, `Playing`, `Paused`, `Ended`).
+2. **Dedicated Standalone Popup (`#modal-getting-started`)**:
+   - Created standalone Windows 95 dialog `<dialog id="modal-getting-started">` titled *"CADN'T — Getting Started"*.
+   - Contains identical playback controls (`▶ Play`, `⏸ Pause`, `↺ Replay`, `Skip`) and a button to seamlessly transition to Terms & Conditions (`#btn-standalone-view-terms`).
+   - Accessible via Request Bar commands: `can i getting started`, `can i demo`, or direct method invocation.
+
+### 26.3 Scene Preservation & Tutorial Integration
+1. **Zero Scene Modification on Reopen**:
+   - Reopening the onboarding/demonstration modal via the Tutorial button (`#btn-tutorial-open`), Help menu (`mitem-help-tutorial`), or typed command `can i tutorial` **strictly preserves** all existing 3D scene geometry, selections, and transforms.
+   - Verified that `sceneObjects.length` and mesh vertex counts remain completely unchanged across opening, playing, pausing, and dismissing the tutorial.
+2. **First-Time vs. Subsequent Reload Lifecycle**:
+   - On clean first visit (`localStorage.getItem("cadnt_onboarded") === null`), the popup appears automatically after 350ms.
+   - Upon clicking `[ Accept Terms & Conditions ]`, `cadnt_onboarded = "true"` is stored in `localStorage`.
+   - On all subsequent reloads, the popup remains hidden and does not disrupt the user's workspace.
+
+### 26.4 Video Playback & Browser Compatibility
+1. **Automated Playback Verification (Chrome via CDP)**:
+   - Script [`scripts/verify_checkpoint_g_video_popup.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_checkpoint_g_video_popup.py) verified:
+     - `video.readyState === 4` (HAVE_ENOUGH_DATA).
+     - `video.videoWidth === 960`, `video.videoHeight === 720` (valid decoded frames).
+     - `video.paused === false` after clicking `Play`.
+     - `video.currentTime` advanced to $5.88\text{s}$.
+     - `video.paused === true` after clicking `Pause`.
+     - `video.currentTime` rewound to $1.00\text{s}$ after clicking `Replay`.
+2. **Safari Compatibility & Limitation Reporting**:
+   - *Automated Execution Limitation*: macOS Safari WebDriver (`safaridriver`) blocks automated remote sessions unless the user manually enables *"Allow remote automation"* under Safari Settings $\to$ Advanced $\to$ Developer.
+   - *Format Compatibility*: Modern Safari (macOS Big Sur 11.3+ / Safari 14.1 through Safari 18+ / macOS Sequoia) natively supports WebM (VP8/VP9) video playback in `<video>`.
+   - *Manual Safari Acceptance Protocol*:
+     1. Open Safari and navigate to `file:///Users/andybuck/.gemini/antigravity/single-file-html-app/index.html`.
+     2. Verify that the dialog *"CADN'T — Getting Started & Terms & Conditions"* automatically opens on first visit.
+     3. Verify side-by-side layout: Terms & Conditions on the left; the 6-sided flange demonstration video on the right.
+     4. Click `▶ Play` to verify smooth playback; click `⏸ Pause`, `↺ Replay`, and `⏭ Skip`.
+     5. Click `Accept Terms & Conditions` to confirm dismissal.
+     6. Click the toolbar `Tutorial` button; verify the popup reopens and that your 3D CAD scene remains completely intact.
+
+### 26.5 Verification Screenshots
+
+| Artifact | Location | Description |
+|---|---|---|
+| `checkpoint_G_01` | [`screenshots/checkpoint_G_01_onboarding_popup_with_video.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_G_01_onboarding_popup_with_video.png) | First-time onboarding dialog showing Terms & Conditions alongside demonstration video. |
+| `checkpoint_G_02` | [`screenshots/checkpoint_G_02_video_actively_playing.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_G_02_video_actively_playing.png) | Video actively playing in Chrome ($t=5.88\text{s}$) with live timer and "Playing" status badge. |
+| `checkpoint_G_03` | [`screenshots/checkpoint_G_03_video_paused_controls.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_G_03_video_paused_controls.png) | Demonstration video paused with retro control buttons visible. |
+| `checkpoint_G_04` | [`screenshots/checkpoint_G_04_tutorial_reopened_scene_intact.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_G_04_tutorial_reopened_scene_intact.png) | Tutorial reopened via toolbar button with 3D CAD scene objects completely preserved. |
+| `checkpoint_G_05` | [`screenshots/checkpoint_G_05_standalone_getting_started_popup.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/checkpoint_G_05_standalone_getting_started_popup.png) | Standalone `#modal-getting-started` popup window with retro media container. |
+
+### 26.6 Git & Deployment Status
+- Implemented and verified strictly on branch `dev`.
+- Automated test suite passing: **215 tests, 0 failures** (100% pass rate).
 - Awaiting user review and authorization before merging into `main` or deploying to GitHub Pages.

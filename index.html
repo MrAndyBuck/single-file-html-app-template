@@ -1089,6 +1089,80 @@
     font-size: 11px;
   }
   dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+  /* Onboarding & Getting Started Modal Side-by-Side Layout (Checkpoint G) */
+  #modal-onboarding {
+    width: 860px;
+    max-width: 96vw;
+    height: auto;
+    max-height: 92vh;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+  }
+  #modal-onboarding[open] {
+    display: flex;
+  }
+  #modal-getting-started {
+    width: 680px;
+    max-width: 95vw;
+    height: auto;
+    max-height: 90vh;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    z-index: 1001;
+  }
+  #modal-getting-started[open] {
+    display: flex;
+  }
+  .onboarding-split-container {
+    display: flex;
+    gap: 10px;
+    margin: 6px 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+  }
+  .onboarding-tc-col {
+    flex: 1 1 360px;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+  }
+  .onboarding-demo-col {
+    flex: 1 1 380px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+  }
+  .win95-media-panel {
+    border: 2px inset #dfdfdf;
+    background: #c0c0c0;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+  }
+  .btn-demo-ctrl {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    background: var(--win95-bg);
+    border-top: 1px solid var(--win95-light);
+    border-left: 1px solid var(--win95-light);
+    border-right: 1px solid var(--win95-darker);
+    border-bottom: 1px solid var(--win95-darker);
+    box-shadow: inset 1px 1px 0px var(--win95-midlight), inset -1px -1px 0px var(--win95-dark);
+  }
+  .btn-demo-ctrl:active {
+    border-top: 1px solid var(--win95-darker);
+    border-left: 1px solid var(--win95-darker);
+    border-right: 1px solid var(--win95-light);
+    border-bottom: 1px solid var(--win95-light);
+    box-shadow: inset 1px 1px 0px var(--win95-dark), inset -1px -1px 0px var(--win95-midlight);
+    padding: 4px 7px 2px 9px;
+  }
   /* Help Dialog Side-by-Side Layout with Cubert (Checkpoint B) */
   #modal-help {
     width: 620px;
@@ -1992,35 +2066,115 @@
   </footer>
 </div>
 
-<!-- Onboarding Modal -->
+<!-- Onboarding Modal (Terms & Conditions Alongside Getting Started Demonstration) -->
 <dialog id="modal-onboarding">
   <h2>
     <span class="win95-dialog-title" data-i18n="modals.onboarding_title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      Welcome to CADN'T v0.1
+      CADN'T — Getting Started & Terms & Conditions
     </span>
-    <button class="win95-btn-caption btn-caption-close" onclick="this.closest('dialog').close()" title="Close">✕</button>
+    <button class="win95-btn-caption btn-caption-close" onclick="closeOnboardingModal(false)" title="Close">✕</button>
   </h2>
-  <p data-i18n="modals.onboarding_intro">CADN'T is a precision 3D CAD application engineered with intentionally dysfunctional interactions. Please review operational guidelines:</p>
-  <ul>
-    <li><strong>The Request Bar</strong>: All typed commands must begin with <code>Can I [command]</code> (e.g. <code>Can I box</code>). Commands lacking polite deference will receive a curt <em>"Nope."</em></li>
-    <li><strong>Viewport Navigation</strong>: Trackpad and mouse wheels will <strong>not</strong> navigate viewports. Orbit with <code>W / S / A / D</code>, pan with <code>Arrow Keys</code>, and zoom with <code>Shift + Arrow Keys</code>. Mouse clicks are strictly reserved for raycast selection.</li>
-    <li><strong>Wandering Toolbars</strong>: Command icons relocate across the toolbar after each execution to stimulate neural elasticity.</li>
-    <li><strong>Starting Geometry</strong>: <em>The command to delete the starting object exists.</em></li>
-    <li><strong>Economy</strong>: You have received a starting grant of $249.00 in fictional CAD credits.</li>
-  </ul>
-  <div style="margin: 10px 0; border: 2px inset #dfdfdf; background: #c0c0c0; padding: 2px;">
-    <div style="background: #000080; color: #fff; font-size: 11px; font-weight: bold; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center;">
-      <span>CADN'T Modeling Demonstration — 6-Sided Mounting Flange</span>
-      <span>Live Video</span>
+  
+  <div class="onboarding-split-container">
+    <!-- Left Column: Complete Terms & Conditions and Operational Guidelines -->
+    <div class="onboarding-tc-col">
+      <div style="font-weight: bold; margin-bottom: 4px; color: #000080;" data-i18n="modals.onboarding_intro">
+        Operational Guidelines & Terms:
+      </div>
+      <div style="flex: 1 1 auto; background: #ffffff; border: 1px solid var(--win95-dark); box-shadow: inset 1px 1px 0 #000000; padding: 8px 10px; overflow-y: auto; max-height: 380px;">
+        <p style="margin-top: 0;">CADN'T is a precision 3D CAD application engineered with intentionally dysfunctional interactions. Please review operational guidelines:</p>
+        <ul style="margin: 0; padding-left: 18px;">
+          <li><strong>The Request Bar</strong>: All typed commands must begin with <code>Can I [command]</code> (e.g. <code>Can I box</code>). Commands lacking polite deference will receive a curt <em>"Nope."</em></li>
+          <li><strong>Viewport Navigation</strong>: Trackpad and mouse wheels will <strong>not</strong> navigate viewports. Orbit with <code>W / S / A / D</code>, pan with <code>Arrow Keys</code>, and zoom with <code>Shift + Arrow Keys</code>. Mouse clicks are strictly reserved for raycast selection.</li>
+          <li><strong>Wandering Toolbars</strong>: Command icons relocate across the toolbar after each execution to stimulate neural elasticity.</li>
+          <li><strong>Starting Geometry</strong>: <em>The command to delete the starting object exists.</em></li>
+          <li><strong>Economy</strong>: You have received a starting grant of $249.00 in fictional CAD credits.</li>
+        </ul>
+      </div>
     </div>
-    <video id="onboarding-demo-video" controls playsinline preload="metadata" style="width: 100%; max-height: 220px; display: block; background: #000;" src="screenshots/cadnt_demonstration.webm">
-      Your browser does not support HTML5 WebM video playback.
-    </video>
+
+    <!-- Right Column: CADN'T Introductory Demonstration Video -->
+    <div class="onboarding-demo-col">
+      <div style="font-weight: bold; margin-bottom: 4px; color: #000080;">
+        CADN'T — Getting Started (Recorded Demonstration):
+      </div>
+      <div class="win95-media-panel">
+        <div style="background: #000080; color: #ffffff; font-size: 11px; font-weight: bold; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+          <span>AGY Autonomous Construction: Flange</span>
+          <span id="onboarding-video-timer" style="font-family: monospace; font-size: 10px;">00:00 / 01:18</span>
+        </div>
+        <div style="background: #000000; border: 1px solid #404040; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+          <video id="onboarding-demo-video" muted controls playsinline preload="auto" style="width: 100%; height: auto; max-height: 220px; display: block; background: #000;" src="assets/demo/cadnt_demonstration.webm">
+            <source src="assets/demo/cadnt_demonstration.webm" type="video/webm">
+            <source src="assets/demo/cadnt_demonstration.mp4" type="video/mp4">
+            <source src="screenshots/cadnt_demonstration.webm" type="video/webm">
+            Your browser does not support HTML5 video playback.
+          </video>
+        </div>
+        <!-- Retro Windows 95 Video Controls -->
+        <div class="demo-controls-strip" style="display: flex; gap: 4px; margin-top: 4px; align-items: center; justify-content: space-between;">
+          <div style="display: flex; gap: 4px;">
+            <button class="win95-btn btn-demo-ctrl" id="btn-demo-play" title="Play demonstration video">▶ Play</button>
+            <button class="win95-btn btn-demo-ctrl" id="btn-demo-pause" title="Pause demonstration video">⏸ Pause</button>
+            <button class="win95-btn btn-demo-ctrl" id="btn-demo-replay" title="Replay demonstration from start">↺ Replay</button>
+            <button class="win95-btn btn-demo-ctrl" id="btn-demo-skip-ctrl" title="Skip demonstration video">⏭ Skip</button>
+          </div>
+          <div id="demo-video-status-badge" style="font-size: 10px; padding: 2px 5px; background: #ffffff; border: 1px inset #808080; font-family: monospace;">Ready</div>
+        </div>
+      </div>
+      <div style="font-size: 10px; color: #555555; margin-top: 4px; font-style: italic;">
+        * Genuine browser screen recording of AGY constructing a 6-sided mounting flange across all 4 viewports.
+      </div>
+    </div>
   </div>
-  <div class="dialog-actions" style="display: flex; justify-content: space-between; align-items: center;">
-    <button class="btn-dialog btn-secondary" onclick="this.closest('dialog').close()" id="btn-skip-onboarding">Skip Demonstration</button>
-    <button class="btn-dialog btn-primary" id="btn-close-onboarding" data-i18n="modals.onboarding_accept">Accept Terms & Conditions</button>
+
+  <div class="dialog-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+    <button class="btn-dialog btn-secondary" onclick="closeOnboardingModal(false)" id="btn-skip-onboarding">Skip Demonstration</button>
+    <button class="btn-dialog btn-primary" onclick="closeOnboardingModal(true)" id="btn-close-onboarding" data-i18n="modals.onboarding_accept">Accept Terms & Conditions</button>
+  </div>
+</dialog>
+
+<!-- Standalone CADN'T Getting Started Modal -->
+<dialog id="modal-getting-started">
+  <h2>
+    <span class="win95-dialog-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+      CADN'T — Getting Started
+    </span>
+    <button class="win95-btn-caption btn-caption-close" onclick="closeGettingStartedModal()" title="Close">✕</button>
+  </h2>
+  <div style="margin: 4px 0 8px 0; font-size: 11px;">
+    Observe AGY operate CADN'T in real-time across all 4 viewports to construct a 6-sided mechanical mounting flange with genuine parametric geometry:
+  </div>
+  <div class="win95-media-panel">
+    <div style="background: #000080; color: #ffffff; font-size: 11px; font-weight: bold; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+      <span>CADN'T Recorded Demonstration</span>
+      <span id="standalone-video-timer" style="font-family: monospace; font-size: 10px;">00:00 / 01:18</span>
+    </div>
+    <div style="background: #000000; border: 1px solid #404040; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 240px;">
+      <video id="standalone-demo-video" muted controls playsinline preload="auto" style="width: 100%; height: auto; max-height: 300px; display: block; background: #000;" src="assets/demo/cadnt_demonstration.webm">
+        <source src="assets/demo/cadnt_demonstration.webm" type="video/webm">
+        <source src="assets/demo/cadnt_demonstration.mp4" type="video/mp4">
+        <source src="screenshots/cadnt_demonstration.webm" type="video/webm">
+        Your browser does not support HTML5 video playback.
+      </video>
+    </div>
+    <div class="demo-controls-strip" style="display: flex; gap: 4px; margin-top: 4px; align-items: center; justify-content: space-between;">
+      <div style="display: flex; gap: 4px;">
+        <button class="win95-btn btn-demo-ctrl" id="btn-standalone-play" title="Play demonstration video">▶ Play</button>
+        <button class="win95-btn btn-demo-ctrl" id="btn-standalone-pause" title="Pause demonstration video">⏸ Pause</button>
+        <button class="win95-btn btn-demo-ctrl" id="btn-standalone-replay" title="Replay demonstration from start">↺ Replay</button>
+      </div>
+      <div id="standalone-video-status-badge" style="font-size: 10px; padding: 2px 5px; background: #ffffff; border: 1px inset #808080; font-family: monospace;">Ready</div>
+    </div>
+  </div>
+  <div class="dialog-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+    <button class="btn-dialog btn-secondary" onclick="closeGettingStartedModal()" id="btn-standalone-skip">Skip</button>
+    <div style="display: flex; gap: 6px;">
+      <button class="btn-dialog" id="btn-standalone-view-terms" onclick="openTermsFromGettingStarted()">View Terms & Conditions</button>
+      <button class="btn-dialog btn-primary" onclick="closeGettingStartedModal()">Close</button>
+    </div>
   </div>
 </dialog>
 
@@ -12099,18 +12253,13 @@ const COMMAND_REGISTRY = [
     id: "tutorial",
     category: "13. Debugging and development commands",
     syntax: "Can I tutorial",
-    aliases: ["Can I tutorial", "tutorial"],
-    description: "Displays the onboarding handbook window.",
+    aliases: ["Can I tutorial", "tutorial", "Can I demo", "demo", "Can I getting started", "getting started"],
+    description: "Displays the CADN'T onboarding handbook and introductory recorded demonstration.",
     prerequisites: "None",
     cost: "$0.00",
     status: "Working",
     control: "#request-input",
-    execute: () => {
-      document.getElementById("modal-onboarding").showModal();
-      showCubertPopup("How can I help you?", "cheerful");
-      cubertConvStage = "AWAITING_DESCRIPTION";
-      addLog("Onboarding handbook presented.", "log-success");
-    }
+    execute: () => openTutorialModal()
   },
   {
     id: "theme",
@@ -12624,11 +12773,8 @@ function executeCommand(rawCmd) {
     case "mute": CADNT_AUDIO.setMute(!CADNT_AUDIO.mute); break;
     case "ad": showAdPopup(); break;
     case "help": openHelpWindow(); addLog("Help index presented.", "log-success"); break;
-    case "tutorial":
-      document.getElementById("modal-onboarding").showModal();
-      showCubertPopup("How can I help you?", "cheerful");
-      cubertConvStage = "AWAITING_DESCRIPTION";
-      addLog("Onboarding handbook presented.", "log-success");
+    case "tutorial": case "demo": case "gettingstarted":
+      openTutorialModal();
       break;
     case "clear":
       requestLogBox.innerHTML = "";
@@ -13848,25 +13994,165 @@ if (btnConfirmCancel) {
   };
 }
 
-// Onboarding Modal
+// Onboarding Modal & Introductory Demonstration Controls (Checkpoint G)
 const modalOnboarding = document.getElementById("modal-onboarding");
+const modalGettingStarted = document.getElementById("modal-getting-started");
 const btnTutorialOpen = document.getElementById("btn-tutorial-open");
-if (btnTutorialOpen && modalOnboarding) {
-  btnTutorialOpen.onclick = () => {
+
+function setupDemoVideoControls(videoId, playBtnId, pauseBtnId, replayBtnId, skipBtnId, statusBadgeId, timerId, onSkip) {
+  const vid = document.getElementById(videoId);
+  const btnPlay = document.getElementById(playBtnId);
+  const btnPause = document.getElementById(pauseBtnId);
+  const btnReplay = document.getElementById(replayBtnId);
+  const btnSkip = document.getElementById(skipBtnId);
+  const badge = document.getElementById(statusBadgeId);
+  const timer = document.getElementById(timerId);
+
+  if (!vid) return;
+
+  function formatTime(s) {
+    if (isNaN(s) || !isFinite(s)) return "00:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return (m < 10 ? "0" : "") + m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
+  function updateStatus(state) {
+    if (badge) badge.textContent = state;
+    if (timer && vid.duration) {
+      timer.textContent = `${formatTime(vid.currentTime)} / ${formatTime(vid.duration)}`;
+    }
+  }
+
+  if (btnPlay) {
+    btnPlay.onclick = () => {
+      vid.play().then(() => updateStatus("Playing")).catch(err => {
+        console.warn("Video play error:", err);
+        updateStatus("Ready");
+      });
+    };
+  }
+
+  if (btnPause) {
+    btnPause.onclick = () => {
+      vid.pause();
+      updateStatus("Paused");
+    };
+  }
+
+  if (btnReplay) {
+    btnReplay.onclick = () => {
+      vid.currentTime = 0;
+      vid.play().then(() => updateStatus("Playing")).catch(err => {
+        console.warn("Video replay error:", err);
+        updateStatus("Ready");
+      });
+    };
+  }
+
+  if (btnSkip && typeof onSkip === "function") {
+    btnSkip.onclick = onSkip;
+  }
+
+  vid.addEventListener("play", () => updateStatus("Playing"));
+  vid.addEventListener("pause", () => updateStatus("Paused"));
+  vid.addEventListener("ended", () => updateStatus("Ended"));
+  vid.addEventListener("timeupdate", () => {
+    if (timer && vid.duration) {
+      timer.textContent = `${formatTime(vid.currentTime)} / ${formatTime(vid.duration)}`;
+    }
+  });
+  vid.addEventListener("loadedmetadata", () => {
+    updateStatus("Ready");
+  });
+}
+
+function closeOnboardingModal(acceptTerms = false) {
+  const vid = document.getElementById("onboarding-demo-video");
+  if (vid) vid.pause();
+  if (modalOnboarding) modalOnboarding.close();
+  if (acceptTerms) {
+    localStorage.setItem("cadnt_onboarded", "true");
+    addLog("Terms & Conditions accepted. Operational guidelines confirmed.", "log-success");
+    status("Ready. Type polite request in Request Bar.");
+  }
+}
+
+function closeGettingStartedModal() {
+  const vid = document.getElementById("standalone-demo-video");
+  if (vid) vid.pause();
+  if (modalGettingStarted) modalGettingStarted.close();
+  if (!localStorage.getItem("cadnt_onboarded") && modalOnboarding) {
     modalOnboarding.showModal();
+  }
+}
+
+function openTermsFromGettingStarted() {
+  const vid = document.getElementById("standalone-demo-video");
+  if (vid) vid.pause();
+  if (modalGettingStarted) modalGettingStarted.close();
+  if (modalOnboarding) modalOnboarding.showModal();
+}
+
+function openTutorialModal() {
+  if (modalOnboarding) {
+    modalOnboarding.showModal();
+    const vid = document.getElementById("onboarding-demo-video");
+    if (vid) {
+      vid.currentTime = 0;
+      vid.play().catch(e => console.log("Video autoplay:", e));
+    }
     showCubertPopup("How can I help you?", "cheerful");
     cubertConvStage = "AWAITING_DESCRIPTION";
-  };
+    addLog("Onboarding handbook and demonstration presented.", "log-success");
+  }
 }
+
+if (btnTutorialOpen) {
+  btnTutorialOpen.onclick = openTutorialModal;
+}
+
+// Wire up video controls for both dialogs
+setupDemoVideoControls(
+  "onboarding-demo-video",
+  "btn-demo-play",
+  "btn-demo-pause",
+  "btn-demo-replay",
+  "btn-demo-skip-ctrl",
+  "demo-video-status-badge",
+  "onboarding-video-timer",
+  () => closeOnboardingModal(false)
+);
+
+setupDemoVideoControls(
+  "standalone-demo-video",
+  "btn-standalone-play",
+  "btn-standalone-pause",
+  "btn-standalone-replay",
+  "btn-standalone-skip",
+  "standalone-video-status-badge",
+  "standalone-video-timer",
+  () => closeGettingStartedModal()
+);
+
 const btnCloseOnboarding = document.getElementById("btn-close-onboarding");
-if (btnCloseOnboarding && modalOnboarding) {
-  btnCloseOnboarding.onclick = () => {
-    modalOnboarding.close();
-    localStorage.setItem("cadnt_onboarded", "true");
-  };
+if (btnCloseOnboarding) {
+  btnCloseOnboarding.onclick = () => closeOnboardingModal(true);
 }
+const btnSkipOnboarding = document.getElementById("btn-skip-onboarding");
+if (btnSkipOnboarding) {
+  btnSkipOnboarding.onclick = () => closeOnboardingModal(false);
+}
+
+// Automatic first-time onboarding presentation
 if (modalOnboarding && !localStorage.getItem("cadnt_onboarded") && !new URLSearchParams(location.search).has("no_auto_onboard")) {
-  setTimeout(() => modalOnboarding.showModal(), 350);
+  setTimeout(() => {
+    modalOnboarding.showModal();
+    const vid = document.getElementById("onboarding-demo-video");
+    if (vid) {
+      vid.play().catch(e => console.log("First-time autoplay:", e));
+    }
+  }, 350);
 }
 
 // Economy Construction Modal
@@ -14734,11 +15020,7 @@ function initWin95MenuBar() {
     "mitem-help-topics": () => {
       openHelpWindow();
     },
-    "mitem-help-tutorial": () => {
-      document.getElementById("modal-onboarding").showModal();
-      showCubertPopup("How can I help you?", "cheerful");
-      cubertConvStage = "AWAITING_DESCRIPTION";
-    },
+    "mitem-help-tutorial": () => openTutorialModal(),
     "mitem-help-credits": () => document.getElementById("modal-construction").showModal(),
     "mitem-help-crash": () => openCrashReportModal(),
     "mitem-help-about": () => document.getElementById("modal-about").showModal()
