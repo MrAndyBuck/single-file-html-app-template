@@ -2328,6 +2328,25 @@
       </div>
     </div>
 
+    <!-- Creator's Portfolio -->
+    <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
+      <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;" data-i18n="modals.portfolio_heading">
+        Creator's Portfolio
+      </div>
+      <p style="margin: 4px 0 6px 0; color: #222222; font-size: 11px;" data-i18n="modals.portfolio_desc">
+        Explore the creator's design and engineering portfolio.
+      </p>
+      <div style="margin: 6px 0 4px 0;">
+        <a id="link-about-portfolio" href="https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; font-weight: bold; color: #000080; text-decoration: underline; background: #ffffff; border: 1px solid var(--win95-dark); padding: 5px 10px; box-shadow: inset 1px 1px 0 #ffffff, 1px 1px 0 #000000; cursor: pointer;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span data-i18n="modals.view_portfolio">View Portfolio (PDF)</span>
+        </a>
+      </div>
+      <div style="font-size: 10px; color: #555555; margin-top: 4px;">
+        Hosted URL: <a href="https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf" target="_blank" rel="noopener noreferrer" style="color: #006600; font-family: var(--font-mono); font-size: 9px; text-decoration: none;">https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf</a>
+      </div>
+    </div>
+
     <!-- Technology & Dependency Audit -->
     <div style="border: 1px solid var(--win95-light); border-top: 1px solid var(--win95-dark); border-left: 1px solid var(--win95-dark); padding: 8px 10px; background: var(--win95-bg);">
       <div style="font-weight: bold; color: #000080; margin-bottom: 4px; text-transform: uppercase; font-size: 11px; border-bottom: 1px solid var(--win95-dark); padding-bottom: 2px;" data-i18n="modals.tech_audit_heading">
@@ -14186,6 +14205,15 @@ const btnCloseAbout = document.getElementById("btn-close-about");
 if (btnCloseAbout && modalAbout) {
   btnCloseAbout.onclick = () => modalAbout.close();
 }
+const linkAboutPortfolio = document.getElementById("link-about-portfolio");
+if (linkAboutPortfolio) {
+  // If running locally (file:// or localhost) and before deployment, fallback to local asset so local testing works
+  if (window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    linkAboutPortfolio.href = "assets/portfolio/PortfolioForPortfolioBuckGithub.pdf";
+  } else {
+    linkAboutPortfolio.href = "https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf";
+  }
+}
 
 // Help Modal with Ring Glow
 const modalHelp = document.getElementById("modal-help");
@@ -16511,6 +16539,17 @@ f 4 5 6`;
       constHtml.includes("404 No Wake Boulevard") &&
       constHtml.includes("Middle of Lake Superior, MI 00000");
     assertTest("Checkpoint F: Parody billing address present in About dialog and Under Construction marketplace modal", addressInAbout && addressInConst);
+
+    // Test 64c: Creator's Portfolio section and external PDF link in About dialog
+    const linkPortfolioEl = document.getElementById("link-about-portfolio");
+    const hasPortfolioHeading = aboutHtml.includes("Creator's Portfolio");
+    const hasPortfolioDesc = aboutHtml.includes("Explore the creator's design and engineering portfolio.");
+    const hasPortfolioLink = linkPortfolioEl !== null &&
+      linkPortfolioEl.textContent.includes("View Portfolio (PDF)") &&
+      linkPortfolioEl.getAttribute("target") === "_blank" &&
+      linkPortfolioEl.getAttribute("rel") === "noopener noreferrer" &&
+      (linkPortfolioEl.getAttribute("href").includes("PortfolioForPortfolioBuckGithub.pdf") || linkPortfolioEl.href.includes("PortfolioForPortfolioBuckGithub.pdf"));
+    assertTest("Portfolio Integration: Creator's Portfolio section with secure PDF link present in About dialog", hasPortfolioHeading && hasPortfolioDesc && hasPortfolioLink);
 
     // =========================================================================
     // Checkpoint G: Official Logo Integration

@@ -25,6 +25,7 @@
 
 | Capability | Implemented | Auto Tested | Visually Verified | User Accepted | Current Status & Notes |
 |---|:---:|:---:|:---:|:---:|---|
+| **Portfolio Integration (v0.20): Creator's Portfolio & PDF Hosting** | **YES** | **YES** | **YES** | *Awaiting User Review* | Source portfolio PDF located and verified at `/Users/andybuck/Downloads/PortfolioForPortfolioBuckGitHub.pdf` ($14,312,651\text{ bytes}$, $13.65\text{ MB}$, PDF 1.4). Copied intact to CADN'T repository on branch `dev` at `assets/portfolio/PortfolioForPortfolioBuckGithub.pdf` (SHA-256: `6335ba1284d98e5377fb336a77a52e5bcda144ac0acf0af063d1e31ea65bebd7`, 100% bit-for-bit match). Tracked by Git, not excluded by `.gitignore`. Prepared for GitHub Pages hosting at `https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf`. Added "Creator's Portfolio" section to About modal (`#modal-about`) with description "Explore the creator's design and engineering portfolio." and prominent clickable link "View Portfolio (PDF)". Opens in a new tab (`target="_blank" rel="noopener noreferrer"`), preserving the running CADN'T session. Verified in real Chrome via CDP and verified across page reloads. Automated test 64c added; all 216 tests passing. |
 | **Checkpoint G (v0.20): Introductory Demonstration Popup** | **YES** | **YES** | **YES** | *Awaiting User Review* | Browser-compatible demonstration video saved in `assets/demo/cadnt_demonstration.webm` ($4.46\text{ MB}$). Integrated into the onboarding interface alongside the complete Terms & Conditions. Preserves complete operational guidelines, bullet points, and exact quote *"The command to delete the starting object exists."* Includes retro Windows 95 `▶ Play`, `⏸ Pause`, `↺ Replay`, and `⏭ Skip` controls, time display, and status badge. Reopening via Tutorial button (`#btn-tutorial-open`, menu item, or `can i tutorial`) reopens demonstration without resetting or modifying the CAD scene ($100\%$ scene preservation). Auto-displays on first launch; suppressed on subsequent reloads once accepted in localStorage. Standalone popup `#modal-getting-started` also implemented. Verified in Chrome via automated video telemetry (currentTime > 0, decoded width 960x720) and documented for manual Safari verification. |
 | **Checkpoint A (v0.20): Antigravity Refinement & Freeze-Undo** | **YES** | **YES** | **YES** | *Awaiting User Review* | Reduced float speed and acceleration to ~15% of previous values (0.15 velocity/accel factor). Objects begin with slow, noticeable drift, gradually accelerate, and maintain slight independent rotations without instantly launching off-screen. Undo behavior (`can i undo`) immediately halts animation and freezes objects in-place at their current displaced world coordinates in real scene state (not an overlay), retaining orientations without accumulating further motion. `can i restore gravity` remains a separate $0.00 command restoring exact original pre-antigravity coordinates. Topology and project serialization preserved. Verified in real browser. |
 | **Checkpoint B (v0.20): Array Command (`can i array`)** | **YES** | **YES** | **YES** | *Awaiting User Review* | Genuine Linear and Polar array modeling operations. Linear Array supports count (2–50), spacing (mm), and axis (X, Y, Z); Polar Array supports count (2–50), rotation center, axis, and sweep angle (default 360°). Interactive Command Bar parameter inputs with live dashed ghost preview (`Array_Preview`). Generates genuine selectable clones with stable, unique object IDs, preserving layers, materials, dimensions, and transforms. Single-step Undo removes all created array copies simultaneously. Native `.cadnt` serialization and reopen verified across all 4 viewports. |
@@ -2259,5 +2260,66 @@ python3 scripts/get_test_results.py
 
 ### 26.6 Git & Deployment Status
 - Implemented and verified strictly on branch `dev`.
-- Automated test suite passing: **215 tests, 0 failures** (100% pass rate).
+- Automated test suite passing: **216 tests, 0 failures** (100% pass rate).
 - Awaiting user review and authorization before merging into `main` or deploying to GitHub Pages.
+
+---
+
+## 27. Creator's Portfolio Hosting & About Section Integration (Build v00000-020)
+
+### 27.1 Source Location & Integrity Verification
+- **Source PDF Path**: `/Users/andybuck/Downloads/PortfolioForPortfolioBuckGitHub.pdf`
+- **Format**: PDF 1.4 document, estimated 20 pages
+- **File Size**: $14,312,651\text{ bytes}$ ($13.65\text{ MB}$)
+- **SHA-256 Checksum**:
+  `6335ba1284d98e5377fb336a77a52e5bcda144ac0acf0af063d1e31ea65bebd7`
+- **Integrity**: Source file preserved strictly intact without modification, conversion, compression, or re-encoding.
+
+### 27.2 Repository Placement & Git Tracking
+- **Repository Destination**:
+  [`assets/portfolio/PortfolioForPortfolioBuckGithub.pdf`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf)
+- **SHA-256 Match**: Bit-for-bit identical to source PDF (`6335ba1284d98e5377fb336a77a52e5bcda144ac0acf0af063d1e31ea65bebd7`).
+- **Git Status**: Tracked by Git, not ignored by `.gitignore`.
+- **Target Branch**: `dev` (staged/committed on `dev` pending user approval to merge/deploy).
+
+### 27.3 About Section Integration (`#modal-about`)
+- Added new section titled **"Creator's Portfolio"** immediately following Development Credits inside the scrollable content container `#about-dialog-content`.
+- **Description**: *"Explore the creator's design and engineering portfolio."*
+- **Clickable Link**: Prominent retro button with icon and label **"View Portfolio (PDF)"** (`#link-about-portfolio`).
+- **External Link Security**: Configured with `target="_blank"` and `rel="noopener noreferrer"`.
+- **Session Preservation**: Clicking the link opens the portfolio in a new browser tab, allowing native PDF viewing and downloading while keeping the running CADN'T 3D modeling session completely open and active in the original tab.
+- **Hosted Public URL**:
+  `https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf`
+- **Local Fallback**: Script automatically detects local execution (`file:` or `localhost`) and resolves to `assets/portfolio/PortfolioForPortfolioBuckGithub.pdf` so local automated and manual browser verification succeeds before deployment.
+- **Content Integrity**: 100% of existing About content preserved:
+  - Original Concept & Creative Direction (Andrew Robert Buck)
+  - AI-Assisted Implementation credits (Google Antigravity & ChatGPT)
+  - Technology Audit & Dependencies (Three.js r128, three-csg.js, Euler $\chi=2$ manifold routines)
+  - Clickable Bibliography (Rhino, SOLIDWORKS, Fusion 360, Blender, Clippy)
+  - Fictional Corporate Billing Address (Middle of Lake Superior, MI 00000)
+
+### 27.4 Automated & Visual Verification
+1. **Automated Test Suite**:
+   - Added Test 64c asserting presence of Creator's Portfolio section, description, and secure PDF link in `#modal-about`.
+   - Result: **216 tests total, 0 failures** (100% pass rate).
+2. **Browser Verification Script ([`scripts/verify_portfolio_integration.py`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/scripts/verify_portfolio_integration.py))**:
+   - Verified PDF SHA-256 parity and PDF 1.4 header/trailer.
+   - Checked public URL status: accurately reports `HTTP 404 (Not Found)` because the code is on `dev` and has not yet been merged/deployed to GitHub Pages.
+   - Launched real Chrome instance via CDP; opened `#modal-about`; verified dialog and link visibility.
+   - Verified that clicking the link preserves 3D scene objects (`sceneObjects.length` unchanged).
+   - Verified that reloading the page persists the link and About dialog functionality.
+   - Verified macOS metadata `com.adobe.pdf` compatibility.
+
+### 27.5 Verification Screenshots
+
+| Artifact | Location | Description |
+|---|---|---|
+| `portfolio_01` | [`screenshots/portfolio_01_about_section.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/portfolio_01_about_section.png) | Updated About window in Chrome displaying the Creator's Portfolio section with 'View Portfolio (PDF)' link. |
+| `portfolio_02` | [`screenshots/portfolio_02_about_reloaded.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/portfolio_02_about_reloaded.png) | Persistence check of About window and portfolio link after full browser reload. |
+
+### 27.6 Deployment Status
+- **Current Branch**: `dev`
+- **GitHub Repository**: `https://github.com/MrAndyBuck/single-file-html-app-template`
+- **Intended Public URL**: `https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf`
+- **Deployment State**: Staged and committed on `dev`. Not merged to `main` and not deployed to GitHub Pages, awaiting user review and authorization.
+
