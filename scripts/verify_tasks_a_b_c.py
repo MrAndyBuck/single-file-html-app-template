@@ -319,42 +319,12 @@ try:
     print(f"  Playback State: paused={play_info['paused']}, currentTime={play_info['currentTime']}, status={play_info['statusBadge']}, timer={play_info['timerText']}")
     capture_screenshot("task_c_02_demo_modal_playing.png")
 
-    # 3. Test Live 3D Perspective Demonstration
-    print("  Triggering Live Perspective 3D Demonstration (#btn-demo-live-persp)...")
-    evaluate("document.getElementById('btn-demo-live-persp').click()")
-    
-    # Wait for the autonomous modeling steps to complete (4.2 seconds)
-    print("  Observing autonomous construction in Perspective Viewport...")
-    for sec in range(1, 6):
-        time.sleep(1.0)
-        status_msg = evaluate("document.getElementById('status-message') ? document.getElementById('status-message').textContent : ''")
-        print(f"    [{sec}s] CAD Status: {status_msg}")
-
-    live_demo_result = evaluate("""(() => {
-        const flange = scene.getObjectByName('AGY_Demo_Flange');
-        const cuts = flange && flange.userData ? flange.userData.edgeCutHistory : [];
-        return {
-            flangeFound: !!flange,
-            cutCount: cuts ? cuts.length : 0,
-            activeVp: activeViewport,
-            cubertMsg: document.getElementById('cubert-speech') ? document.getElementById('cubert-speech').textContent : ''
-        };
-    })()""")
-
-    print(f"  Flange Mesh Created: {live_demo_result['flangeFound']}")
-    print(f"  Cut Count (Center Bore + 6 Bolt Holes + Chamfer): {live_demo_result['cutCount']}")
-    print(f"  Active Viewport: {live_demo_result['activeVp']}")
-    print(f"  Cubert Message: {live_demo_result['cubertMsg']}")
-
-    assert live_demo_result['flangeFound'], "AGY_Demo_Flange must be present in 3D scene!"
-    assert live_demo_result['cutCount'] >= 7, "Flange must contain parametric cut features (bore, bolt holes, chamfer)!"
-    assert live_demo_result['activeVp'] == "perspective", "Demo must execute in Perspective viewport!"
-
-    capture_screenshot("task_c_03_live_3d_perspective_flange.png")
-    print("  [PASS] Task C Acceptance Criteria met: Perspective-only demonstration asset and live in-viewport 3D demonstration function perfectly without black screen.")
+    # Close onboarding modal
+    evaluate("closeOnboardingModal(false)")
+    print("  [INFO] Demo video update withheld from merge per user request ('merge everything but the demo video').")
 
     print("\n=========================================================================")
-    print("ALL VERIFICATION CHECKS PASSED FOR TASKS A, B, AND C!")
+    print("ALL VERIFICATION CHECKS PASSED FOR TASKS A & B!")
     print("=========================================================================")
 
 finally:
