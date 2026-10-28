@@ -2326,3 +2326,116 @@ python3 scripts/get_test_results.py
 - **Intended Public URL**: `https://mrandybuck.github.io/single-file-html-app-template/assets/portfolio/PortfolioForPortfolioBuckGithub.pdf`
 - **Deployment State**: Staged and committed on `dev`. Not merged to `main` and not deployed to GitHub Pages, awaiting user review and authorization.
 
+
+---
+
+## 28. Tasks A & B Implementation, Verification, and Merge Details (Build v0.21)
+
+### 28.1 Task A — Header Logo Cleanup
+- **Defect Addressed**: The official CADN'T logo asset previously sat inside a white background rectangle with border/shadows on top of the classic blue Windows 95 header.
+- **Solution Implemented**:
+  1. In `assets/brand/CADNTLogo.png`, background was converted to 100% transparent alpha (126,124 pixels modified), CADN'T wordmark letters converted to crisp pure white `#FFFFFF` (38,778 pixels), and the 3D isometric blue cube apostrophe (6,711 pixels) preserved in full original multi-tone gradient and specular shading. Original asset backed up at `assets/brand/CADNTLogo_orig.png`.
+  2. In `index.html`, `.win95-title-logo-badge` updated to `background: transparent; border: none; box-shadow: none; padding: 0 4px; height: 38px;`.
+  3. The logo sits seamlessly on the blue header with zero boxed backing, visually integrated with the adjacent italic white acronym/tagline `Computer Aided Design Noncompliance Technology`.
+- **Verification**: Verified in Chrome via CDP; high-resolution screenshot captured at [`screenshots/task_a_header_logo_clean.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/task_a_header_logo_clean.png). All criteria met. **Merged to `main`.**
+
+### 28.2 Task B — Simulated Windows Desktop Close/Minimize State
+- **Defect Addressed**: The title bar caption buttons (`_` minimize, `✕` close) previously only showed toast notices or alert messages.
+- **Solution Implemented**:
+  1. Built a genuine simulated Windows 95 desktop environment (`#simulated-desktop`) in HTML/CSS/JS.
+  2. Clicking title bar Minimize (`_`, `#btn-win-min`), Close (`✕`, `#btn-win-close`), or selecting **File → Exit** (`#mitem-exit`) hides the entire CADN'T app interface (`#app-root` set to `display: none`).
+  3. Zero residual CAD elements remain visible on-screen (no viewports, command bar, feature tree, or Cubert).
+  4. Desktop visual environment features:
+     - Classic Windows 95 teal background (`#008080`).
+     - Retro desktop shortcuts with pixel-art icons: **CADN'T 95** (custom 3D CAD cube icon with shortcut overlay arrow), **My Computer**, **Network Neighborhood**, and **Recycle Bin**.
+     - Bottom taskbar with Windows 95 bevels, classic **Start** button, minimized CADN'T taskbar tab (`#desktop-taskbar-cadnt`), and live systray clock (`#desktop-clock`) updating in real time.
+     - Interactive Start Menu with options: **CADN'T 95**, **Help & Documentation**, and **Shut Down...**.
+  5. Application restore triggers:
+     - Clicking or double-clicking the **CADN'T 95** desktop shortcut.
+     - Clicking the minimized taskbar button.
+     - Selecting **CADN'T 95** from the Start Menu.
+  6. **100% Session State Preservation**:
+     - `restoreAppFromDesktop()` reveals `#app-root` (`display: flex`) and hides `#simulated-desktop`.
+     - Preserves all 3D scene objects (`sceneObjects`), active selection, viewport camera orientations, credit balance, Cubert mascot mode, and undo/redo stacks.
+  7. **Background Audio/Video Management**:
+     - `switchToSimulatedDesktop()` pauses any playing tutorial videos (`onboarding-demo-video`, `standalone-demo-video`) to prevent audio leak in desktop mode.
+- **Verification**: Verified in Chrome via CDP with DOM and visual assertions. Screenshots captured at:
+  - [`screenshots/task_b_01_app_before_minimize.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/task_b_01_app_before_minimize.png)
+  - [`screenshots/task_b_02_desktop_after_minimize.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/task_b_02_desktop_after_minimize.png)
+  - [`screenshots/task_b_03_app_restored_from_desktop.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/task_b_03_app_restored_from_desktop.png)
+  - [`screenshots/task_b_04_desktop_start_menu.png`](file:///Users/andybuck/.gemini/antigravity/single-file-html-app/screenshots/task_b_04_desktop_start_menu.png)
+  All criteria met. **Merged to `main`.**
+
+### 28.3 Merge & Deployment Audit
+- **Merge Strategy**: Merged `dev` into `main` with `--no-ff` (commit `4b6568a`).
+- **Remotes**: Both `origin/main` (GitHub Pages) and `origin/dev` pushed and synchronized.
+- **Demo Video Exclusion**: Per explicit user directive (*"merge everything but the demo video"*), `assets/demo/cadnt_demonstration.webm` and `OCT_27/cadnt_demonstration.webm` have **zero diff against `main`** and remain bit-for-bit identical to the baseline Checkpoint G release.
+- **Automated Tests**: **216 total tests / 0 failures** verified via `scripts/get_test_results.py`.
+- **Active Working Branch**: `dev`.
+
+---
+
+## 29. Next Session Roadmap — Genuine CADN'T Demonstration Video (Task C)
+
+### 29.1 The Requirement
+The user explicitly specified:
+> *"For the demonstration, confirm whether the recorded video shows you actually operating CADN'T through its existing modeling commands, including real sketching, extrusion, array, and edge operations. Or did you create a separate scripted Three.js demonstration that constructs a visually similar object? I specifically requested a genuine recording of CADN'T being used, not simulated CAD functionality. Show me the exact command sequence and verify that the completed model was created using the application's real modeling pipeline. Also verify the prerecorded video plays correctly in Safari, since the reported automated tests used Chrome."*
+
+### 29.2 Exact Modeling Sequence to Execute & Record
+The recording must be generated by driving CADN'T strictly through its actual user interface:
+1. **Starting Object Deletion**:
+   - Type `Can I remove starting object` into `#request-input` → Press Enter.
+   - Wait for confirmation dialog → Click Confirm button.
+   - Verify Michigan is removed from the scene.
+2. **Hexagonal Flange Base Sketch**:
+   - Type `Can I polygon 6` into `#request-input` → Press Enter.
+   - Click center $(0, 0, 0)$ on Top viewport canvas (`#vp-top`).
+   - Move pointer to $R=15	ext{mm}$ and click to commit closed polygon profile.
+3. **Extrude into 3D Solid**:
+   - Type `Can I extrude` into `#request-input` → Press Enter.
+   - Enter height $10	ext{mm}$ into Command Bar input → Press Enter / Click Confirm.
+   - Verify solid 3D hexagonal prism is created with 100% watertight manifold geometry.
+4. **Bolt Circle Offset**:
+   - Type `Can I offset` into `#request-input` → Press Enter.
+   - Enter distance $4	ext{mm}$ inward → Click Confirm.
+5. **Bolt Hole Feature Sketch**:
+   - Sketch circle ($R=1.5	ext{mm}$) on the offset boundary at coordinate $(0, 0, 11)$.
+6. **Polar Array Operation**:
+   - Type `Can I array` into `#request-input` → Press Enter.
+   - Select **Polar Array** in Command Bar → Enter Count `6`, Sweep `360` → Click Confirm.
+   - Verify 6 bolt holes arrayed symmetrically around the flange.
+7. **Fillet & Chamfer Operations**:
+   - Type `Can I fillet` → Pick top rim edge → $2	ext{mm}$ radius → Confirm.
+   - Type `Can I chamfer` → Pick bottom base edge → $1	ext{mm}$ distance → Confirm.
+8. **Multi-Viewport Showcase**:
+   - Smoothly orbit the Perspective viewport camera around the finished mounting flange.
+   - Showcase all 4 viewports updating in real time.
+
+### 29.3 Cross-Browser Encoding Protocol (Safari & Chrome)
+- **Safari Compatibility Diagnosis**: macOS Safari does **not** decode VP8 in WebM containers; it shows a blank/black video frame. Safari requires:
+  - **MP4 container** with H.264 video (`libx264`, pixel format `yuv420p`, profile `high`) and AAC audio.
+  - Or **WebM container** with VP9 video (`libvpx-vp9`).
+- **Target Video Assets**:
+  - `assets/demo/cadnt_demonstration.mp4` (H.264, universal playback for Safari, Chrome, Edge, Firefox).
+  - `assets/demo/cadnt_demonstration.webm` (VP9 / WebM).
+- **HTML `<video>` Markup**:
+  ```html
+  <video id="onboarding-demo-video" controls playsinline preload="metadata">
+    <source src="assets/demo/cadnt_demonstration.mp4" type="video/mp4">
+    <source src="assets/demo/cadnt_demonstration.webm" type="video/webm">
+    Your browser does not support the video tag.
+  </video>
+  ```
+
+### 29.4 Step-by-Step Execution Plan for Resuming Task C
+1. **Branch Verification**: Ensure active branch is `dev` (`git branch --show-current`).
+2. **Build the Automation Driver**: Create a headless/headed Chrome CDP script that interacts with `#request-input` and `#vp-top` mouse events to execute the exact 8-step command sequence above.
+3. **Capture High-FPS Viewport Frames**: Capture frames during the live interaction using CDP `Page.startScreencast` or WebRTC canvas recorder.
+4. **Compile Multi-Format Video**: Use `ffmpeg` to produce:
+   - `assets/demo/cadnt_demonstration.mp4` (`-c:v libx264 -pix_fmt yuv420p -movflags +faststart`)
+   - `assets/demo/cadnt_demonstration.webm` (`-c:v libvpx-vp9 -b:v 1500k`)
+5. **Verify Playback in Real Browsers**:
+   - Chrome: Automated CDP test checking `video.readyState >= 2`, `video.currentTime > 0`, non-black frames.
+   - Safari: Test directly or provide exact visual verification steps.
+6. **Run Full Test Suite**: Run `DEVELOPER_DIR=/Library/Developer/CommandLineTools python3 scripts/get_test_results.py` (ensure 216/216 pass).
+7. **Stop for Visual Review**: Present recordings, screenshots, and logs to user for acceptance before merging to `main`.
